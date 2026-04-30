@@ -9,7 +9,7 @@ window.__WORKSPACE_SUPABASE_KEY__='sb_publishable_pp_BQcNqXoFSQA-0P4WTpA_Q1r-pLH
 try{localStorage.setItem('pt_workspace_supabase_cfg_v2',JSON.stringify({url:window.__WORKSPACE_SUPABASE_URL__,key:window.__WORKSPACE_SUPABASE_KEY__,saved_at:new Date().toISOString(),source:'bundled'}));}catch(e){}
 </script>
 <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>
-<link rel='stylesheet' href='assets/app.css?v=20260430-v93'>
+<link rel='stylesheet' href='assets/app.css?v=20260430-v94'>
 <style>
 body:not(.v24-ready) #tasks #kanban{visibility:hidden}body:not(.v24-ready) #tasks:after{content:'Загружаю задачи…';display:block;margin:14px 0;padding:18px;border:1px solid #e5e7eb;border-radius:18px;background:#fff;color:#64748b;font-weight:700}.hidden-auth-config{display:none!important}
 .ms-source{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}.ms-filter{position:relative;min-width:180px}.ms-filter-btn{width:100%;height:42px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #dbe4ef;border-radius:13px;background:#fff;color:#0f172a;padding:0 12px;font-weight:800;cursor:pointer;white-space:nowrap}.ms-filter-btn span{overflow:hidden;text-overflow:ellipsis}.ms-filter-btn:after{content:'▾';color:#64748b;font-size:12px}.ms-filter.open .ms-filter-btn{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.10)}.ms-menu{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:90;min-width:260px;max-width:360px;max-height:320px;overflow:auto;border:1px solid #dbe4ef;border-radius:16px;background:#fff;box-shadow:0 18px 50px rgba(15,23,42,.16);padding:8px}.ms-filter.open .ms-menu{display:block}.ms-actions{display:flex;gap:6px;padding:4px 4px 8px;border-bottom:1px solid #eef2f7;margin-bottom:6px}.ms-actions button{border:0;border-radius:9px;background:#f1f5f9;color:#334155;font-size:12px;font-weight:800;padding:7px 9px;cursor:pointer}.ms-actions button:hover{background:#e2e8f0}.ms-row{display:flex;align-items:center;gap:9px;padding:8px 7px;border-radius:10px;cursor:pointer;font-size:13px;color:#0f172a}.ms-row:hover{background:#f8fafc}.ms-row input{width:15px;height:15px}.ms-row.all{font-weight:900;border-bottom:1px solid #f1f5f9;margin-bottom:3px}.toolbar .ms-filter,.timeline-filterbar .ms-filter{min-width:180px}@media(max-width:720px){.ms-filter{min-width:100%}.ms-menu{position:fixed;left:12px!important;right:12px!important;top:120px!important;max-width:none}}
@@ -48,6 +48,15 @@ function enhance(sel){if(!sel||sel.__msEnhanced||!IDS.includes(sel.id))return;se
 function scan(){IDS.forEach(id=>enhance(document.getElementById(id)))}
 document.addEventListener('click',e=>{if(!e.target.closest('.ms-filter'))document.querySelectorAll('.ms-filter.open').forEach(x=>x.classList.remove('open'))});
 document.addEventListener('DOMContentLoaded',scan);setInterval(scan,700);scan();
+})();
+</script>
+<script>
+(()=>{if(window.__TASK_DELETE_FIX_V94__)return;window.__TASK_DELETE_FIX_V94__=1;
+function cfg(){let c={};try{c=JSON.parse(localStorage.getItem('pt_workspace_supabase_cfg_v2')||'{}')}catch{}return{url:(c.url||window.__WORKSPACE_SUPABASE_URL__||'').replace(/\/+$/,''),key:c.key||window.__WORKSPACE_SUPABASE_KEY__||''}}
+function client(){if(window.sb)return window.sb;let c=cfg();return supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})}
+function removeLocal(id){try{if(Array.isArray(window.tasks)){let i=window.tasks.findIndex(t=>t.id===id);if(i>=0)window.tasks.splice(i,1)}}catch{}let card=document.querySelector(`[data-task-id="${CSS.escape(id)}"]`);if(card)card.remove();try{let m=document.getElementById('mOpen');if(m)m.textContent=String(Math.max(0,Number(m.textContent||0)-1))}catch{}}
+async function deleteTask(id){let c=client();let r=await c.from('tasks').delete().eq('id',id);if(!r.error)return;let soft=await c.from('tasks').update({deleted_at:new Date().toISOString()}).eq('id',id);if(soft.error)throw r.error}
+document.addEventListener('click',async e=>{let btn=e.target.closest('[data-action="delete-task"]');if(!btn)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();let id=btn.dataset.id;if(!id)return;if(!confirm('Убрать задачу?'))return;btn.disabled=true;let old=btn.textContent;btn.textContent='Удаляю…';try{await deleteTask(id);removeLocal(id);let st=document.getElementById('sideStatusText');if(st)st.textContent='Задача удалена. Обновите страницу, если нужно пересчитать все показатели.'}catch(err){btn.disabled=false;btn.textContent=old;let msg=err&&err.message?err.message:String(err||'');alert('Не удалось удалить задачу. Проверьте права на проект или RLS-политику tasks_delete_project_editors. Технически: '+msg)}},true);
 })();
 </script>
 </body></html>
