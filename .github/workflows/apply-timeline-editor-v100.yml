@@ -1,13 +1,12 @@
-name: Apply timeline editor v102
+name: Apply timeline editor v103
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
       - '.github/workflows/apply-timeline-editor-v100.yml'
-      - '.timeline-dynamic-lanes-v102-trigger'
       - 'timeline-dynamic-lanes-v102-trigger.txt'
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -27,36 +26,37 @@ jobs:
           s = app.read_text(encoding='utf-8')
           s = re.sub(r"\n?/\* Timeline dynamic lane heights v10[0-9] start \*/.*?/\* Timeline dynamic lane heights v10[0-9] end \*/\n?", "\n", s, flags=re.S)
           block = r'''
-/* Timeline dynamic lane heights v102 start */
-(()=>{if(window.__TIMELINE_DYNAMIC_LANES_V102__)return;window.__TIMELINE_DYNAMIC_LANES_V102__=1;
-const BASE_LANE=78,TOP_PAD=8,GAP=10,BOTTOM_PAD=24;
-function px(v){return Number.parseFloat(String(v||'').replace('px',''))||0}
-function timeline(){return document.querySelector('.wk-tl')}
-function installTimelineLaneStyle(){if(document.getElementById('timeline-dynamic-lanes-v102-css'))return;let s=document.createElement('style');s.id='timeline-dynamic-lanes-v102-css';s.textContent=`.wk-tlitem{height:auto!important;max-height:none!important;overflow:visible!important}.wk-tlitem .wk-tltitle,.wk-tlitem h4,.wk-tlitem .wk-tlmeta{white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;max-height:none!important}.wk-tlitem .wk-tlmeta{overflow:visible!important;text-overflow:clip!important}`;document.head.appendChild(s)}
-function laneOf(el){if(el.dataset.lane!=null)return Math.max(0,Number(el.dataset.lane)||0);let top=px(el.style.top||getComputedStyle(el).top);return Math.max(0,Math.round((top-TOP_PAD)/BASE_LANE))}
-function measuredHeight(el){let cs=getComputedStyle(el),pt=px(cs.paddingTop),pb=px(cs.paddingBottom);let title=el.querySelector('.wk-tltitle')||el.querySelector('h4'),meta=el.querySelector('.wk-tlmeta');let inner=pt+pb;if(title)inner+=title.scrollHeight;if(meta)inner+=meta.scrollHeight+4;return Math.ceil(Math.max(66,el.scrollHeight,el.offsetHeight,inner))}
-let raf=0;
-function adjustTimelineLaneHeights(){raf=0;installTimelineLaneStyle();let tl=timeline(),body=tl?.querySelector('.wk-tlbody');if(!tl||!body)return;let items=[...body.querySelectorAll('.wk-tlitem')];if(!items.length)return;let keepLeft=tl.scrollLeft,keepTop=tl.scrollTop,laneHeights=[];items.forEach(el=>{el.style.height='auto';el.style.maxHeight='none';el.style.overflow='visible';let lane=laneOf(el);el.dataset.lane=String(lane);laneHeights[lane]=Math.max(laneHeights[lane]||BASE_LANE,measuredHeight(el)+GAP)});let offsets=[],y=TOP_PAD;for(let i=0;i<laneHeights.length;i++){offsets[i]=y;y+=laneHeights[i]||BASE_LANE}items.forEach(el=>{let lane=Number(el.dataset.lane)||0;el.style.top=(offsets[lane]??TOP_PAD)+'px'});body.style.height=Math.max(360,y+BOTTOM_PAD)+'px';tl.scrollLeft=keepLeft;tl.scrollTop=keepTop}
-function scheduleTimelineLaneHeights(){if(!raf)raf=requestAnimationFrame(adjustTimelineLaneHeights)}
-installTimelineLaneStyle();
-new MutationObserver(scheduleTimelineLaneHeights).observe(document.body,{childList:true,subtree:true});
-document.addEventListener('DOMContentLoaded',scheduleTimelineLaneHeights);
-window.addEventListener('resize',scheduleTimelineLaneHeights);
-document.addEventListener('pointerup',scheduleTimelineLaneHeights,true);
-document.addEventListener('mouseup',scheduleTimelineLaneHeights,true);
-document.addEventListener('drop',scheduleTimelineLaneHeights,true);
-setInterval(()=>{if(timeline())scheduleTimelineLaneHeights()},1000);
-scheduleTimelineLaneHeights();
-})();
-/* Timeline dynamic lane heights v102 end */
-'''
+          /* Timeline dynamic lane heights v103 start */
+          (()=>{if(window.__TIMELINE_DYNAMIC_LANES_V103__)return;window.__TIMELINE_DYNAMIC_LANES_V103__=1;
+          const BASE_LANE=78,TOP_PAD=8,GAP=12,BOTTOM_PAD=28;
+          function px(v){return Number.parseFloat(String(v||'').replace('px',''))||0}
+          function timeline(){return document.querySelector('.wk-tl')}
+          function installTimelineLaneStyle(){if(document.getElementById('timeline-dynamic-lanes-v103-css'))return;let s=document.createElement('style');s.id='timeline-dynamic-lanes-v103-css';s.textContent=`.wk-tlitem{height:auto!important;max-height:none!important;overflow:visible!important}.wk-tlitem .wk-tltitle,.wk-tlitem h4,.wk-tlitem .wk-tlmeta{white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;max-height:none!important}.wk-tlitem .wk-tlmeta{overflow:visible!important;text-overflow:clip!important}`;document.head.appendChild(s)}
+          function laneOf(el){if(el.dataset.lane!=null)return Math.max(0,Number(el.dataset.lane)||0);let top=px(el.style.top||getComputedStyle(el).top);return Math.max(0,Math.round((top-TOP_PAD)/BASE_LANE))}
+          function measuredHeight(el){let cs=getComputedStyle(el),pt=px(cs.paddingTop),pb=px(cs.paddingBottom);let title=el.querySelector('.wk-tltitle')||el.querySelector('h4'),meta=el.querySelector('.wk-tlmeta');let inner=pt+pb;if(title)inner+=title.scrollHeight;if(meta)inner+=meta.scrollHeight+4;return Math.ceil(Math.max(66,el.scrollHeight,el.offsetHeight,inner))}
+          let raf=0;
+          function adjustTimelineLaneHeights(){raf=0;installTimelineLaneStyle();let tl=timeline(),body=tl?.querySelector('.wk-tlbody');if(!tl||!body)return;let items=[...body.querySelectorAll('.wk-tlitem')];if(!items.length)return;let keepLeft=tl.scrollLeft,keepTop=tl.scrollTop,laneHeights=[];items.forEach(el=>{el.style.height='auto';el.style.maxHeight='none';el.style.overflow='visible';let lane=laneOf(el);el.dataset.lane=String(lane);laneHeights[lane]=Math.max(laneHeights[lane]||BASE_LANE,measuredHeight(el)+GAP)});let offsets=[],y=TOP_PAD;for(let i=0;i<laneHeights.length;i++){offsets[i]=y;y+=laneHeights[i]||BASE_LANE}items.forEach(el=>{let lane=Number(el.dataset.lane)||0;el.style.top=(offsets[lane]??TOP_PAD)+'px'});body.style.height=Math.max(360,y+BOTTOM_PAD)+'px';tl.scrollLeft=keepLeft;tl.scrollTop=keepTop}
+          function scheduleTimelineLaneHeights(){if(!raf)raf=requestAnimationFrame(adjustTimelineLaneHeights)}
+          installTimelineLaneStyle();
+          new MutationObserver(scheduleTimelineLaneHeights).observe(document.body,{childList:true,subtree:true});
+          document.addEventListener('DOMContentLoaded',scheduleTimelineLaneHeights);
+          window.addEventListener('resize',scheduleTimelineLaneHeights);
+          document.addEventListener('pointerup',scheduleTimelineLaneHeights,true);
+          document.addEventListener('mouseup',scheduleTimelineLaneHeights,true);
+          document.addEventListener('drop',scheduleTimelineLaneHeights,true);
+          setInterval(()=>{if(timeline())scheduleTimelineLaneHeights()},1000);
+          scheduleTimelineLaneHeights();
+          })();
+          /* Timeline dynamic lane heights v103 end */
+          '''
+          block = re.sub(r'(?m)^          ', '', block).strip()
           s = s.rstrip() + '\n\n' + block + '\n'
           app.write_text(s, encoding='utf-8')
 
           idx = Path('index.html')
           h = idx.read_text(encoding='utf-8')
-          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260507-v102", h)
-          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260507-v102", h)
+          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260507-v103", h)
+          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260507-v103", h)
           idx.write_text(h, encoding='utf-8')
           PY
           node --check assets/app.js
