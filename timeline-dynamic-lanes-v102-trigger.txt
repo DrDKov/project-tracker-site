@@ -1,1 +1,1 @@
-run task board mode v105
+run task board mode v106
