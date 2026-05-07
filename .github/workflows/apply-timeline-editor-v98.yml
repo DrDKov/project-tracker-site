@@ -1,0 +1,90 @@
+name: Apply timeline editor v98
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-timeline-editor-v98.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch timeline editor into main files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          app = Path('assets/app.js')
+          s = app.read_text(encoding='utf-8')
+          start = '/* Timeline editor v98 start */'
+          end = '/* Timeline editor v98 end */'
+          if start in s and end in s:
+              a = s.index(start)
+              b = s.index(end, a) + len(end)
+              s = s[:a] + s[b:]
+          s += r'''
+
+/* Timeline editor v98 start */
+(()=>{if(window.__TIMELINE_EDITOR_V98__)return;window.__TIMELINE_EDITOR_V98__=1;
+const DAY=86400000,LANE=78,STORE='pt_timeline_lanes_v98';
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const D=v=>new Date(String(v||ymd(new Date())).slice(0,10)+'T00:00:00');
+const add=(v,n)=>{let d=D(v);d.setDate(d.getDate()+n);return ymd(d)};
+const diff=(a,b)=>Math.round((D(b)-D(a))/DAY);
+const norm=v=>String(v||'').trim().replace(/\s+/g,' ').toLowerCase();
+function tl(){return document.querySelector('.wk-tl')}
+function tasks(){return Array.isArray(window.tasks)?window.tasks:[]}
+function projects(){return Array.isArray(window.projects)?window.projects:[]}
+function sb(){return window.sb||null}
+function map(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch{return{}}}
+function saveMap(m){try{localStorage.setItem(STORE,JSON.stringify(m))}catch{}}
+function dayW(box){let d=box.querySelector('.wk-tlday');return d?Math.max(40,d.getBoundingClientRect().width):150}
+function firstDate(box){let first=box.querySelector('.wk-tlday b')?.textContent?.trim();let year=new Date().getFullYear();if(/^\d{2}\.\d{2}$/.test(first)){let [dd,mm]=first.split('.');return `${year}-${mm}-${dd}`}return ymd(new Date())}
+function resolve(el){let kind=el.classList.contains('project')?'project':'task';let title=norm(el.querySelector('h4')?.textContent||'');let arr=kind==='project'?projects():tasks();let row=arr.find(x=>norm(x.name||x.title)===title);if(!row&&el.dataset.tlId)row=arr.find(x=>String(x.id)===String(el.dataset.tlId));if(!row)return null;return{kind,row,id:row.id,key:kind+':'+row.id}}
+function addUi(box){box.querySelectorAll('.wk-tlitem').forEach(el=>{let r=resolve(el);if(r){el.dataset.tlKind=r.kind;el.dataset.tlId=r.id;el.dataset.tlKey=r.key;el.dataset.status=r.row.status||'';el.dataset.fullTitle=el.querySelector('h4')?.textContent||'';}if(!el.__tl98){el.__tl98=1;el.insertAdjacentHTML('beforeend','<span class="tl98-move" title="Перетащить по датам и вертикальному порядку">↕</span><span class="tl98-resize tl98-left" title="Изменить дату начала"></span><span class="tl98-resize tl98-right" title="Изменить срок"></span>');}})}
+function followLabels(box){let sc=box.scrollLeft,dw=dayW(box);box.querySelectorAll('.wk-tlitem').forEach(el=>{let h=el.querySelector('h4'),sub=el.querySelector('div');if(!h)return;el.classList.toggle('tl98-long',el.offsetWidth>dw+4);for(let label of [h,sub].filter(Boolean)){label.classList.add('tl98-label');label.style.transform='translateX(0px)';label.title=label.textContent||'';}if(!el.classList.contains('tl98-long'))return;let left=el.offsetLeft,w=el.offsetWidth,pad=12;let raw=Math.max(0,sc-left+pad);let labelW=Math.max(h.scrollWidth,sub?.scrollWidth||0);let maxShift=Math.max(0,w-Math.min(labelW,w-pad*2)-pad);let shift=Math.min(raw,maxShift);h.style.transform=`translateX(${shift}px)`;if(sub)sub.style.transform=`translateX(${shift}px)`;});}
+function applyLanes(box){let m=map(),body=box.querySelector('.wk-tlbody'),max=0;box.querySelectorAll('.wk-tlitem').forEach(el=>{let k=el.dataset.tlKey;if(k&&m[k]!=null){let lane=Math.max(0,+m[k]||0);el.style.top=(lane*LANE+8)+'px';max=Math.max(max,lane);}});if(body&&max>0)body.style.height=Math.max(body.offsetHeight,(max+1)*LANE+24)+'px'}
+async function saveDates(kind,id,patch){let c=sb();let arr=kind==='project'?projects():tasks();let row=arr.find(x=>String(x.id)===String(id));if(row)Object.assign(row,patch);if(!c)return;let table=kind==='project'?'projects':'tasks';let r=await c.from(table).update(patch).eq('id',id);if(r.error)throw r.error}
+function installDrag(box){if(box.__tl98drag)return;box.__tl98drag=1;box.addEventListener('pointerdown',ev=>{let el=ev.target.closest('.wk-tlitem');if(!el)return;let r=resolve(el);if(!r)return;let mode=ev.target.classList.contains('tl98-left')?'left':ev.target.classList.contains('tl98-right')?'right':'move';if(mode==='move'&&ev.target.closest('button,a,input,select,textarea'))return;ev.preventDefault();ev.stopPropagation();let dw=dayW(box),base=firstDate(box),sx=ev.clientX,sy=ev.clientY,sl=box.scrollLeft,st=box.scrollTop,ol=el.offsetLeft,ot=el.offsetTop,ow=el.offsetWidth;let row=r.row,os=row.start_date||row.due_date||row.deadline||base,oe=row.due_date||row.deadline||row.start_date||os;el.classList.add('tl98-dragging');el.setPointerCapture?.(ev.pointerId);function move(e){let dx=e.clientX-sx+box.scrollLeft-sl,dy=e.clientY-sy+box.scrollTop-st;if(mode==='move'){el.style.left=Math.max(0,ol+dx)+'px';el.style.top=Math.max(0,ot+dy)+'px'}else if(mode==='left'){let nr=ol+ow,nl=Math.max(0,Math.min(nr-dw,ol+dx));el.style.left=nl+'px';el.style.width=Math.max(dw,nr-nl)+'px'}else{el.style.width=Math.max(dw,ow+dx)+'px'}followLabels(box)}async function up(){document.removeEventListener('pointermove',move,true);document.removeEventListener('pointerup',up,true);el.classList.remove('tl98-dragging');let a=Math.max(0,Math.round(el.offsetLeft/dw)),span=Math.max(1,Math.round(el.offsetWidth/dw)),lane=Math.max(0,Math.round(el.offsetTop/LANE));let ns=add(base,a),ne=add(ns,span-1);if(mode==='move'){let oldSpan=Math.max(1,diff(os,oe)+1);ne=add(ns,oldSpan-1)}let m=map();m[r.key]=lane;saveMap(m);let patch=r.kind==='project'?{start_date:ns,deadline:ne}:{start_date:ns,due_date:ne,sort_order:lane*1000};try{await saveDates(r.kind,r.id,patch)}catch(err){alert('Не удалось сохранить изменение таймлайна: '+(err?.message||err))}applyLanes(box);followLabels(box)}document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',up,true)},true)}
+function enhance(){let box=tl();if(!box)return;addUi(box);applyLanes(box);followLabels(box);installDrag(box);if(!box.__tl98scroll){box.__tl98scroll=1;box.addEventListener('scroll',()=>followLabels(box),{passive:true})}}
+new MutationObserver(enhance).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',enhance);setInterval(enhance,600);
+})();
+/* Timeline editor v98 end */
+'''
+          app.write_text(s, encoding='utf-8')
+
+          css = Path('assets/app.css')
+          c = css.read_text(encoding='utf-8')
+          cstart = '/* Timeline editor v98 css start */'
+          cend = '/* Timeline editor v98 css end */'
+          if cstart in c and cend in c:
+              a = c.index(cstart)
+              b = c.index(cend, a) + len(cend)
+              c = c[:a] + c[b:]
+          c += r'''
+
+/* Timeline editor v98 css start */
+.wk-tlitem{cursor:grab!important;user-select:none!important;overflow:hidden!important}.wk-tlitem.tl98-dragging{cursor:grabbing!important;z-index:60!important;box-shadow:0 18px 42px rgba(15,23,42,.25)!important}.wk-tlitem .tl98-label{position:relative!important;left:auto!important;display:block!important;width:max-content!important;max-width:none!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;will-change:transform!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.70),rgba(255,255,255,0))!important;border-radius:8px!important;padding-right:12px!important}.wk-tlitem.tl98-long h4.tl98-label{font-size:12px!important;max-height:none!important;-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important}.wk-tlitem.done .tl98-label,.wk-tlitem[data-status="done"] .tl98-label{text-decoration:line-through!important;opacity:.72!important}.tl98-move{position:absolute!important;left:3px!important;top:3px!important;width:18px!important;height:18px!important;border-radius:6px!important;background:rgba(15,23,42,.76)!important;color:#fff!important;display:grid!important;place-items:center!important;font-size:11px!important;line-height:1!important;z-index:12!important;cursor:grab!important}.tl98-resize{position:absolute!important;top:0!important;bottom:0!important;width:9px!important;z-index:13!important}.tl98-resize:after{content:'';position:absolute;top:8px;bottom:8px;width:2px;border-radius:9px;background:rgba(15,23,42,.28)}.tl98-resize:hover:after{background:rgba(37,99,235,.95)}.tl98-left{left:0!important;cursor:w-resize!important}.tl98-left:after{left:2px}.tl98-right{right:0!important;cursor:e-resize!important}.tl98-right:after{right:2px}
+/* Timeline editor v98 css end */
+'''
+          css.write_text(c, encoding='utf-8')
+
+          idx = Path('index.html')
+          h = idx.read_text(encoding='utf-8')
+          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260507-v98", h)
+          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260507-v98", h)
+          idx.write_text(h, encoding='utf-8')
+          PY
+          git rm .github/workflows/apply-timeline-editor-v98.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/app.js assets/app.css index.html
+          git commit -m "Add interactive timeline editor"
+          git push
