@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/apply-timeline-editor-v100.yml'
       - '.timeline-dynamic-lanes-v102-trigger'
+      - 'timeline-dynamic-lanes-v102-trigger.txt'
   workflow_dispatch:
 
 permissions:
