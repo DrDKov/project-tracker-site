@@ -37,3 +37,8 @@
 
 /* Timeline v97: full labels + drag handles */
 .wk-tlitem{contain:paint!important;cursor:grab}.wk-tlitem h4,.wk-tlitem div{position:relative!important;left:auto!important;display:block!important;width:auto!important;max-width:none!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;pointer-events:none!important}.wk-tlitem .wk-resize{position:absolute;left:-4px;top:0;bottom:0;width:10px;cursor:ew-resize;z-index:11}.wk-tlitem .wk-resize.end{left:auto;right:-4px}.wk-tlitem.done,.wk-tlitem.done h4,.wk-tlitem.done div,.wk-tlitem[data-status="done"],.wk-tlitem[data-status="done"] h4,.wk-tlitem[data-status="done"] div{opacity:.72!important;text-decoration:line-through!important}
+
+/* Timeline task title visibility + sticky labels for long tasks */
+.wk-tlitem{overflow:visible!important}
+.wk-tlitem h4{white-space:normal!important;overflow:visible!important;text-overflow:clip!important;max-width:none!important}
+.wk-tlitem.wk-span-long h4{position:sticky!important;left:8px!important;z-index:3!important;background:linear-gradient(90deg,rgba(255,255,255,.92),rgba(255,255,255,0))!important;padding-right:10px!important;display:inline-block!important;max-width:calc(100% - 20px)!important}
