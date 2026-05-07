@@ -36,7 +36,6 @@ const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const D=v=>new Date(String(v||ymd(new Date())).slice(0,10)+'T00:00:00');
 const add=(v,n)=>{let d=D(v);d.setDate(d.getDate()+n);return ymd(d)};
 const diff=(a,b)=>Math.round((D(b)-D(a))/DAY_MS);
-const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const textKey=v=>String(v||'').trim().replace(/\s+/g,' ').toLowerCase();
 const storeKey='pt_timeline_manual_lanes_v97';
 function laneMap(){try{return JSON.parse(localStorage.getItem(storeKey)||'{}')}catch{return{}}}
@@ -48,7 +47,7 @@ function itemTitle(el){return textKey(el.querySelector('h4')?.textContent||'')}
 function resolve(el){let title=itemTitle(el), kind=el.classList.contains('project')?'project':'task';let list=kind==='project'?projects():tasks();let found=list.find(x=>textKey(x.name||x.title)===title);if(!found&&el.dataset.id)found=list.find(x=>String(x.id)===String(el.dataset.id));if(!found)return null;return {kind,row:found,id:found.id,key:kind+':'+found.id};}
 function dayWidth(tl){let d=tl.querySelector('.wk-tlday');return d?Math.max(40,d.getBoundingClientRect().width):150}
 function firstDate(tl){let first=tl.querySelector('.wk-tlday b')?.textContent?.trim();let year=new Date().getFullYear();if(/^\d{2}\.\d{2}$/.test(first)){let [dd,mm]=first.split('.');return `${year}-${mm}-${dd}`}return ymd(new Date())}
-function labelFollow(tl){let sc=tl.scrollLeft, vw=tl.clientWidth;tl.querySelectorAll('.wk-tlitem').forEach(el=>{let h=el.querySelector('h4'), sub=el.querySelector('div');if(!h)return;[h,sub].filter(Boolean).forEach(label=>{label.classList.add('wk-tl-label-follow');label.style.removeProperty('max-width');label.style.removeProperty('width');label.style.whiteSpace='nowrap';label.style.overflow='visible';label.style.textOverflow='clip';label.style.transform='translateX(0px)';});let left=el.offsetLeft, w=el.offsetWidth, pad=10;let raw=Math.max(0, sc-left+pad);let max=Math.max(0,w-pad*2);let labelW=h.scrollWidth||0;let shift=Math.min(raw, Math.max(0,w-labelW-pad));if(labelW>w-pad*2)shift=Math.min(raw, Math.max(0,w-pad*2));h.style.transform=`translateX(${shift}px)`;if(sub)sub.style.transform=`translateX(${shift}px)`;h.title=h.textContent||'';if(sub)sub.title=sub.textContent||'';});}
+function labelFollow(tl){let sc=tl.scrollLeft;tl.querySelectorAll('.wk-tlitem').forEach(el=>{let h=el.querySelector('h4'), sub=el.querySelector('div');if(!h)return;[h,sub].filter(Boolean).forEach(label=>{label.classList.add('wk-tl-label-follow');label.style.whiteSpace='nowrap';label.style.overflow='visible';label.style.textOverflow='clip';label.style.transform='translateX(0px)';});let left=el.offsetLeft, w=el.offsetWidth, pad=10;let raw=Math.max(0, sc-left+pad);let labelW=h.scrollWidth||0;let shift=Math.min(raw, Math.max(0,w-labelW-pad));if(labelW>w-pad*2)shift=Math.min(raw, Math.max(0,w-pad*2));h.style.transform=`translateX(${shift}px)`;if(sub)sub.style.transform=`translateX(${shift}px)`;h.title=h.textContent||'';if(sub)sub.title=sub.textContent||'';});}
 function addControls(tl){tl.querySelectorAll('.wk-tlitem').forEach(el=>{if(el.__tlv97)return;el.__tlv97=1;let r=resolve(el);if(r){el.dataset.tlKind=r.kind;el.dataset.tlId=r.id;el.dataset.tlKey=r.key;el.dataset.status=r.row.status||'';}el.insertAdjacentHTML('beforeend',`<span class="tl-handle" title="Перетащить по датам и вертикальному порядку">↕</span><span class="tl-resize tl-left" title="Изменить дату начала"></span><span class="tl-resize tl-right" title="Изменить срок"></span>`);});}
 function applyLanes(tl){let m=laneMap(), laneH=78, maxLane=0;tl.querySelectorAll('.wk-tlitem').forEach(el=>{let key=el.dataset.tlKey;if(!key||m[key]==null)return;let lane=Math.max(0,Number(m[key])||0);maxLane=Math.max(maxLane,lane);el.style.top=(lane*laneH+8)+'px';});let body=tl.querySelector('.wk-tlbody');if(body&&maxLane>0)body.style.height=Math.max(body.offsetHeight,(maxLane+1)*laneH+18)+'px';}
 async function patchRow(kind,id,patch){let c=sb();if(!c)return;let table=kind==='project'?'projects':'tasks';let r=await c.from(table).update(patch).eq('id',id);if(r.error)throw r.error;let arr=kind==='project'?projects():tasks();let row=arr.find(x=>String(x.id)===String(id));if(row)Object.assign(row,patch);}
@@ -59,7 +58,6 @@ const mo=new MutationObserver(()=>enhance());mo.observe(document.documentElement
 /* Timeline interactive v97 end */
 '''
           app.write_text(s, encoding='utf-8')
-
           css = Path('assets/app.css')
           c = css.read_text(encoding='utf-8')
           cstart = '/* Timeline interactive v97 css start */'
@@ -75,7 +73,6 @@ const mo=new MutationObserver(()=>enhance());mo.observe(document.documentElement
 /* Timeline interactive v97 css end */
 '''
           css.write_text(c, encoding='utf-8')
-
           idx = Path('index.html')
           h = idx.read_text(encoding='utf-8')
           import re
@@ -89,3 +86,4 @@ const mo=new MutationObserver(()=>enhance());mo.observe(document.documentElement
           git add assets/app.js assets/app.css index.html
           git commit -m "Make timeline tasks draggable and resizable"
           git push
+# trigger 2
