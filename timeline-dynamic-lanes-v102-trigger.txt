@@ -1,1 +1,1 @@
-run task board mode v109
+run task favorites v110
