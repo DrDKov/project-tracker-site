@@ -1,4 +1,4 @@
-name: Apply task favorites v110
+name: Fix task favorites v111
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch task favorites
+      - name: Fix missing favorite helper
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -24,33 +24,19 @@ jobs:
           app=Path('assets/app.js')
           s=app.read_text(encoding='utf-8')
           s=s.replace("const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order';","const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order,is_favorite';")
-          s=s.replace("const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order,is_favorite,is_favorite';","const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order,is_favorite';")
-          helper=r'''
+          helper="""
           function isTaskFavorite(t){return !!(t&&t.is_favorite)}
           async function toggleTaskFavorite(id){let t=byId(S.tasks,id);if(!t)return;let old=!!t.is_favorite,next=!old;t.is_favorite=next;renderTasks();try{let r=await S.sb.from('tasks').update({is_favorite:next,updated_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error}catch(e){t.is_favorite=old;renderTasks();alert('Не удалось изменить избранность задачи: '+(e.message||e))}}
-          (()=>{if(window.__TASK_FAVORITES_V110__)return;window.__TASK_FAVORITES_V110__=1;function favCss(){if(document.getElementById('task-favorite-v110-css'))return;let st=document.createElement('style');st.id='task-favorite-v110-css';st.textContent='.task-card{position:relative}.task-fav-btn{position:absolute;right:34px;top:12px;width:26px;height:26px;border:0;border-radius:10px;background:rgba(255,255,255,.78);color:#94a3b8;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;box-shadow:0 1px 5px rgba(15,23,42,.08)}.task-fav-btn:hover{background:#fff;color:#ca8a04}.task-fav-btn.active{color:#f59e0b;background:#fffbeb}.task-card.wk-complete .task-fav-btn{opacity:1}';document.head.appendChild(st)}favCss();document.addEventListener('pointerdown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('mousedown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('click',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();toggleTaskFavorite(b.dataset.id)},true);document.addEventListener('DOMContentLoaded',favCss)})();
-          '''
+          (()=>{if(window.__TASK_FAVORITES_V111__)return;window.__TASK_FAVORITES_V111__=1;function favCss(){if(document.getElementById('task-favorite-v111-css'))return;let st=document.createElement('style');st.id='task-favorite-v111-css';st.textContent='.task-card{position:relative}.task-fav-btn{position:absolute;right:34px;top:12px;width:26px;height:26px;border:0;border-radius:10px;background:rgba(255,255,255,.78);color:#94a3b8;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;box-shadow:0 1px 5px rgba(15,23,42,.08)}.task-fav-btn:hover{background:#fff;color:#ca8a04}.task-fav-btn.active{color:#f59e0b;background:#fffbeb}.task-card.wk-complete .task-fav-btn{opacity:1}';document.head.appendChild(st)}favCss();document.addEventListener('pointerdown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('mousedown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('click',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();toggleTaskFavorite(b.dataset.id)},true);document.addEventListener('DOMContentLoaded',favCss)})();
+          """
           helper=re.sub(r'(?m)^          ','',helper).strip()
           if 'function isTaskFavorite(t)' not in s:
-            s=s.replace('\nfunction render(){selects();','\n'+helper+'\nfunction render(){selects();')
-          new_card=r'''
-          function cardT(t){let over=t.status!=='done'&&t.due_date&&t.due_date<today(),ids=tids(t).map(uname).join(', ')||'Не назначено',fav=isTaskFavorite(t);return`<article class="task-card wk-task ${t.status==='done'?'wk-complete':''} ${over?'overdue':''}" draggable="true" data-task-id="${t.id}" style="--accent:${pcolor(t.project_id)};--bg:${rgba(pcolor(t.project_id),.12)};--bd:${rgba(pcolor(t.project_id),.34)};"><button type="button" class="task-fav-btn ${fav?'active':''}" data-id="${t.id}" aria-label="Избранное" title="Избранное">${fav?'★':'☆'}</button><label class="wk-done"><input type="checkbox" data-action="toggle-task" data-id="${t.id}" ${t.status==='done'?'checked':''}><span></span></label><div class="row"><span class="badge">${PR[t.priority]||t.priority||'—'}</span>${over?'<span class="badge high">Просрочено</span>':''}</div><h4>${esc(t.title)}</h4><p>${esc(pname(t.project_id))}</p><p class="muted">${fmt(t.start_date)} → ${fmt(t.due_date)}</p><p class="muted">${esc(ids)}</p>${t.notes?`<p>${esc(t.notes)}</p>`:''}${doneWho(t)}${subBlock(t)}<div class="actions"><button class="btn sm secondary" data-action="open-task" data-id="${t.id}">Редактировать</button><button class="btn sm danger" data-action="delete-task" data-id="${t.id}">Убрать</button></div></article>`}
-          '''
-          new_card=re.sub(r'(?m)^          ','',new_card).strip()
-          s2=re.sub(r"function cardT\(t\)\{.*?\nfunction render\(",new_card+'\nfunction render(',s,flags=re.S)
-          if s2==s:
-            raise SystemExit('cardT replacement failed')
-          s=s2
-          old="function taskOrder(a,b){let ad=done(a)?1:0,bd=done(b)?1:0;if(ad!==bd)return ad-bd;let ao=Number.isFinite(+a.sort_order)?+a.sort_order:1e12,bo=Number.isFinite(+b.sort_order)?+b.sort_order:1e12;if(ao!==bo)return ao-bo;let adue=a.due_date||'9999-12-31',bdue=b.due_date||'9999-12-31';if(adue!==bdue)return String(adue).localeCompare(String(bdue));return String(a.created_at||'').localeCompare(String(b.created_at||''))}"
-          new="function taskOrder(a,b){let ad=done(a)?1:0,bd=done(b)?1:0;if(ad!==bd)return ad-bd;let af=isTaskFavorite(a)?0:1,bf=isTaskFavorite(b)?0:1;if(af!==bf)return af-bf;let ao=Number.isFinite(+a.sort_order)?+a.sort_order:1e12,bo=Number.isFinite(+b.sort_order)?+b.sort_order:1e12;if(ao!==bo)return ao-bo;let adue=a.due_date||'9999-12-31',bdue=b.due_date||'9999-12-31';if(adue!==bdue)return String(adue).localeCompare(String(bdue));return String(a.created_at||'').localeCompare(String(b.created_at||''))}"
-          if old not in s:
-            raise SystemExit('taskOrder replacement failed')
-          s=s.replace(old,new,1)
+            s=s.replace('\nfunction cardT(t){','\n'+helper+'\nfunction cardT(t){',1)
           app.write_text(s,encoding='utf-8')
           idx=Path('index.html')
           h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260507-v110",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260507-v110",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260507-v111",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260507-v111",h)
           idx.write_text(h,encoding='utf-8')
           PY
           node --check assets/app.js
@@ -58,5 +44,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/app.js index.html
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Add favorite stars to tasks"
+          git commit -m "Fix missing favorite helper"
           git push
