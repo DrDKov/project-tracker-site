@@ -1,4 +1,4 @@
-name: Apply realtime sync v112
+name: Audit handlers for clean render optimization
 
 on:
   workflow_dispatch:
@@ -6,55 +6,33 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-timeline-editor-v100.yml'
-      - 'timeline-dynamic-lanes-v102-trigger.txt'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  apply:
+  audit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add realtime sync
+      - name: Print handler contexts
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          app=Path('assets/app.js')
-          s=app.read_text(encoding='utf-8')
-          s=re.sub(r"\n?/\* Realtime sync v11[0-9] start \*/.*?/\* Realtime sync v11[0-9] end \*/\n?","\n",s,flags=re.S)
-          rt=r'''
-          /* Realtime sync v112 start */
-          function rtId(row){return row?.id||null}
-          function rtKey(row){return row?.id||((row?.task_id||'')+'::'+(row?.user_id||''))}
-          function rtArray(table){return table==='tasks'?S.tasks:table==='projects'?S.projects:table==='app_users'?S.users:table==='task_assignees'?S.assignees:table==='task_subtasks'?S.subtasks:null}
-          function rtNewer(local,row){if(!local||!row)return true;let a=local.updated_at||local.created_at,b=row.updated_at||row.created_at;if(!a||!b)return true;return new Date(b)>=new Date(a)}
-          function rtUpsert(table,row){let arr=rtArray(table);if(!arr||!row)return false;if((table==='tasks'||table==='projects'||table==='task_subtasks')&&row.deleted_at){return rtRemove(table,row)}if(table==='app_users'&&row.is_active===false){return rtRemove(table,row)}let key=table==='task_assignees'?rtKey(row):rtId(row);if(!key)return false;let i=arr.findIndex(x=>(table==='task_assignees'?rtKey(x):rtId(x))===key);if(i>=0){if(!rtNewer(arr[i],row))return false;arr[i]={...arr[i],...row}}else arr.push(row);return true}
-          function rtRemove(table,row){let arr=rtArray(table);if(!arr||!row)return false;let key=table==='task_assignees'?rtKey(row):rtId(row);if(!key)return false;let n=arr.length;for(let i=arr.length-1;i>=0;i--){let k=table==='task_assignees'?rtKey(arr[i]):rtId(arr[i]);if(k===key)arr.splice(i,1)}return arr.length!==n}
-          function setRealtimeStatus(text){S.rtText=text;let el=$('sideStatusText');if(el){let base=String(el.textContent||'').replace(/ · Realtime:.*$/,'');el.textContent=base+' · Realtime: '+text}}
-          function scheduleRealtimeRender(reason){S.rtReason=reason||S.rtReason||'realtime';clearTimeout(S.rtTimer);S.rtTimer=setTimeout(()=>{S.rtTimer=null;try{if(S.view==='tasks')renderTasks();else if(S.view==='projects')renderProjects();else if(S.view==='timeline')renderTimeline();else if(S.view==='team')renderTeam();else render()}catch(e){console.warn('[realtime] render failed',e)}},80)}
-          function handleRealtimePayload(table,payload){try{S.rtLastEvent=Date.now();let ev=payload.eventType,row=ev==='DELETE'?(payload.old||{}):(payload.new||{});let changed=ev==='DELETE'?rtRemove(table,row):rtUpsert(table,row);if(changed){setRealtimeStatus('синхронизировано '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));scheduleRealtimeRender(table+':'+ev)}}catch(e){console.warn('[realtime] payload error',table,e)}}
-          function teardownRealtime(){try{if(S.rtChannel&&S.sb)S.sb.removeChannel(S.rtChannel)}catch(e){}S.rtChannel=null;S.rtStatus='closed'}
-          async function softRealtimeSync(){if(S.rtSoftSyncing)return;S.rtSoftSyncing=true;try{setRealtimeStatus('мягкая синхронизация');await loadTasksSafe();let ps=await optional('projects/realtime',S.sb.from('projects').select('*').order('created_at',{ascending:true}),9000);if(ps.length)S.projects=ps.filter(x=>!x.deleted_at);let us=await optional('app_users/realtime',S.sb.from('app_users').select('*').eq('is_active',true).order('created_at',{ascending:true}),7000);if(us.length)S.users=us;S.assignees=await optional('task_assignees/realtime',S.sb.from('task_assignees').select('*').order('created_at',{ascending:true}),7000);S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);setRealtimeStatus('подключён');render()}catch(e){console.warn('[realtime] soft sync failed',e);setRealtimeStatus('ошибка мягкой синхронизации')}finally{S.rtSoftSyncing=false}}
-          function setupRealtime(){if(!S.sb||!S.user)return;if(S.rtChannel&&S.rtStatus==='SUBSCRIBED')return;teardownRealtime();let ch=S.sb.channel('workspace-realtime-v112');['tasks','task_assignees','task_subtasks','projects','app_users'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},p=>handleRealtimePayload(t,p)));S.rtChannel=ch;S.rtStatus='connecting';setRealtimeStatus('подключение');ch.subscribe(st=>{S.rtStatus=st;if(st==='SUBSCRIBED')setRealtimeStatus('подключён');if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){setRealtimeStatus('переподключение');clearTimeout(S.rtReconnectTimer);S.rtReconnectTimer=setTimeout(setupRealtime,2500)}});if(!S.rtVisibilityHook){S.rtVisibilityHook=true;document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;let stale=!S.rtLastEvent||Date.now()-S.rtLastEvent>5*60*1000;if(S.rtStatus!=='SUBSCRIBED'){setupRealtime();softRealtimeSync()}else if(stale)softRealtimeSync()});window.addEventListener('online',()=>{setupRealtime();softRealtimeSync()});window.addEventListener('beforeunload',teardownRealtime)}}
-          /* Realtime sync v112 end */
-          '''
-          rt=re.sub(r'(?m)^          ','',rt).strip()
-          if 'function setupRealtime()' not in s:
-            s=s.replace('\nasync function load(){','\n'+rt+'\nasync function load(){',1)
-          s=s.replace("render();status('Подключено',`${S.profile.display_name||S.user.email} · ${S.profile.role} · проектов: ${S.projects.length} · задач: ${S.tasks.length}${S.taskError?' · задачи не обновились':''}${S.warnings.length?' · предупреждения: '+S.warnings.length:''}`)","render();setupRealtime();status('Подключено',`${S.profile.display_name||S.user.email} · ${S.profile.role} · проектов: ${S.projects.length} · задач: ${S.tasks.length}${S.taskError?' · задачи не обновились':''}${S.warnings.length?' · предупреждения: '+S.warnings.length:''}`)",1)
-          app.write_text(s,encoding='utf-8')
-          idx=Path('index.html')
-          h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260507-v112",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260507-v112",h)
-          idx.write_text(h,encoding='utf-8')
+          s=Path('assets/app.js').read_text(encoding='utf-8')
+          print('LEN',len(s))
+          terms=['projectForm','taskForm','addEventListener','submit','from(\'tasks\')','from("tasks")','from(\'projects\')','from("projects")','render();','await load()','load()','S.sb.from']
+          for term in terms:
+              print('\n==== TERM',term,'====')
+              hits=[m.start() for m in re.finditer(re.escape(term),s)]
+              print('count',len(hits),'positions',hits[:30])
+              for pos in hits[:12]:
+                  a=max(0,pos-900); b=min(len(s),pos+1600)
+                  snippet=s[a:b].replace('\n','\\n')
+                  print('--- pos',pos,'---')
+                  print(snippet)
+          print('\n==== FORM-LIKE FUNCTIONS ====')
+          for m in re.finditer(r"\$\('(?:projectForm|taskForm|projectModal|taskModal)'\)|getElementById\('(?:projectForm|taskForm|projectModal|taskModal)'\)",s):
+              pos=m.start(); print('---',m.group(0),'@',pos,'---'); print(s[max(0,pos-1200):min(len(s),pos+1800)].replace('\n','\\n'))
           PY
-          node --check assets/app.js
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/app.js index.html
-          git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Add Supabase realtime sync"
-          git push
