@@ -1,4 +1,4 @@
-name: Add assignee DnD duplicate cleanup v124
+name: Make task modal two column v125
 
 on:
   workflow_dispatch:
@@ -15,47 +15,134 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add duplicate cleanup after assignee drag
+      - name: Make existing task modal two column
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          app=Path('assets/app.js')
-          s=app.read_text(encoding='utf-8')
-          helper="""
-function dedupeRenderedTaskCards(){let root=$('kanban');if(!root)return;let cols=[...root.querySelectorAll('.drop-col,.kanban-col,.task-col,.board-col,[data-assignee-id],[data-col]')];if(!cols.length)cols=[...root.children];cols.forEach(col=>{let seen=new Set();[...col.querySelectorAll('.task-card[data-task-id],.wk-task[data-task-id],article[data-task-id]')].forEach(card=>{let id=card.dataset.taskId;if(!id)return;if(seen.has(id))card.remove();else seen.add(id)})})}
-function afterTaskBoardMutation(){try{dedupeTaskAssignees&&dedupeTaskAssignees()}catch(e){}requestAnimationFrame(()=>{try{dedupeRenderedTaskCards()}catch(e){}})}
-"""
-          if 'function dedupeRenderedTaskCards()' not in s:
-            if 'function dedupeTaskAssignees()' in s:
-              s=s.replace('function dedupeTaskAssignees()', helper+'function dedupeTaskAssignees()', 1)
-            else:
-              s=s.replace('function byId(a,id){', helper+'function byId(a,id){', 1)
-          # After direct renderTasks calls, clean duplicate cards in the rendered board.
-          s=s.replace('renderTasks();dedupeRenderedTaskCards();','renderTasks();')
-          s=s.replace('renderTasks();','renderTasks();afterTaskBoardMutation();')
-          # Keep cleanup from accumulating inside its own helper if the replacement touched it.
-          s=s.replace('dedupeRenderedTaskCards();afterTaskBoardMutation();','dedupeRenderedTaskCards();')
-          # Add a single passive post-drop/post-dragend cleanup hook. It does not handle assignment; it only removes transient DOM duplicates.
-          hook="""
-(()=>{if(window.__ASSIGNEE_DND_DEDUPE_V124__)return;window.__ASSIGNEE_DND_DEDUPE_V124__=1;['drop','dragend'].forEach(ev=>document.addEventListener(ev,()=>{if(S.view==='tasks')afterTaskBoardMutation()},true));})();
-"""
-          if '__ASSIGNEE_DND_DEDUPE_V124__' not in s:
-            s=s.replace('async function load(){', hook+'async function load(){', 1)
-          app.write_text(s,encoding='utf-8')
-          idx=Path('index.html')
-          h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v124",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v124",h)
-          idx.write_text(h,encoding='utf-8')
+
+          idx = Path('index.html')
+          h = idx.read_text(encoding='utf-8')
+
+          task_modal = """<dialog id='taskModal' class='modal task-modal-wide'><form class='modal-body task-modal-body' id='taskForm' method='dialog'><div class='modal-head task-modal-head'><h3>Задача</h3><button type='button' class='x' data-close='taskModal'>✕</button></div><input type='hidden' id='taskId'><div class='task-modal-grid'><section class='task-main-col'><h4 class='task-modal-section-title'>Основная информация</h4><div class='form-grid task-main-grid'><label><span>Название</span><input class='input' id='taskTitle' required></label><label><span>Проект</span><select class='input' id='taskProject'></select></label><label class='full'><span>Исполнители</span><select class='input multi' id='taskAssignee' multiple size='5'></select><span class='muted'>Можно выбрать несколько исполнителей: Ctrl/Shift + клик.</span></label><label><span>Статус</span><select class='input' id='taskStatus'><option value='planned'>Запланировано</option><option value='in_progress'>В работе</option><option value='waiting'>Ожидание</option><option value='done'>Завершено</option></select></label><label><span>Приоритет</span><select class='input' id='taskPriority'><option value='high'>Высокий</option><option value='medium'>Средний</option><option value='low'>Низкий</option></select></label><label><span>Дата старта</span><input class='input' id='taskStart' type='date'></label><label><span>Срок</span><input class='input' id='taskDue' type='date'></label><label class='full'><span>Описание</span><textarea class='input textarea' id='taskNotes' placeholder='Описание задачи, контекст, детали выполнения'></textarea></label></div><div class='modal-actions task-main-actions'><button type='button' class='btn secondary' data-close='taskModal'>Отмена</button><button class='btn primary'>Сохранить</button></div></section><aside class='task-comments-block task-comments-col' id='taskCommentsBlock'><div class='task-comments-head'><h4>Комментарии</h4><span class='muted'>💬 <span id='taskCommentsCount'>0</span></span></div><div class='task-comments-list' id='taskCommentsList'><div class='empty'>Комментариев пока нет</div></div><div class='task-comment-form'><textarea class='input textarea' id='taskCommentText' placeholder='Добавить комментарий'></textarea><button class='btn secondary' type='button' data-action='add-task-comment'>Добавить комментарий</button></div></aside></div></form></dialog>"""
+
+          h2 = re.sub(r"<dialog id='taskModal' class='modal'>.*?</form></dialog>\n<dialog id='userModal'", task_modal + "\n<dialog id='userModal'", h, count=1, flags=re.S)
+          if h2 == h:
+            raise SystemExit('task modal replacement failed')
+          h = h2
+          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260508-v125", h)
+          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260508-v125", h)
+          idx.write_text(h, encoding='utf-8')
+
+          css = Path('assets/app.css')
+          c = css.read_text(encoding='utf-8')
+          c = re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?", "\n", c, flags=re.S)
+          add = r'''
+/* Task modal two-column v125 start */
+#taskModal.modal.task-modal-wide{
+  width:min(1180px,calc(100vw - 32px))!important;
+  max-width:1180px!important;
+}
+#taskModal .task-modal-body{
+  width:100%!important;
+  max-height:calc(100vh - 48px)!important;
+  padding:20px!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr)!important;
+  overflow:hidden!important;
+}
+#taskModal .task-modal-head{
+  margin-bottom:16px!important;
+}
+#taskModal .task-modal-grid{
+  min-height:0!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1.45fr) minmax(360px,.95fr)!important;
+  gap:18px!important;
+  align-items:stretch!important;
+}
+#taskModal .task-main-col,
+#taskModal .task-comments-col{
+  min-width:0!important;
+  min-height:0!important;
+  border:1px solid #e5e7eb!important;
+  border-radius:18px!important;
+  background:#fff!important;
+  padding:16px!important;
+}
+#taskModal .task-main-col{
+  display:flex!important;
+  flex-direction:column!important;
+  overflow:auto!important;
+}
+#taskModal .task-modal-section-title{
+  margin:0 0 12px!important;
+  font-size:15px!important;
+  color:#0f172a!important;
+}
+#taskModal .task-main-grid{
+  align-content:start!important;
+}
+#taskModal .task-main-actions{
+  margin-top:auto!important;
+  padding-top:16px!important;
+  position:sticky!important;
+  bottom:-16px!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.72),#fff 38%)!important;
+}
+#taskModal .task-comments-block.task-comments-col{
+  margin-top:0!important;
+  border-top:1px solid #e5e7eb!important;
+  display:grid!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;
+  gap:10px!important;
+  overflow:hidden!important;
+  background:#f8fafc!important;
+}
+#taskModal .task-comments-head{
+  margin:0!important;
+  padding-bottom:10px!important;
+  border-bottom:1px solid #e5e7eb!important;
+}
+#taskModal .task-comments-head h4{
+  margin:0!important;
+}
+#taskModal .task-comments-list{
+  min-height:220px!important;
+  max-height:none!important;
+  overflow:auto!important;
+  padding-right:4px!important;
+}
+#taskModal .task-comment-form{
+  margin-top:0!important;
+  padding-top:10px!important;
+  border-top:1px solid #e5e7eb!important;
+}
+#taskModal #taskCommentText{
+  min-height:76px!important;
+}
+@media(max-width:920px){
+  #taskModal.modal.task-modal-wide{width:min(760px,calc(100vw - 20px))!important}
+  #taskModal .task-modal-body{max-height:calc(100vh - 24px)!important;overflow:auto!important;padding:14px!important}
+  #taskModal .task-modal-grid{grid-template-columns:1fr!important;gap:12px!important}
+  #taskModal .task-main-col{overflow:visible!important}
+  #taskModal .task-comments-block.task-comments-col{min-height:360px!important}
+  #taskModal .task-comments-list{min-height:180px!important;max-height:320px!important}
+  #taskModal .task-main-actions{position:static!important;background:#fff!important}
+}
+/* Task modal two-column v125 end */
+'''
+          c = c.rstrip() + "\n\n" + add.strip() + "\n"
+          css.write_text(c, encoding='utf-8')
           PY
           node --check assets/app.js
-          grep -q "function dedupeRenderedTaskCards" assets/app.js
-          grep -q "__ASSIGNEE_DND_DEDUPE_V124__" assets/app.js
-          grep -q "assets/app.js?v=20260508-v124" index.html
+          grep -q "task-modal-wide" index.html
+          grep -q "task-modal-grid" index.html
+          grep -q "Task modal two-column v125" assets/app.css
+          grep -q "assets/app.js?v=20260508-v125" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add assets/app.js index.html
+          git add index.html assets/app.css
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Remove transient duplicate task cards after assignee drag"
+          git commit -m "Make task modal two column"
           git push
