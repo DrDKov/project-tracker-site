@@ -1,4 +1,4 @@
-name: Fix task favorites v111
+name: Apply realtime sync v112
 
 on:
   workflow_dispatch:
@@ -16,27 +16,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix missing favorite helper
+      - name: Add realtime sync
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           app=Path('assets/app.js')
           s=app.read_text(encoding='utf-8')
-          s=s.replace("const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order';","const TASK_COLUMNS='id,project_id,title,notes,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,completed_at,sort_order,is_favorite';")
-          helper="""
-          function isTaskFavorite(t){return !!(t&&t.is_favorite)}
-          async function toggleTaskFavorite(id){let t=byId(S.tasks,id);if(!t)return;let old=!!t.is_favorite,next=!old;t.is_favorite=next;renderTasks();try{let r=await S.sb.from('tasks').update({is_favorite:next,updated_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error}catch(e){t.is_favorite=old;renderTasks();alert('Не удалось изменить избранность задачи: '+(e.message||e))}}
-          (()=>{if(window.__TASK_FAVORITES_V111__)return;window.__TASK_FAVORITES_V111__=1;function favCss(){if(document.getElementById('task-favorite-v111-css'))return;let st=document.createElement('style');st.id='task-favorite-v111-css';st.textContent='.task-card{position:relative}.task-fav-btn{position:absolute;right:34px;top:12px;width:26px;height:26px;border:0;border-radius:10px;background:rgba(255,255,255,.78);color:#94a3b8;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:6;box-shadow:0 1px 5px rgba(15,23,42,.08)}.task-fav-btn:hover{background:#fff;color:#ca8a04}.task-fav-btn.active{color:#f59e0b;background:#fffbeb}.task-card.wk-complete .task-fav-btn{opacity:1}';document.head.appendChild(st)}favCss();document.addEventListener('pointerdown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('mousedown',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()},true);document.addEventListener('click',e=>{let b=e.target.closest('.task-fav-btn');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();toggleTaskFavorite(b.dataset.id)},true);document.addEventListener('DOMContentLoaded',favCss)})();
-          """
-          helper=re.sub(r'(?m)^          ','',helper).strip()
-          if 'function isTaskFavorite(t)' not in s:
-            s=s.replace('\nfunction cardT(t){','\n'+helper+'\nfunction cardT(t){',1)
+          s=re.sub(r"\n?/\* Realtime sync v11[0-9] start \*/.*?/\* Realtime sync v11[0-9] end \*/\n?","\n",s,flags=re.S)
+          rt=r'''
+          /* Realtime sync v112 start */
+          function rtId(row){return row?.id||null}
+          function rtKey(row){return row?.id||((row?.task_id||'')+'::'+(row?.user_id||''))}
+          function rtArray(table){return table==='tasks'?S.tasks:table==='projects'?S.projects:table==='app_users'?S.users:table==='task_assignees'?S.assignees:table==='task_subtasks'?S.subtasks:null}
+          function rtNewer(local,row){if(!local||!row)return true;let a=local.updated_at||local.created_at,b=row.updated_at||row.created_at;if(!a||!b)return true;return new Date(b)>=new Date(a)}
+          function rtUpsert(table,row){let arr=rtArray(table);if(!arr||!row)return false;if((table==='tasks'||table==='projects'||table==='task_subtasks')&&row.deleted_at){return rtRemove(table,row)}if(table==='app_users'&&row.is_active===false){return rtRemove(table,row)}let key=table==='task_assignees'?rtKey(row):rtId(row);if(!key)return false;let i=arr.findIndex(x=>(table==='task_assignees'?rtKey(x):rtId(x))===key);if(i>=0){if(!rtNewer(arr[i],row))return false;arr[i]={...arr[i],...row}}else arr.push(row);return true}
+          function rtRemove(table,row){let arr=rtArray(table);if(!arr||!row)return false;let key=table==='task_assignees'?rtKey(row):rtId(row);if(!key)return false;let n=arr.length;for(let i=arr.length-1;i>=0;i--){let k=table==='task_assignees'?rtKey(arr[i]):rtId(arr[i]);if(k===key)arr.splice(i,1)}return arr.length!==n}
+          function setRealtimeStatus(text){S.rtText=text;let el=$('sideStatusText');if(el){let base=String(el.textContent||'').replace(/ · Realtime:.*$/,'');el.textContent=base+' · Realtime: '+text}}
+          function scheduleRealtimeRender(reason){S.rtReason=reason||S.rtReason||'realtime';clearTimeout(S.rtTimer);S.rtTimer=setTimeout(()=>{S.rtTimer=null;try{if(S.view==='tasks')renderTasks();else if(S.view==='projects')renderProjects();else if(S.view==='timeline')renderTimeline();else if(S.view==='team')renderTeam();else render()}catch(e){console.warn('[realtime] render failed',e)}},80)}
+          function handleRealtimePayload(table,payload){try{S.rtLastEvent=Date.now();let ev=payload.eventType,row=ev==='DELETE'?(payload.old||{}):(payload.new||{});let changed=ev==='DELETE'?rtRemove(table,row):rtUpsert(table,row);if(changed){setRealtimeStatus('синхронизировано '+new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'}));scheduleRealtimeRender(table+':'+ev)}}catch(e){console.warn('[realtime] payload error',table,e)}}
+          function teardownRealtime(){try{if(S.rtChannel&&S.sb)S.sb.removeChannel(S.rtChannel)}catch(e){}S.rtChannel=null;S.rtStatus='closed'}
+          async function softRealtimeSync(){if(S.rtSoftSyncing)return;S.rtSoftSyncing=true;try{setRealtimeStatus('мягкая синхронизация');await loadTasksSafe();let ps=await optional('projects/realtime',S.sb.from('projects').select('*').order('created_at',{ascending:true}),9000);if(ps.length)S.projects=ps.filter(x=>!x.deleted_at);let us=await optional('app_users/realtime',S.sb.from('app_users').select('*').eq('is_active',true).order('created_at',{ascending:true}),7000);if(us.length)S.users=us;S.assignees=await optional('task_assignees/realtime',S.sb.from('task_assignees').select('*').order('created_at',{ascending:true}),7000);S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);setRealtimeStatus('подключён');render()}catch(e){console.warn('[realtime] soft sync failed',e);setRealtimeStatus('ошибка мягкой синхронизации')}finally{S.rtSoftSyncing=false}}
+          function setupRealtime(){if(!S.sb||!S.user)return;if(S.rtChannel&&S.rtStatus==='SUBSCRIBED')return;teardownRealtime();let ch=S.sb.channel('workspace-realtime-v112');['tasks','task_assignees','task_subtasks','projects','app_users'].forEach(t=>ch.on('postgres_changes',{event:'*',schema:'public',table:t},p=>handleRealtimePayload(t,p)));S.rtChannel=ch;S.rtStatus='connecting';setRealtimeStatus('подключение');ch.subscribe(st=>{S.rtStatus=st;if(st==='SUBSCRIBED')setRealtimeStatus('подключён');if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(st)){setRealtimeStatus('переподключение');clearTimeout(S.rtReconnectTimer);S.rtReconnectTimer=setTimeout(setupRealtime,2500)}});if(!S.rtVisibilityHook){S.rtVisibilityHook=true;document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;let stale=!S.rtLastEvent||Date.now()-S.rtLastEvent>5*60*1000;if(S.rtStatus!=='SUBSCRIBED'){setupRealtime();softRealtimeSync()}else if(stale)softRealtimeSync()});window.addEventListener('online',()=>{setupRealtime();softRealtimeSync()});window.addEventListener('beforeunload',teardownRealtime)}}
+          /* Realtime sync v112 end */
+          '''
+          rt=re.sub(r'(?m)^          ','',rt).strip()
+          if 'function setupRealtime()' not in s:
+            s=s.replace('\nasync function load(){','\n'+rt+'\nasync function load(){',1)
+          s=s.replace("render();status('Подключено',`${S.profile.display_name||S.user.email} · ${S.profile.role} · проектов: ${S.projects.length} · задач: ${S.tasks.length}${S.taskError?' · задачи не обновились':''}${S.warnings.length?' · предупреждения: '+S.warnings.length:''}`)","render();setupRealtime();status('Подключено',`${S.profile.display_name||S.user.email} · ${S.profile.role} · проектов: ${S.projects.length} · задач: ${S.tasks.length}${S.taskError?' · задачи не обновились':''}${S.warnings.length?' · предупреждения: '+S.warnings.length:''}`)",1)
           app.write_text(s,encoding='utf-8')
           idx=Path('index.html')
           h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260507-v111",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260507-v111",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260507-v112",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260507-v112",h)
           idx.write_text(h,encoding='utf-8')
           PY
           node --check assets/app.js
@@ -44,5 +56,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/app.js index.html
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Fix missing favorite helper"
+          git commit -m "Add Supabase realtime sync"
           git push
