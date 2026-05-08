@@ -1,4 +1,4 @@
-name: Audit handlers for clean render optimization
+name: Apply clean render optimization v116
 
 on:
   workflow_dispatch:
@@ -9,31 +9,50 @@ on:
       - 'timeline-dynamic-lanes-v102-trigger.txt'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  audit:
+  apply:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Print handler contexts
+      - name: Apply minimal render cleanup
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          s=Path('assets/app.js').read_text(encoding='utf-8')
-          print('LEN',len(s))
-          terms=['projectForm','taskForm','addEventListener','submit','from(\'tasks\')','from("tasks")','from(\'projects\')','from("projects")','render();','await load()','load()','S.sb.from']
-          for term in terms:
-              print('\n==== TERM',term,'====')
-              hits=[m.start() for m in re.finditer(re.escape(term),s)]
-              print('count',len(hits),'positions',hits[:50])
-              for pos in hits[:20]:
-                  a=max(0,pos-1400); b=min(len(s),pos+2200)
-                  snippet=s[a:b].replace('\n','\\n')
-                  print('--- pos',pos,'---')
-                  print(snippet)
-          print('\n==== FORM-LIKE FUNCTIONS ====')
-          for m in re.finditer(r"\$\('(?:projectForm|taskForm|projectModal|taskModal)'\)|getElementById\('(?:projectForm|taskForm|projectModal|taskModal)'\)",s):
-              pos=m.start(); print('---',m.group(0),'@',pos,'---'); print(s[max(0,pos-1800):min(len(s),pos+2600)].replace('\n','\\n'))
+          app=Path('assets/app.js')
+          s=app.read_text(encoding='utf-8')
+          s=re.sub(r"\n?/\* Fast create render v11[0-9] start \*/.*?/\* Fast create render v11[0-9] end \*/\n?","\n",s,flags=re.S)
+          s=re.sub(r"\n?/\* Clean render optimization v11[0-9] start \*/.*?/\* Clean render optimization v11[0-9] end \*/\n?","\n",s,flags=re.S)
+          helper="""
+          /* Clean render optimization v116 start */
+          function renderMetricsOnly(){if($('mProjects'))$('mProjects').textContent=S.projects.length;if($('mOpen'))$('mOpen').textContent=S.tasks.filter(t=>t.status!=='done').length;if($('mOverdue'))$('mOverdue').textContent=S.tasks.filter(t=>t.status!=='done'&&t.due_date&&t.due_date<today()).length;if($('mUsers'))$('mUsers').textContent=S.users.length}
+          function selectSignature(){return JSON.stringify({p:S.projects.map(p=>[p.id,p.name,p.owner_id,p.status]),u:S.users.map(u=>[u.id,u.display_name,u.email])})}
+          function selectsMaybe(){let sig=selectSignature();if(S.selectSignature===sig)return;S.selectSignature=sig;selects()}
+          function scheduleRender(reason){S.renderReason=reason||S.renderReason||'update';clearTimeout(S.renderTimer);S.renderTimer=setTimeout(()=>{S.renderTimer=null;try{renderMetricsOnly();if(S.view==='tasks')renderTasks();else if(S.view==='projects')renderProjects();else if(S.view==='timeline')renderTimeline();else if(S.view==='team')renderTeam();else if(S.view==='chat')renderChat();else if(S.view==='audit')renderAudit();else render()}catch(e){console.warn('[render]',e)}},60)}
+          /* Clean render optimization v116 end */
+          """
+          helper=re.sub(r'(?m)^          ','',helper).strip()
+          if 'function scheduleRender(reason)' not in s:
+            s=s.replace('\nasync function load(){','\n'+helper+'\nasync function load(){',1)
+          s=s.replace('function render(){selects();','function render(){selectsMaybe();',1)
+          s=s.replace('async function loadTasksSafe(){S.tasksLoading=true;S.taskError=\'\';render();try{','async function loadTasksSafe(opts={}){let silent=opts&&opts.silent===true;S.tasksLoading=true;S.taskError=\'\';if(!silent&&!S.tasks.length)render();try{',1)
+          s=s.replace('}finally{S.tasksLoading=false;render()}}\nasync function restore(){','}finally{S.tasksLoading=false;if(!silent)render()}}\nasync function restore(){',1)
+          s=s.replace('await loadTasksSafe();let ps=','await loadTasksSafe({silent:true});let ps=',1)
+          s=s.replace("setRealtimeStatus('подключён');render()}catch(e)","setRealtimeStatus('подключён');scheduleRender('soft-sync')}catch(e)",1)
+          s=re.sub(r"function scheduleRealtimeRender\(reason\)\{.*?\}\nfunction handleRealtimePayload", "function scheduleRealtimeRender(reason){scheduleRender(reason||'realtime')}\nfunction handleRealtimePayload", s, count=1, flags=re.S)
+          app.write_text(s,encoding='utf-8')
+          idx=Path('index.html')
+          h=idx.read_text(encoding='utf-8')
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v116",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v116",h)
+          idx.write_text(h,encoding='utf-8')
           PY
+          node --check assets/app.js
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add assets/app.js index.html
+          git diff --cached --quiet && echo 'No app changes to commit' && exit 0
+          git commit -m "Clean render scheduling and reduce UI jumps"
+          git push
