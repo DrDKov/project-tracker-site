@@ -1,4 +1,4 @@
-name: Task modal two column CSS v127
+name: Task modal two column CSS v128
 
 on:
   workflow_dispatch:
@@ -15,37 +15,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply CSS only
+      - name: Apply modal CSS
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
-          css=Path('assets/app.css')
-          c=css.read_text(encoding='utf-8')
-          c=re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?","\n",c,flags=re.S)
-          c += """
-
-/* Task modal two-column v127 start */
+          css_path = Path('assets/app.css')
+          css = css_path.read_text(encoding='utf-8')
+          css = re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?", "\n", css, flags=re.S)
+          block = """
+/* Task modal two-column v128 start */
 #taskModal.modal{width:min(1180px,calc(100vw - 32px))!important;max-width:1180px!important}
 #taskModal .modal-body{max-height:calc(100vh - 48px)!important;display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(360px,.95fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:0 18px!important;overflow:hidden!important;padding:20px!important}
 #taskModal .modal-head{grid-column:1/-1!important;grid-row:1!important;margin-bottom:16px!important}
 #taskModal #taskId{display:none!important}
-#taskModal .form-grid{grid-column:1!important;grid-row:2!important;border:1px solid #e5e7eb!important;border-radius:18px!important;padding:16px!important;overflow:auto!important;align-content:start!important}
-#taskModal .form-grid:before{content:'Основная информация';grid-column:1/-1;font-weight:900;font-size:15px;color:#0f172a}
-#taskModal .task-comments-block{grid-column:2!important;grid-row:2/4!important;margin:0!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#f8fafc!important;padding:16px!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:10px!important;overflow:hidden!important}
+#taskModal .form-grid{grid-column:1!important;grid-row:2!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#fff!important;padding:16px!important;overflow:auto!important;align-content:start!important;min-height:0!important;min-width:0!important}
+#taskModal .form-grid:before{content:'Основная информация';grid-column:1/-1;font-weight:900;font-size:15px;color:#0f172a;margin-bottom:2px}
+#taskModal .task-comments-block{grid-column:2!important;grid-row:2/4!important;margin:0!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#f8fafc!important;padding:16px!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:10px!important;overflow:hidden!important;min-height:0!important;min-width:0!important}
+#taskModal .task-comments-head{margin:0!important;padding-bottom:10px!important;border-bottom:1px solid #e5e7eb!important}
 #taskModal .task-comments-list{min-height:220px!important;max-height:none!important;overflow:auto!important;padding-right:4px!important}
 #taskModal .task-comment-form{margin-top:0!important;padding-top:10px!important;border-top:1px solid #e5e7eb!important}
-#taskModal .modal-actions{grid-column:1!important;grid-row:3!important;margin-top:0!important;padding:14px 16px 0!important;background:#fff!important}
-@media(max-width:920px){#taskModal.modal{width:min(760px,calc(100vw - 20px))!important}#taskModal .modal-body{overflow:auto!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;gap:12px!important}#taskModal .form-grid{grid-column:1!important;grid-row:2!important;overflow:visible!important}#taskModal .task-comments-block{grid-column:1!important;grid-row:3!important;min-height:360px!important}#taskModal .modal-actions{grid-column:1!important;grid-row:4!important;padding:0!important}}
-/* Task modal two-column v127 end */
+#taskModal #taskCommentText{min-height:76px!important}
+#taskModal .modal-actions{grid-column:1!important;grid-row:3!important;margin-top:0!important;padding:14px 16px 0!important;background:#fff!important;justify-content:flex-end!important}
+@media(max-width:920px){#taskModal.modal{width:min(760px,calc(100vw - 20px))!important}#taskModal .modal-body{overflow:auto!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;gap:12px!important;max-height:calc(100vh - 24px)!important}#taskModal .form-grid{grid-column:1!important;grid-row:2!important;overflow:visible!important}#taskModal .task-comments-block{grid-column:1!important;grid-row:3!important;min-height:360px!important}#taskModal .task-comments-list{min-height:180px!important;max-height:320px!important}#taskModal .modal-actions{grid-column:1!important;grid-row:4!important;padding:0!important}}
+/* Task modal two-column v128 end */
 """
-          css.write_text(c,encoding='utf-8')
-          idx=Path('index.html')
-          h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v127",h)
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v127",h)
-          idx.write_text(h,encoding='utf-8')
+          css_path.write_text(css.rstrip() + "\n\n" + block, encoding='utf-8')
+          idx = Path('index.html')
+          html = idx.read_text(encoding='utf-8')
+          html = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260508-v128", html)
+          html = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260508-v128", html)
+          idx.write_text(html, encoding='utf-8')
           PY
+          grep -q "Task modal two-column v128" assets/app.css
+          grep -q "assets/app.css?v=20260508-v128" index.html
+          grep -q "assets/app.js?v=20260508-v128" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html assets/app.css
