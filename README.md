@@ -64,5 +64,3 @@ http://localhost:8080/
 В архиве проверены: структура, отсутствие legacy-файлов, отсутствие старых script-ссылок, синтаксис `assets/app.js` через `node --check`.
 
 Полный 100% функциональный эквивалент можно подтвердить только после ручного regression-test на реальной Supabase-базе.
-
-<!-- trigger task card comments UI v118 -->
