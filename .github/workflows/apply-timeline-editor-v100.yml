@@ -1,4 +1,4 @@
-name: Force task comments loading v120
+name: Use RPC for task comment delete v121
 
 on:
   workflow_dispatch:
@@ -15,42 +15,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Force task comments loading
+      - name: Use RPC for task comment delete
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           app=Path('assets/app.js')
           s=app.read_text(encoding='utf-8')
-          s=s.replace('subtasks:[],messages:[]','subtasks:[],taskComments:[],messages:[]')
-          # Remove any previous attempted task_comments loader lines to avoid duplicates.
-          s=re.sub(r"S\.taskComments=await optional\('task_comments',S\.sb\.from\('task_comments'\)\.select\('\*'\)\.is\('deleted_at',null\)\.order\('created_at',\{ascending:true\}\),7000\);", "", s)
-          s=re.sub(r"S\.taskComments=await optional\('task_comments/realtime',S\.sb\.from\('task_comments'\)\.select\('\*'\)\.is\('deleted_at',null\)\.order\('created_at',\{ascending:true\}\),7000\);", "", s)
-          # Primary load: insert directly before project messages load.
-          marker="S.messages=await optional('project_messages',S.sb.from('project_messages').select('*').order('created_at',{ascending:true}),6000);"
-          loader="S.taskComments=await optional('task_comments',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);"
-          if marker not in s:
-            raise SystemExit('primary project_messages marker not found')
-          s=s.replace(marker, loader+marker, 1)
-          # Soft sync: insert directly after realtime subtasks load.
-          soft="S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);"
-          soft_loader="S.taskComments=await optional('task_comments/realtime',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);"
-          if soft not in s:
-            raise SystemExit('soft subtasks marker not found')
-          s=s.replace(soft, soft+soft_loader, 1)
+          # Replace direct soft-delete in deleteTaskComment(id) with RPC-first approach.
+          old="let r=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error;S.taskComments=S.taskComments.filter(x=>x.id!==id);renderTaskCommentsModal();scheduleRender('task-comment-delete')"
+          new="let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error){let fallback=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(fallback.error)throw fallback.error}S.taskComments=S.taskComments.filter(x=>x.id!==id);renderTaskCommentsModal();scheduleRender('task-comment-delete')"
+          if old in s:
+            s=s.replace(old,new,1)
+          elif "soft_delete_task_comment" not in s:
+            # Broader replacement for formatting differences.
+            s2=re.sub(r"let r=await S\.sb\.from\('task_comments'\)\.update\(\{deleted_at:new Date\(\)\.toISOString\(\)\}\)\.eq\('id',id\);if\(r\.error\)throw r\.error;", "let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error){let fallback=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(fallback.error)throw fallback.error}", s, count=1)
+            if s2==s:
+              raise SystemExit('deleteTaskComment direct update pattern not found')
+            s=s2
           app.write_text(s,encoding='utf-8')
           idx=Path('index.html')
           h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v120",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v120",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v121",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v121",h)
           idx.write_text(h,encoding='utf-8')
           PY
           node --check assets/app.js
-          grep -q "S.taskComments=await optional('task_comments',S.sb.from('task_comments')" assets/app.js
-          grep -q "S.taskComments=await optional('task_comments/realtime',S.sb.from('task_comments')" assets/app.js
+          grep -q "soft_delete_task_comment" assets/app.js
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add assets/app.js index.html
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Force task comments loading"
+          git commit -m "Use RPC for task comment delete"
           git push
