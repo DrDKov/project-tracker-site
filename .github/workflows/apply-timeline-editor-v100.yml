@@ -1,4 +1,4 @@
-name: Fix task card comments UI v118
+name: Fix persistent task comments v119
 
 on:
   workflow_dispatch:
@@ -6,7 +6,6 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/apply-timeline-editor-v100.yml'
-      - 'README.md'
 
 permissions:
   contents: write
@@ -16,38 +15,46 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix task card comments UI
+      - name: Load task comments persistently
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           app=Path('assets/app.js')
           s=app.read_text(encoding='utf-8')
+          # Ensure state exists.
           s=s.replace('subtasks:[],messages:[]','subtasks:[],taskComments:[],messages:[]')
-          if "S.taskComments=await optional('task_comments'" not in s:
-            s=s.replace("S.subtasks=await optional('task_subtasks',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),6000);", "S.subtasks=await optional('task_subtasks',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),6000);S.taskComments=await optional('task_comments',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);")
-            s=s.replace("S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);", "S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);S.taskComments=await optional('task_comments/realtime',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);")
-          new_card=r'''
-          function cardT(t){let over=t.status!=='done'&&t.due_date&&t.due_date<today(),ids=tids(t).map(uname).join(', ')||'Не назначено',fav=isTaskFavorite(t);return`<article class="task-card wk-task ${t.status==='done'?'wk-complete':''} ${over?'overdue':''}" draggable="true" data-task-id="${t.id}" style="--accent:${pcolor(t.project_id)};--bg:${rgba(pcolor(t.project_id),.12)};--bd:${rgba(pcolor(t.project_id),.34)};"><button type="button" class="task-fav-btn ${fav?'active':''}" data-id="${t.id}" aria-label="Избранное" title="Избранное">${fav?'★':'☆'}</button><label class="wk-done"><input type="checkbox" data-action="toggle-task" data-id="${t.id}" ${t.status==='done'?'checked':''}><span></span></label><div class="row"><span class="badge">${PR[t.priority]||t.priority||'—'}</span>${over?'<span class="badge high">Просрочено</span>':''}</div><h4>${esc(t.title)}</h4><p>${esc(pname(t.project_id))}</p><p class="muted">${fmt(t.start_date)} → ${fmt(t.due_date)}</p><p class="muted">${esc(ids)}</p>${t.notes?'<p class="muted task-desc-hint">Есть описание</p>':''}${doneWho(t)}${subBlock(t)}<div class="task-card-footer"><button type="button" class="task-comment-badge" data-action="open-task" data-id="${t.id}">💬 ${taskCommentCount(t.id)}</button><div class="task-more"><button type="button" class="task-more-btn" data-action="task-menu" data-id="${t.id}">⋯</button><div class="task-more-menu" data-menu-id="${t.id}"><button type="button" data-action="open-task" data-id="${t.id}">Редактировать</button><button type="button" class="danger" data-action="delete-task" data-id="${t.id}">Убрать</button></div></div></div></article>`}
-          '''
-          new_card=re.sub(r'(?m)^          ','',new_card).strip()
-          s2=re.sub(r"function cardT\(t\)\{.*?\nfunction render\(",new_card+'\nfunction render(',s,flags=re.S)
-          if s2==s:
-            raise SystemExit('cardT replacement failed')
-          s=s2
+          # Primary load: after task_subtasks, also load task_comments.
+          primary="S.subtasks=await optional('task_subtasks',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),6000);"
+          if primary in s and "S.taskComments=await optional('task_comments',S.sb.from('task_comments')" not in s:
+            s=s.replace(primary, primary+"S.taskComments=await optional('task_comments',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);")
+          # Soft realtime sync: refresh comments too.
+          soft="S.subtasks=await optional('task_subtasks/realtime',S.sb.from('task_subtasks').select('*').order('created_at',{ascending:true}),7000);"
+          if soft in s and "S.taskComments=await optional('task_comments/realtime'" not in s:
+            s=s.replace(soft, soft+"S.taskComments=await optional('task_comments/realtime',S.sb.from('task_comments').select('*').is('deleted_at',null).order('created_at',{ascending:true}),7000);")
+          # If the exact v118 replacement did not land, enforce compact card once.
+          if 'task-card-footer' not in s:
+            new_card=r'''
+            function cardT(t){let over=t.status!=='done'&&t.due_date&&t.due_date<today(),ids=tids(t).map(uname).join(', ')||'Не назначено',fav=isTaskFavorite(t);return`<article class="task-card wk-task ${t.status==='done'?'wk-complete':''} ${over?'overdue':''}" draggable="true" data-task-id="${t.id}" style="--accent:${pcolor(t.project_id)};--bg:${rgba(pcolor(t.project_id),.12)};--bd:${rgba(pcolor(t.project_id),.34)};"><button type="button" class="task-fav-btn ${fav?'active':''}" data-id="${t.id}" aria-label="Избранное" title="Избранное">${fav?'★':'☆'}</button><label class="wk-done"><input type="checkbox" data-action="toggle-task" data-id="${t.id}" ${t.status==='done'?'checked':''}><span></span></label><div class="row"><span class="badge">${PR[t.priority]||t.priority||'—'}</span>${over?'<span class="badge high">Просрочено</span>':''}</div><h4>${esc(t.title)}</h4><p>${esc(pname(t.project_id))}</p><p class="muted">${fmt(t.start_date)} → ${fmt(t.due_date)}</p><p class="muted">${esc(ids)}</p>${t.notes?'<p class="muted task-desc-hint">Есть описание</p>':''}${doneWho(t)}${subBlock(t)}<div class="task-card-footer"><button type="button" class="task-comment-badge" data-action="open-task" data-id="${t.id}">💬 ${taskCommentCount(t.id)}</button><div class="task-more"><button type="button" class="task-more-btn" data-action="task-menu" data-id="${t.id}">⋯</button><div class="task-more-menu" data-menu-id="${t.id}"><button type="button" data-action="open-task" data-id="${t.id}">Редактировать</button><button type="button" class="danger" data-action="delete-task" data-id="${t.id}">Убрать</button></div></div></div></article>`}
+            '''
+            new_card=re.sub(r'(?m)^            ','',new_card).strip()
+            s2=re.sub(r"function cardT\(t\)\{.*?\nfunction render\(",new_card+'\nfunction render(',s,flags=re.S)
+            if s2==s:
+              raise SystemExit('cardT replacement failed')
+            s=s2
           app.write_text(s,encoding='utf-8')
           idx=Path('index.html')
           h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v118",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v118",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v119",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v119",h)
           idx.write_text(h,encoding='utf-8')
           PY
           node --check assets/app.js
+          grep -q "task_comments" assets/app.js
           grep -q "task-card-footer" assets/app.js
-          grep -q "taskCommentCount" assets/app.js
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add assets/app.js index.html
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Fix task card comments UI"
+          git commit -m "Fix persistent task comments"
           git push
