@@ -1,4 +1,4 @@
-name: Task modal two column CSS v129
+name: Force task modal layout v130
 
 on:
   workflow_dispatch:
@@ -15,30 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply modal CSS safely
+      - name: Force modal layout
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64
           import re
-          modal_css_b64 = 'LyogVGFzayBtb2RhbCB0d28tY29sdW1uIHYxMjkgc3RhcnQgKi8KI3Rhc2tNb2RhbC5tb2RhbHt3aWR0aDptaW4oMTE4MHB4LGNhbGMoMTAwdncgLSAzMnB4KSkhaW1wb3J0YW50O21heC13aWR0aDoxMTgwcHghaW1wb3J0YW50fQojdGFza01vZGFsIC5tb2RhbC1ib2R5e21heC1oZWlnaHQ6Y2FsYygxMDB2aCAtIDQ4cHgpIWltcG9ydGFudDtkaXNwbGF5OmdyaWQhaW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtY29sdW1uczptaW5tYXgoMCwxLjQ1ZnIpIG1pbm1heCgzNjBweCwuOTVmcikhaW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtcm93czphdXRvIG1pbm1heCgwLDFmcikgYXV0byFpbXBvcnRhbnQ7Z2FwOjAgMThweCFpbXBvcnRhbnQ7b3ZlcmZsb3c6aGlkZGVuIWltcG9ydGFudDtwYWRkaW5nOjIwcHghaW1wb3J0YW50fQojdGFza01vZGFsIC5tb2RhbC1oZWFke2dyaWQtY29sdW1uOjEvLTEhaW1wb3J0YW50O2dyaWQtcm93OjEhaW1wb3J0YW50O21hcmdpbi1ib3R0b206MTZweCFpbXBvcnRhbnR9CiN0YXNrTW9kYWwgI3Rhc2tJZHtkaXNwbGF5Om5vbmUhaW1wb3J0YW50fQojdGFza01vZGFsIC5mb3JtLWdyaWR7Z3JpZC1jb2x1bW46MSFpbXBvcnRhbnQ7Z3JpZC1yb3c6MiFpbXBvcnRhbnQ7Ym9yZGVyOjFweCBzb2xpZCAjZTVlN2ViIWltcG9ydGFudDtib3JkZXItcmFkaXVzOjE4cHghaW1wb3J0YW50O2JhY2tncm91bmQ6I2ZmZiFpbXBvcnRhbnQ7cGFkZGluZzoxNnB4IWltcG9ydGFudDtvdmVyZmxvdzphdXRvIWltcG9ydGFudDthbGlnbi1jb250ZW50OnN0YXJ0IWltcG9ydGFudDttaW4taGVpZ2h0OjAhaW1wb3J0YW50O21pbi13aWR0aDowIWltcG9ydGFudH0KI3Rhc2tNb2RhbCAuZm9ybS1ncmlkOmJlZm9yZXtjb250ZW50OifQntGB0L3QvtCy0L3QsNGPINC40L3RhNC+0YDQvNCw0YbQuNGPJztncmlkLWNvbHVtbjoxLy0xO2ZvbnQtd2VpZ2h0OjkwMDtmb250LXNpemU6MTVweDtjb2xvcjojMGYxNzJhO21hcmdpbi1ib3R0b206MnB4fQojdGFza01vZGFsIC50YXNrLWNvbW1lbnRzLWJsb2Nre2dyaWQtY29sdW1uOjIhaW1wb3J0YW50O2dyaWQtcm93OjIvNCFpbXBvcnRhbnQ7bWFyZ2luOjAhaW1wb3J0YW50O2JvcmRlcjoxcHggc29saWQgI2U1ZTdlYiFpbXBvcnRhbnQ7Ym9yZGVyLXJhZGl1czoxOHB4IWltcG9ydGFudDtiYWNrZ3JvdW5kOiNmOGZhZmMhaW1wb3J0YW50O3BhZGRpbmc6MTZweCFpbXBvcnRhbnQ7ZGlzcGxheTpncmlkIWltcG9ydGFudDtncmlkLXRlbXBsYXRlLXJvd3M6YXV0byBtaW5tYXgoMCwxZnIpIGF1dG8haW1wb3J0YW50O2dhcDoxMHB4IWltcG9ydGFudDtvdmVyZmxvdzpoaWRkZW4haW1wb3J0YW50O21pbi1oZWlnaHQ6MCFpbXBvcnRhbnQ7bWluLXdpZHRoOjAhaW1wb3J0YW50fQojdGFza01vZGFsIC50YXNrLWNvbW1lbnRzLWhlYWR7bWFyZ2luOjAhaW1wb3J0YW50O3BhZGRpbmctYm90dG9tOjEwcHghaW1wb3J0YW50O2JvcmRlci1ib3R0b206MXB4IHNvbGlkICNlNWU3ZWIhaW1wb3J0YW50fQojdGFza01vZGFsIC50YXNrLWNvbW1lbnRzLWxpc3R7bWluLWhlaWdodDoyMjBweCFpbXBvcnRhbnQ7bWF4LWhlaWdodDpub25lIWltcG9ydGFudDtvdmVyZmxvdzphdXRvIWltcG9ydGFudDtwYWRkaW5nLXJpZ2h0OjRweCFpbXBvcnRhbnR9CiN0YXNrTW9kYWwgLnRhc2stY29tbWVudC1mb3Jte21hcmdpbi10b3A6MCFpbXBvcnRhbnQ7cGFkZGluZy10b3A6MTBweCFpbXBvcnRhbnQ7Ym9yZGVyLXRvcDoxcHggc29saWQgI2U1ZTdlYiFpbXBvcnRhbnR9CiN0YXNrTW9kYWwgI3Rhc2tDb21tZW50VGV4dHttaW4taGVpZ2h0Ojc2cHghaW1wb3J0YW50fQojdGFza01vZGFsIC5tb2RhbC1hY3Rpb25ze2dyaWQtY29sdW1uOjEhaW1wb3J0YW50O2dyaWQtcm93OjMhaW1wb3J0YW50O21hcmdpbi10b3A6MCFpbXBvcnRhbnQ7cGFkZGluZzoxNHB4IDE2cHggMCFpbXBvcnRhbnQ7YmFja2dyb3VuZDojZmZmIWltcG9ydGFudDtqdXN0aWZ5LWNvbnRlbnQ6ZmxleC1lbmQhaW1wb3J0YW50fQpAbWVkaWEobWF4LXdpZHRoOjkyMHB4KXsjdGFza01vZGFsLm1vZGFse3dpZHRoOm1pbig3NjBweCxjYWxjKDEwMHZ3IC0gMjBweCkpIWltcG9ydGFudH0jdGFza01vZGFsIC5tb2RhbC1ib2R5e292ZXJmbG93OmF1dG8haW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIhaW1wb3J0YW50O2dyaWQtdGVtcGxhdGUtcm93czphdXRvIGF1dG8gYXV0byBhdXRvIWltcG9ydGFudDtnYXA6MTJweCFpbXBvcnRhbnQ7bWF4LWhlaWdodDpjYWxjKDEwMHZoIC0gMjRweCkhaW1wb3J0YW50fSN0YXNrTW9kYWwgLmZvcm0tZ3JpZHtncmlkLWNvbHVtbjoxIWltcG9ydGFudDtncmlkLXJvdzoyIWltcG9ydGFudDtvdmVyZmxvdzp2aXNpYmxlIWltcG9ydGFudH0jdGFza01vZGFsIC50YXNrLWNvbW1lbnRzLWJsb2Nre2dyaWQtY29sdW1uOjEhaW1wb3J0YW50O2dyaWQtcm93OjMhaW1wb3J0YW50O21pbi1oZWlnaHQ6MzYwcHghaW1wb3J0YW50fSN0YXNrTW9kYWwgLnRhc2stY29tbWVudHMtbGlzdHttaW4taGVpZ2h0OjE4MHB4IWltcG9ydGFudDttYXgtaGVpZ2h0OjMyMHB4IWltcG9ydGFudH0jdGFza01vZGFsIC5tb2RhbC1hY3Rpb25ze2dyaWQtY29sdW1uOjEhaW1wb3J0YW50O2dyaWQtcm93OjQhaW1wb3J0YW50O3BhZGRpbmc6MCFpbXBvcnRhbnR9fQovKiBUYXNrIG1vZGFsIHR3by1jb2x1bW4gdjEyOSBlbmQgKi8='
-          block = base64.b64decode(modal_css_b64).decode('utf-8')
-          css_path = Path('assets/app.css')
-          css = css_path.read_text(encoding='utf-8')
-          css = re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?", "\n", css, flags=re.S)
-          css_path.write_text(css.rstrip() + "\n\n" + block + "\n", encoding='utf-8')
-          idx = Path('index.html')
-          html = idx.read_text(encoding='utf-8')
-          html = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260508-v129", html)
-          html = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260508-v129", html)
-          idx.write_text(html, encoding='utf-8')
+          css_file=Path('assets/app.css')
+          css=css_file.read_text(encoding='utf-8')
+          css=re.sub(r"\n?/\* Force task modal two-column v13[0-9] start \*/.*?/\* Force task modal two-column v13[0-9] end \*/\n?","\n",css,flags=re.S)
+          add="/* Force task modal two-column v130 start */\n@media(min-width:701px){dialog#taskModal.modal,#taskModal[open]{width:min(1240px,calc(100vw - 28px))!important;max-width:1240px!important}dialog#taskModal>form#taskForm.modal-body{width:100%!important;max-height:calc(100vh - 44px)!important;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(520px,1.35fr) minmax(390px,.9fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;column-gap:20px!important;row-gap:14px!important;padding:20px!important}dialog#taskModal>form#taskForm>.modal-head{grid-column:1/3!important;grid-row:1!important;margin:0!important}dialog#taskModal>form#taskForm>input#taskId{display:none!important}dialog#taskModal>form#taskForm>.form-grid{grid-column:1!important;grid-row:2!important;min-width:0!important;min-height:0!important;overflow:auto!important;align-content:start!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#fff!important;padding:16px!important}dialog#taskModal>form#taskForm>#taskCommentsBlock.task-comments-block{grid-column:2!important;grid-row:2/4!important;min-width:0!important;min-height:0!important;margin:0!important;overflow:hidden!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:10px!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#f8fafc!important;padding:16px!important}dialog#taskModal>form#taskForm>#taskCommentsBlock .task-comments-list{min-height:0!important;height:auto!important;max-height:none!important;overflow:auto!important}dialog#taskModal>form#taskForm>.modal-actions{grid-column:1!important;grid-row:3!important;margin:0!important;padding:0 16px 0!important;align-self:end!important}}@media(max-width:700px){dialog#taskModal>form#taskForm.modal-body{display:block!important;max-height:calc(100vh - 24px)!important;overflow:auto!important}}\n/* Force task modal two-column v130 end */\n"
+          css_file.write_text(css.rstrip()+"\n\n"+add,encoding='utf-8')
+          idx=Path('index.html')
+          html=idx.read_text(encoding='utf-8')
+          html=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v130",html)
+          html=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v130",html)
+          idx.write_text(html,encoding='utf-8')
           PY
-          grep -q "Task modal two-column v129" assets/app.css
-          grep -q "assets/app.css?v=20260508-v129" index.html
-          grep -q "assets/app.js?v=20260508-v129" index.html
+          grep -q "Force task modal two-column v130" assets/app.css
+          grep -q "assets/app.css?v=20260508-v130" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html assets/app.css
           git diff --cached --quiet && exit 0
-          git commit -m "Apply task modal two column CSS"
+          git commit -m "Force task modal two column layout"
           git push
