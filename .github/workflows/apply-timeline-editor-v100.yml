@@ -1,4 +1,4 @@
-name: Apply task modal two column CSS v126
+name: Task modal two column CSS v127
 
 on:
   workflow_dispatch:
@@ -15,133 +15,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Apply two-column layout to existing task modal
+      - name: Apply CSS only
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
+          css=Path('assets/app.css')
+          c=css.read_text(encoding='utf-8')
+          c=re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?","\n",c,flags=re.S)
+          c += """
 
-          css = Path('assets/app.css')
-          c = css.read_text(encoding='utf-8')
-          c = re.sub(r"\n?/\* Task modal two-column v12[0-9] start \*/.*?/\* Task modal two-column v12[0-9] end \*/\n?", "\n", c, flags=re.S)
-          add = r'''
-/* Task modal two-column v126 start */
-#taskModal.modal{
-  width:min(1180px,calc(100vw - 32px))!important;
-  max-width:1180px!important;
-}
-#taskModal .modal-body{
-  width:100%!important;
-  max-height:calc(100vh - 48px)!important;
-  padding:20px!important;
-  display:grid!important;
-  grid-template-columns:minmax(0,1.45fr) minmax(360px,.95fr)!important;
-  grid-template-rows:auto minmax(0,1fr) auto!important;
-  gap:0 18px!important;
-  overflow:hidden!important;
-}
-#taskModal .modal-head{
-  grid-column:1 / -1!important;
-  grid-row:1!important;
-  margin-bottom:16px!important;
-}
+/* Task modal two-column v127 start */
+#taskModal.modal{width:min(1180px,calc(100vw - 32px))!important;max-width:1180px!important}
+#taskModal .modal-body{max-height:calc(100vh - 48px)!important;display:grid!important;grid-template-columns:minmax(0,1.45fr) minmax(360px,.95fr)!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:0 18px!important;overflow:hidden!important;padding:20px!important}
+#taskModal .modal-head{grid-column:1/-1!important;grid-row:1!important;margin-bottom:16px!important}
 #taskModal #taskId{display:none!important}
-#taskModal .form-grid{
-  grid-column:1!important;
-  grid-row:2!important;
-  min-width:0!important;
-  min-height:0!important;
-  align-content:start!important;
-  border:1px solid #e5e7eb!important;
-  border-radius:18px!important;
-  background:#fff!important;
-  padding:16px!important;
-  overflow:auto!important;
-}
-#taskModal .form-grid:before{
-  content:'Основная информация';
-  grid-column:1 / -1;
-  display:block;
-  margin:0 0 2px;
-  font-weight:900;
-  font-size:15px;
-  color:#0f172a;
-}
-#taskModal .task-comments-block{
-  grid-column:2!important;
-  grid-row:2 / 4!important;
-  min-width:0!important;
-  min-height:0!important;
-  margin:0!important;
-  border:1px solid #e5e7eb!important;
-  border-radius:18px!important;
-  background:#f8fafc!important;
-  padding:16px!important;
-  display:grid!important;
-  grid-template-rows:auto minmax(0,1fr) auto!important;
-  gap:10px!important;
-  overflow:hidden!important;
-}
-#taskModal .task-comments-head{
-  margin:0!important;
-  padding-bottom:10px!important;
-  border-bottom:1px solid #e5e7eb!important;
-}
-#taskModal .task-comments-head h4{margin:0!important}
-#taskModal .task-comments-list{
-  min-height:220px!important;
-  max-height:none!important;
-  overflow:auto!important;
-  padding-right:4px!important;
-}
-#taskModal .task-comment-form{
-  margin-top:0!important;
-  padding-top:10px!important;
-  border-top:1px solid #e5e7eb!important;
-}
-#taskModal #taskCommentText{min-height:76px!important}
-#taskModal .modal-actions{
-  grid-column:1!important;
-  grid-row:3!important;
-  margin-top:0!important;
-  padding:14px 16px 0!important;
-  justify-content:flex-end!important;
-  background:linear-gradient(180deg,rgba(255,255,255,.72),#fff 38%)!important;
-}
-@media(max-width:920px){
-  #taskModal.modal{width:min(760px,calc(100vw - 20px))!important}
-  #taskModal .modal-body{
-    max-height:calc(100vh - 24px)!important;
-    overflow:auto!important;
-    padding:14px!important;
-    grid-template-columns:1fr!important;
-    grid-template-rows:auto auto auto auto!important;
-    gap:12px!important;
-  }
-  #taskModal .modal-head{grid-column:1!important;grid-row:1!important;margin-bottom:0!important}
-  #taskModal .form-grid{grid-column:1!important;grid-row:2!important;overflow:visible!important}
-  #taskModal .task-comments-block{grid-column:1!important;grid-row:3!important;min-height:360px!important}
-  #taskModal .task-comments-list{min-height:180px!important;max-height:320px!important}
-  #taskModal .modal-actions{grid-column:1!important;grid-row:4!important;padding:0!important;background:#fff!important}
-}
-/* Task modal two-column v126 end */
-'''
-          c = c.rstrip() + "\n\n" + add.strip() + "\n"
-          css.write_text(c, encoding='utf-8')
-
-          idx = Path('index.html')
-          h = idx.read_text(encoding='utf-8')
-          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260508-v126", h)
-          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260508-v126", h)
-          idx.write_text(h, encoding='utf-8')
+#taskModal .form-grid{grid-column:1!important;grid-row:2!important;border:1px solid #e5e7eb!important;border-radius:18px!important;padding:16px!important;overflow:auto!important;align-content:start!important}
+#taskModal .form-grid:before{content:'Основная информация';grid-column:1/-1;font-weight:900;font-size:15px;color:#0f172a}
+#taskModal .task-comments-block{grid-column:2!important;grid-row:2/4!important;margin:0!important;border:1px solid #e5e7eb!important;border-radius:18px!important;background:#f8fafc!important;padding:16px!important;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;gap:10px!important;overflow:hidden!important}
+#taskModal .task-comments-list{min-height:220px!important;max-height:none!important;overflow:auto!important;padding-right:4px!important}
+#taskModal .task-comment-form{margin-top:0!important;padding-top:10px!important;border-top:1px solid #e5e7eb!important}
+#taskModal .modal-actions{grid-column:1!important;grid-row:3!important;margin-top:0!important;padding:14px 16px 0!important;background:#fff!important}
+@media(max-width:920px){#taskModal.modal{width:min(760px,calc(100vw - 20px))!important}#taskModal .modal-body{overflow:auto!important;grid-template-columns:1fr!important;grid-template-rows:auto auto auto auto!important;gap:12px!important}#taskModal .form-grid{grid-column:1!important;grid-row:2!important;overflow:visible!important}#taskModal .task-comments-block{grid-column:1!important;grid-row:3!important;min-height:360px!important}#taskModal .modal-actions{grid-column:1!important;grid-row:4!important;padding:0!important}}
+/* Task modal two-column v127 end */
+"""
+          css.write_text(c,encoding='utf-8')
+          idx=Path('index.html')
+          h=idx.read_text(encoding='utf-8')
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v127",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v127",h)
+          idx.write_text(h,encoding='utf-8')
           PY
-          node --check assets/app.js
-          grep -q "Task modal two-column v126" assets/app.css
-          grep -q "assets/app.css?v=20260508-v126" index.html
-          grep -q "assets/app.js?v=20260508-v126" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html assets/app.css
-          git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Apply task modal two column layout"
+          git diff --cached --quiet && exit 0
+          git commit -m "Apply task modal two column CSS"
           git push
