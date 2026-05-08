@@ -1,4 +1,4 @@
-name: Use RPC for task comment delete v121
+name: Replace task comment delete function v122
 
 on:
   workflow_dispatch:
@@ -15,36 +15,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Use RPC for task comment delete
+      - name: Replace deleteTaskComment function
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           app=Path('assets/app.js')
           s=app.read_text(encoding='utf-8')
-          # Replace direct soft-delete in deleteTaskComment(id) with RPC-first approach.
-          old="let r=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(r.error)throw r.error;S.taskComments=S.taskComments.filter(x=>x.id!==id);renderTaskCommentsModal();scheduleRender('task-comment-delete')"
-          new="let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error){let fallback=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(fallback.error)throw fallback.error}S.taskComments=S.taskComments.filter(x=>x.id!==id);renderTaskCommentsModal();scheduleRender('task-comment-delete')"
-          if old in s:
-            s=s.replace(old,new,1)
-          elif "soft_delete_task_comment" not in s:
-            # Broader replacement for formatting differences.
-            s2=re.sub(r"let r=await S\.sb\.from\('task_comments'\)\.update\(\{deleted_at:new Date\(\)\.toISOString\(\)\}\)\.eq\('id',id\);if\(r\.error\)throw r\.error;", "let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error){let fallback=await S.sb.from('task_comments').update({deleted_at:new Date().toISOString()}).eq('id',id);if(fallback.error)throw fallback.error}", s, count=1)
-            if s2==s:
-              raise SystemExit('deleteTaskComment direct update pattern not found')
-            s=s2
+          new_func="""async function deleteTaskComment(id){let c=(S.taskComments||[]).find(x=>x.id===id);if(!c)return;if(!canDeleteComment(c)){alert('Нет прав на удаление комментария');return}let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error)throw r.error;S.taskComments=S.taskComments.filter(x=>x.id!==id);renderTaskCommentsModal();scheduleRender('task-comment-delete')}"""
+          s2=re.sub(r"async function deleteTaskComment\(id\)\{.*?\}\s*\(\(\)=>\{", new_func+"\n(()=>{", s, count=1, flags=re.S)
+          if s2==s:
+            raise SystemExit('deleteTaskComment function replacement failed')
+          s=s2
           app.write_text(s,encoding='utf-8')
           idx=Path('index.html')
           h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v121",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v121",h)
+          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v122",h)
+          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v122",h)
           idx.write_text(h,encoding='utf-8')
           PY
           node --check assets/app.js
           grep -q "soft_delete_task_comment" assets/app.js
+          ! grep -q "from('task_comments').update" assets/app.js
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add assets/app.js index.html
           git diff --cached --quiet && echo 'No app changes to commit' && exit 0
-          git commit -m "Use RPC for task comment delete"
+          git commit -m "Replace task comment delete with RPC"
           git push
