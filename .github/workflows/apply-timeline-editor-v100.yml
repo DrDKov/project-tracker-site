@@ -1,4 +1,4 @@
-name: Task comment composer compact v131
+name: Task comment composer icon button v132
 
 on:
   workflow_dispatch:
@@ -15,28 +15,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Make comment composer compact
+      - name: Replace comment button text with icon
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
+          idx=Path('index.html')
+          html=idx.read_text(encoding='utf-8')
+          old="<button class='btn secondary' type='button' data-action='add-task-comment'>Добавить комментарий</button>"
+          new="<button class='btn secondary task-comment-send' type='button' data-action='add-task-comment' aria-label='Добавить комментарий' title='Добавить комментарий'>➤</button>"
+          if old in html:
+            html=html.replace(old,new,1)
+          elif "task-comment-send" not in html:
+            html=re.sub(r"<button([^>]*data-action=['\"]add-task-comment['\"][^>]*)>.*?</button>",r"<button\1 class='btn secondary task-comment-send' aria-label='Добавить комментарий' title='Добавить комментарий'>➤</button>",html,count=1,flags=re.S)
+          html=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v132",html)
+          html=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v132",html)
+          idx.write_text(html,encoding='utf-8')
           css_file=Path('assets/app.css')
           css=css_file.read_text(encoding='utf-8')
           css=re.sub(r"\n?/\* Task comment composer v13[0-9] start \*/.*?/\* Task comment composer v13[0-9] end \*/\n?","\n",css,flags=re.S)
-          add="/* Task comment composer v131 start */\n#taskModal #taskCommentsBlock .task-comment-form{display:grid!important;grid-template-columns:minmax(0,1fr) 42px!important;gap:8px!important;align-items:end!important;margin-top:0!important;padding-top:10px!important;border-top:1px solid #e5e7eb!important}\n#taskModal #taskCommentText{width:100%!important;min-height:128px!important;max-height:240px!important;resize:vertical!important;line-height:1.42!important;padding:12px!important}\n#taskModal #taskCommentsBlock [data-action='add-task-comment']{width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;border-radius:14px!important;font-size:0!important;line-height:1!important;background:#0f172a!important;color:#fff!important;box-shadow:0 8px 18px rgba(15,23,42,.18)!important}\n#taskModal #taskCommentsBlock [data-action='add-task-comment']::before{content:'➤';font-size:17px!important;font-weight:900!important;display:block!important;transform:translateX(1px)!important}\n#taskModal #taskCommentsBlock [data-action='add-task-comment']:hover{filter:brightness(1.08)!important}\n#taskModal #taskCommentsBlock [data-action='add-task-comment']:active{transform:translateY(1px)!important}\n@media(max-width:700px){#taskModal #taskCommentsBlock .task-comment-form{grid-template-columns:minmax(0,1fr) 40px!important}#taskModal #taskCommentText{min-height:110px!important}#taskModal #taskCommentsBlock [data-action='add-task-comment']{width:40px!important;height:40px!important;min-width:40px!important}}\n/* Task comment composer v131 end */\n"
+          add="/* Task comment composer v132 start */\n#taskModal #taskCommentsBlock .task-comment-form{display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;gap:8px!important;align-items:end!important;margin-top:0!important;padding-top:10px!important;border-top:1px solid #e5e7eb!important}\n#taskModal #taskCommentText{width:100%!important;min-height:140px!important;max-height:260px!important;resize:vertical!important;line-height:1.42!important;padding:12px!important}\n#taskModal #taskCommentsBlock button.task-comment-send,#taskModal button.task-comment-send.btn,#taskModal #taskCommentsBlock button[data-action='add-task-comment']{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;padding:0!important;border-radius:14px!important;font-size:18px!important;line-height:1!important;display:grid!important;place-items:center!important;background:#0f172a!important;color:#fff!important;box-shadow:0 8px 18px rgba(15,23,42,.18)!important;overflow:hidden!important;white-space:nowrap!important}\n#taskModal #taskCommentsBlock button.task-comment-send:hover{filter:brightness(1.08)!important}\n#taskModal #taskCommentsBlock button.task-comment-send:active{transform:translateY(1px)!important}\n@media(max-width:700px){#taskModal #taskCommentsBlock .task-comment-form{grid-template-columns:minmax(0,1fr) 40px!important}#taskModal #taskCommentText{min-height:118px!important}#taskModal #taskCommentsBlock button.task-comment-send,#taskModal button.task-comment-send.btn,#taskModal #taskCommentsBlock button[data-action='add-task-comment']{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important}}\n/* Task comment composer v132 end */\n"
           css_file.write_text(css.rstrip()+"\n\n"+add,encoding='utf-8')
-          idx=Path('index.html')
-          html=idx.read_text(encoding='utf-8')
-          html=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v131",html)
-          html=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v131",html)
-          idx.write_text(html,encoding='utf-8')
           PY
-          grep -q "Task comment composer v131" assets/app.css
-          grep -q "assets/app.css?v=20260508-v131" index.html
-          grep -q "assets/app.js?v=20260508-v131" index.html
+          grep -q "task-comment-send" index.html
+          grep -q "Task comment composer v132" assets/app.css
+          grep -q "assets/app.css?v=20260508-v132" index.html
+          grep -q "assets/app.js?v=20260508-v132" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html assets/app.css
           git diff --cached --quiet && exit 0
-          git commit -m "Make task comment composer compact"
+          git commit -m "Use compact icon button for task comments"
           git push
