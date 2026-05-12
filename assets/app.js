@@ -1,7 +1,14 @@
-/* App loader v133: keep canonical app code untouched and add week-day task plus helper. */
+/* App loader v134: keep canonical app code untouched and load current week-day task plus helper. */
 (()=>{
-  if(window.__PROJECT_TRACKER_APP_LOADER_V133__) return;
-  window.__PROJECT_TRACKER_APP_LOADER_V133__ = 1;
-  const base = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@e481d7309e43a8dd83b8325a0b1a24cfde86b06b/assets/';
-  document.write('<script src="'+base+'app.js"><\/script><script src="'+base+'week-day-task-plus-v133.js"><\/script>');
+  if(window.__PROJECT_TRACKER_APP_LOADER_V134__) return;
+  window.__PROJECT_TRACKER_APP_LOADER_V134__ = 1;
+  const appUrl = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@e481d7309e43a8dd83b8325a0b1a24cfde86b06b/assets/app.js';
+  const helperUrl = 'assets/week-day-task-plus-v133.js?v=20260512-v134';
+  function load(src, cb){
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = cb || null;
+    document.head.appendChild(s);
+  }
+  load(appUrl, ()=>load(helperUrl));
 })();
