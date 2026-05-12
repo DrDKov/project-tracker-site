@@ -1,0 +1,96 @@
+name: Apply timeline editor v101
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-timeline-editor-v101.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch timeline editor into main files
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          app = Path('assets/app.js')
+          s = app.read_text(encoding='utf-8')
+          blocks = [
+              ('/* Timeline editor v98 start */','/* Timeline editor v98 end */'),
+              ('/* Timeline editor v99 start */','/* Timeline editor v99 end */'),
+              ('/* Timeline editor v100 start */','/* Timeline editor v100 end */'),
+              ('/* Timeline editor v101 start */','/* Timeline editor v101 end */')
+          ]
+          for a0,b0 in blocks:
+              if a0 in s and b0 in s:
+                  a=s.index(a0); b=s.index(b0,a)+len(b0); s=s[:a]+s[b:]
+          s += r'''
+
+/* Timeline editor v101 start */
+(()=>{if(window.__TIMELINE_EDITOR_V101__)return;window.__TIMELINE_EDITOR_V101__=1;
+const DAY=86400000,LANE=78,STORE='pt_timeline_lanes_v101';
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const D=v=>new Date(String(v||ymd(new Date())).slice(0,10)+'T00:00:00');
+const add=(v,n)=>{let d=D(v);d.setDate(d.getDate()+n);return ymd(d)};
+const diff=(a,b)=>Math.round((D(b)-D(a))/DAY);
+const norm=v=>String(v||'').trim().replace(/\s+/g,' ').toLowerCase();
+function tlBox(){return document.querySelector('.wk-tl')}
+function allTasks(){return Array.isArray(window.tasks)?window.tasks:[]}
+function allProjects(){return Array.isArray(window.projects)?window.projects:[]}
+function sbClient(){return window.sb||null}
+function laneMap(){try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch{return{}}}
+function saveLaneMap(m){try{localStorage.setItem(STORE,JSON.stringify(m))}catch{}}
+function dayW(tl){let d=tl.querySelector('.wk-tlday');return d?Math.max(40,d.getBoundingClientRect().width):150}
+function firstDate(tl){let first=tl.querySelector('.wk-tlday b')?.textContent?.trim();let year=new Date().getFullYear();if(/^\d{2}\.\d{2}$/.test(first)){let [dd,mm]=first.split('.');return `${year}-${mm}-${dd}`}return ymd(new Date())}
+function resolve(el){let kind=el.classList.contains('project')?'project':'task';let title=norm(el.querySelector('h4')?.textContent||'');let arr=kind==='project'?allProjects():allTasks();let row=arr.find(x=>norm(x.name||x.title)===title);if(!row&&el.dataset.tlId)row=arr.find(x=>String(x.id)===String(el.dataset.tlId));if(!row)return null;return{kind,row,id:row.id,key:kind+':'+row.id}}
+function addControls(tl){tl.querySelectorAll('.wk-tlitem').forEach(el=>{let r=resolve(el);if(r){el.dataset.tlKind=r.kind;el.dataset.tlId=r.id;el.dataset.tlKey=r.key;el.dataset.status=r.row.status||'';}if(!el.__tl101){el.__tl101=1;el.insertAdjacentHTML('beforeend','<span class="tl101-move" title="Перетащить по датам и вертикальному порядку">↕</span><span class="tl101-resize tl101-left" title="Изменить дату начала"></span><span class="tl101-resize tl101-right" title="Изменить срок"></span>');}})}
+function follow(tl){let sc=tl.scrollLeft,dw=dayW(tl);tl.querySelectorAll('.wk-tlitem').forEach(el=>{let h=el.querySelector('h4'),sub=el.querySelector('div');if(!h)return;let long=el.offsetWidth>dw+4;el.classList.toggle('tl101-long',long);[h,sub].filter(Boolean).forEach(x=>{x.classList.add('tl101-label');x.style.transform='translateX(0px)';x.title=x.textContent||''});if(!long)return;let left=el.offsetLeft,w=el.offsetWidth,pad=12,raw=Math.max(0,sc-left+pad);let labelW=Math.max(h.scrollWidth,sub?.scrollWidth||0);let shift=Math.min(raw,Math.max(0,w-Math.min(labelW,w-pad*2)-pad));h.style.transform=`translateX(${shift}px)`;if(sub)sub.style.transform=`translateX(${shift}px)`;});}
+function applyLanes(tl){let m=laneMap(),body=tl.querySelector('.wk-tlbody'),max=0;tl.querySelectorAll('.wk-tlitem').forEach(el=>{let k=el.dataset.tlKey;if(k&&m[k]!=null){let lane=Math.max(0,+m[k]||0);el.style.top=(lane*LANE+8)+'px';max=Math.max(max,lane);}});if(body&&max>0)body.style.height=Math.max(body.offsetHeight,(max+1)*LANE+24)+'px'}
+async function saveDates(kind,id,patch){let arr=kind==='project'?allProjects():allTasks();let row=arr.find(x=>String(x.id)===String(id));if(row)Object.assign(row,patch);let c=sbClient();if(!c)return;let table=kind==='project'?'projects':'tasks';let r=await c.from(table).update(patch).eq('id',id);if(r.error)throw r.error}
+function installDrag(tl){if(tl.__tl101drag)return;tl.__tl101drag=1;tl.addEventListener('pointerdown',ev=>{let el=ev.target.closest('.wk-tlitem');if(!el)return;let r=resolve(el);if(!r)return;let mode=ev.target.classList.contains('tl101-left')?'left':ev.target.classList.contains('tl101-right')?'right':'move';if(mode==='move'&&ev.target.closest('button,a,input,select,textarea'))return;ev.preventDefault();ev.stopPropagation();let dw=dayW(tl),base=firstDate(tl),sx=ev.clientX,sy=ev.clientY,sl=tl.scrollLeft,st=tl.scrollTop,ol=el.offsetLeft,ot=el.offsetTop,ow=el.offsetWidth;let row=r.row,os=row.start_date||row.due_date||row.deadline||base,oe=row.due_date||row.deadline||row.start_date||os;el.classList.add('tl101-dragging');el.setPointerCapture?.(ev.pointerId);function move(e){let dx=e.clientX-sx+tl.scrollLeft-sl,dy=e.clientY-sy+tl.scrollTop-st;if(mode==='move'){el.style.left=Math.max(0,ol+dx)+'px';el.style.top=Math.max(0,ot+dy)+'px'}else if(mode==='left'){let nr=ol+ow,nl=Math.max(0,Math.min(nr-dw,ol+dx));el.style.left=nl+'px';el.style.width=Math.max(dw,nr-nl)+'px'}else{el.style.width=Math.max(dw,ow+dx)+'px'}follow(tl)}async function up(){document.removeEventListener('pointermove',move,true);document.removeEventListener('pointerup',up,true);el.classList.remove('tl101-dragging');let a=Math.max(0,Math.round(el.offsetLeft/dw)),span=Math.max(1,Math.round(el.offsetWidth/dw)),lane=Math.max(0,Math.round(el.offsetTop/LANE));let ns=add(base,a),ne=add(ns,span-1);if(mode==='move'){let oldSpan=Math.max(1,diff(os,oe)+1);ne=add(ns,oldSpan-1)}let m=laneMap();m[r.key]=lane;saveLaneMap(m);let patch=r.kind==='project'?{start_date:ns,deadline:ne}:{start_date:ns,due_date:ne,sort_order:lane*1000};try{await saveDates(r.kind,r.id,patch)}catch(err){alert('Не удалось сохранить изменение таймлайна: '+(err?.message||err))}applyLanes(tl);follow(tl)}document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',up,true)},true)}
+function enhance(){let tl=tlBox();if(!tl)return;addControls(tl);applyLanes(tl);follow(tl);installDrag(tl);if(!tl.__tl101scroll){tl.__tl101scroll=1;tl.addEventListener('scroll',()=>follow(tl),{passive:true})}}
+new MutationObserver(enhance).observe(document.documentElement,{childList:true,subtree:true});document.addEventListener('DOMContentLoaded',enhance);setInterval(enhance,600);
+})();
+/* Timeline editor v101 end */
+'''
+          app.write_text(s, encoding='utf-8')
+          css = Path('assets/app.css')
+          c = css.read_text(encoding='utf-8')
+          css_blocks = [
+              ('/* Timeline editor v98 css start */','/* Timeline editor v98 css end */'),
+              ('/* Timeline editor v99 css start */','/* Timeline editor v99 css end */'),
+              ('/* Timeline editor v100 css start */','/* Timeline editor v100 css end */'),
+              ('/* Timeline editor v101 css start */','/* Timeline editor v101 css end */')
+          ]
+          for a0,b0 in css_blocks:
+              if a0 in c and b0 in c:
+                  a=c.index(a0); b=c.index(b0,a)+len(b0); c=c[:a]+c[b:]
+          c += r'''
+
+/* Timeline editor v101 css start */
+.wk-tlitem{cursor:grab!important;user-select:none!important;overflow:hidden!important}.wk-tlitem.tl101-dragging{cursor:grabbing!important;z-index:60!important;box-shadow:0 18px 42px rgba(15,23,42,.25)!important}.wk-tlitem .tl101-label{position:relative!important;left:auto!important;display:block!important;width:max-content!important;max-width:none!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;will-change:transform!important;pointer-events:none!important;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,255,255,.70),rgba(255,255,255,0))!important;border-radius:8px!important;padding-right:12px!important}.wk-tlitem.tl101-long h4.tl101-label{font-size:12px!important;max-height:none!important;-webkit-line-clamp:unset!important;-webkit-box-orient:unset!important}.wk-tlitem.done .tl101-label,.wk-tlitem[data-status="done"] .tl101-label{text-decoration:line-through!important;opacity:.72!important}.tl101-move{position:absolute!important;left:3px!important;top:3px!important;width:18px!important;height:18px!important;border-radius:6px!important;background:rgba(15,23,42,.76)!important;color:#fff!important;display:grid!important;place-items:center!important;font-size:11px!important;line-height:1!important;z-index:12!important;cursor:grab!important}.tl101-resize{position:absolute!important;top:0!important;bottom:0!important;width:9px!important;z-index:13!important}.tl101-resize:after{content:'';position:absolute;top:8px;bottom:8px;width:2px;border-radius:9px;background:rgba(15,23,42,.28)}.tl101-resize:hover:after{background:rgba(37,99,235,.95)}.tl101-left{left:0!important;cursor:w-resize!important}.tl101-left:after{left:2px}.tl101-right{right:0!important;cursor:e-resize!important}.tl101-right:after{right:2px}
+/* Timeline editor v101 css end */
+'''
+          css.write_text(c, encoding='utf-8')
+          idx = Path('index.html')
+          h = idx.read_text(encoding='utf-8')
+          h = re.sub(r"assets/app\.js\?v=[^'\"]+", "assets/app.js?v=20260507-v101", h)
+          h = re.sub(r"assets/app\.css\?v=[^'\"]+", "assets/app.css?v=20260507-v101", h)
+          idx.write_text(h, encoding='utf-8')
+          PY
+          node --check assets/app.js
+          if [ -f package.json ]; then npm ci && npm run build --if-present; else echo 'Static site: no package.json build script to run.'; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/app.js assets/app.css index.html
+          git diff --cached --quiet && echo 'No changes to commit' && exit 0
+          git commit -m "Add interactive timeline editor [skip ci]"
+          git push
