@@ -22,10 +22,9 @@ jobs:
           import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          links = """<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>
-<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>
-<meta name='theme-color' content='#0f172a'>"""
+          links = "<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>\n<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>\n<meta name='theme-color' content='#0f172a'>"
           s = re.sub(r"\n<link rel=['\"](?:shortcut icon|icon)['\"][^>]*assets/favicon\.svg[^>]*>", "", s)
+          s = re.sub(r"\n<meta name=['\"]theme-color['\"][^>]*>", "", s)
           if "assets/favicon.svg" not in s:
               s = s.replace("<title>Workspace · Project Tracker</title>", "<title>Workspace · Project Tracker</title>\n" + links, 1)
           p.write_text(s, encoding='utf-8')
@@ -38,4 +37,4 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Connect browser favicon"
           git push
-# trigger 20260508-2150
+# trigger 20260508-2210
