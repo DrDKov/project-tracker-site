@@ -1,4 +1,4 @@
-name: Connect favicon v134
+name: Connect favicon v136
 
 on:
   workflow_dispatch:
@@ -15,26 +15,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Connect favicon in index
+      - name: Switch favicon path
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          links = "<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>\n<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>\n<meta name='theme-color' content='#0f172a'>"
-          s = re.sub(r"\n<link rel=['\"](?:shortcut icon|icon)['\"][^>]*assets/favicon\.svg[^>]*>", "", s)
-          s = re.sub(r"\n<meta name=['\"]theme-color['\"][^>]*>", "", s)
-          if "assets/favicon.svg" not in s:
-              s = s.replace("<title>Workspace · Project Tracker</title>", "<title>Workspace · Project Tracker</title>\n" + links, 1)
-          p.write_text(s, encoding='utf-8')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('assets/favicon.svg?v=20260508-v134','/project-tracker-site/favicon.svg?v=20260508-v136')
+          s=s.replace('assets/favicon.svg?v=20260508-v135','/project-tracker-site/favicon.svg?v=20260508-v136')
+          p.write_text(s,encoding='utf-8')
           PY
-          grep -q "assets/favicon.svg?v=20260508-v134" index.html
-          test -f assets/favicon.svg
+          grep -q "/project-tracker-site/favicon.svg?v=20260508-v136" index.html
+          test -f favicon.svg
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m "Connect browser favicon"
+          git commit -m "Use absolute favicon path"
           git push
-# trigger 20260508-2210
+# trigger 20260508-2245
