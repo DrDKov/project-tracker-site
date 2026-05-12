@@ -1,4 +1,4 @@
-name: Task comment composer icon button v132
+name: Clean favicon remnants and restore v132
 
 on:
   workflow_dispatch:
@@ -15,35 +15,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Replace comment button text with icon
+      - name: Clean favicon remnants and restore app asset version
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-          idx=Path('index.html')
-          html=idx.read_text(encoding='utf-8')
-          old="<button class='btn secondary' type='button' data-action='add-task-comment'>Добавить комментарий</button>"
-          new="<button class='btn secondary task-comment-send' type='button' data-action='add-task-comment' aria-label='Добавить комментарий' title='Добавить комментарий'>➤</button>"
-          if old in html:
-            html=html.replace(old,new,1)
-          elif "task-comment-send" not in html:
-            html=re.sub(r"<button([^>]*data-action=['\"]add-task-comment['\"][^>]*)>.*?</button>",r"<button\1 class='btn secondary task-comment-send' aria-label='Добавить комментарий' title='Добавить комментарий'>➤</button>",html,count=1,flags=re.S)
-          html=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v132",html)
-          html=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260508-v132",html)
-          idx.write_text(html,encoding='utf-8')
-          css_file=Path('assets/app.css')
-          css=css_file.read_text(encoding='utf-8')
-          css=re.sub(r"\n?/\* Task comment composer v13[0-9] start \*/.*?/\* Task comment composer v13[0-9] end \*/\n?","\n",css,flags=re.S)
-          add="/* Task comment composer v132 start */\n#taskModal #taskCommentsBlock .task-comment-form{display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;gap:8px!important;align-items:end!important;margin-top:0!important;padding-top:10px!important;border-top:1px solid #e5e7eb!important}\n#taskModal #taskCommentText{width:100%!important;min-height:140px!important;max-height:260px!important;resize:vertical!important;line-height:1.42!important;padding:12px!important}\n#taskModal #taskCommentsBlock button.task-comment-send,#taskModal button.task-comment-send.btn,#taskModal #taskCommentsBlock button[data-action='add-task-comment']{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;padding:0!important;border-radius:14px!important;font-size:18px!important;line-height:1!important;display:grid!important;place-items:center!important;background:#0f172a!important;color:#fff!important;box-shadow:0 8px 18px rgba(15,23,42,.18)!important;overflow:hidden!important;white-space:nowrap!important}\n#taskModal #taskCommentsBlock button.task-comment-send:hover{filter:brightness(1.08)!important}\n#taskModal #taskCommentsBlock button.task-comment-send:active{transform:translateY(1px)!important}\n@media(max-width:700px){#taskModal #taskCommentsBlock .task-comment-form{grid-template-columns:minmax(0,1fr) 40px!important}#taskModal #taskCommentText{min-height:118px!important}#taskModal #taskCommentsBlock button.task-comment-send,#taskModal button.task-comment-send.btn,#taskModal #taskCommentsBlock button[data-action='add-task-comment']{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important}}\n/* Task comment composer v132 end */\n"
-          css_file.write_text(css.rstrip()+"\n\n"+add,encoding='utf-8')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('assets/app.css?v=20260508-v137','assets/app.css?v=20260508-v132')
+          s=s.replace('assets/app.js?v=20260508-v137','assets/app.js?v=20260508-v132')
+          for x in [
+            "<link rel='icon' type='image/svg+xml' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
+            "<link rel='shortcut icon' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
+            "<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>\n",
+            "<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>\n",
+            "<meta name='theme-color' content='#0f172a'>\n"
+          ]:
+            s=s.replace(x,'')
+          p.write_text(s,encoding='utf-8')
           PY
-          grep -q "task-comment-send" index.html
-          grep -q "Task comment composer v132" assets/app.css
+          rm -f favicon.svg assets/favicon.svg .github/workflows/connect-favicon-v134.yml
+          ! grep -q "favicon" index.html
           grep -q "assets/app.css?v=20260508-v132" index.html
           grep -q "assets/app.js?v=20260508-v132" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add index.html assets/app.css
+          git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "Use compact icon button for task comments"
+          git commit -m "Clean favicon remnants and restore v132"
           git push
+# clean favicon remnants 20260508-2330
