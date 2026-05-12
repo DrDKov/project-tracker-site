@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -24,21 +24,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - name: Connect week click fix
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          idx=Path('index.html')
-          h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+", 'assets/app.js?v=20260512-week-click-fix-connected', h)
-          tag="<script src='assets/week-click-fix.js?v=20260512-week-click-fix-connected'></script>"
-          if 'assets/week-click-fix.js' not in h:
-              h=h.replace("</body>", tag+"\n</body>")
-          idx.write_text(h, encoding='utf-8')
-          PY
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
