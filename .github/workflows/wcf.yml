@@ -31,3 +31,4 @@ jobs:
           git add assets/app.js index.html
           git commit -m "Apply WCF [skip ci]" || exit 0
           git push
+# trigger 2
