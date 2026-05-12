@@ -1,4 +1,4 @@
-name: Inject safe favicon loader
+name: Rollback safe favicon loader
 
 on:
   workflow_dispatch:
@@ -15,25 +15,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add isolated favicon loader to app js
+      - name: Remove safe favicon loader and workflow
         run: |
           python - <<'PY'
           from pathlib import Path
           app = Path('assets/app.js')
           s = app.read_text(encoding='utf-8')
-          block = "/* Safe favicon loader v1 start */\n(()=>{try{if(window.__SAFE_APP_ICON_V1__)return;window.__SAFE_APP_ICON_V1__=1;var h=document.head||document.getElementsByTagName('head')[0];if(!h)return;if(document.querySelector('link[data-app-icon=\"project-tracker\"]'))return;var l=document.createElement('link');l.rel='icon';l.type='image/svg+xml';l.href='assets/app-icon.svg?v=1';l.setAttribute('data-app-icon','project-tracker');h.appendChild(l)}catch(e){console.warn('[favicon]',e)}})();\n/* Safe favicon loader v1 end */\n"
-          if 'Safe favicon loader v1' not in s:
-              s = block + s
+          start = '/* Safe favicon loader v1 start */\n'
+          end = '/* Safe favicon loader v1 end */\n'
+          if start in s and end in s:
+              a = s.index(start)
+              b = s.index(end) + len(end)
+              s = s[:a] + s[b:]
           app.write_text(s, encoding='utf-8')
           PY
+          rm -f assets/app-icon.svg
+          rm -f .github/workflows/apply-timeline-editor-v100.yml
           node --check assets/app.js
-          grep -q "Safe favicon loader v1" assets/app.js
-          test -f assets/app-icon.svg
-          ! grep -q "favicon.svg" index.html
+          ! grep -q "Safe favicon loader v1" assets/app.js
+          ! test -f assets/app-icon.svg
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add assets/app.js assets/app-icon.svg
+          git add -A
           git diff --cached --quiet && exit 0
-          git commit -m "Add safe browser tab icon loader"
+          git commit -m "Rollback safe favicon loader"
           git push
-# safe favicon loader 20260512
+# rollback safe favicon 20260512
