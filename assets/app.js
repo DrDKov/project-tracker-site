@@ -1,6 +1,3 @@
-/* Safe favicon loader v1 start */
-(()=>{try{if(window.__SAFE_APP_ICON_V1__)return;window.__SAFE_APP_ICON_V1__=1;var h=document.head||document.getElementsByTagName('head')[0];if(!h)return;if(document.querySelector('link[data-app-icon="project-tracker"]'))return;var l=document.createElement('link');l.rel='icon';l.type='image/svg+xml';l.href='assets/app-icon.svg?v=1';l.setAttribute('data-app-icon','project-tracker');h.appendChild(l)}catch(e){console.warn('[favicon]',e)}})();
-/* Safe favicon loader v1 end */
 /* Workspace runtime v90: slower-network task loader + slim task query. */
 (()=>{if(window.__WS_V90__)return;window.__WS_V90__=1;
 const $=id=>document.getElementById(id),qa=s=>[...document.querySelectorAll(s)],esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])),pad=n=>String(n).padStart(2,'0'),ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),today=()=>ymd(new Date()),D=v=>new Date(String(v||today()).slice(0,10)+'T00:00:00'),add=(v,n)=>{let d=D(v);d.setDate(d.getDate()+n);return ymd(d)},diff=(a,b)=>Math.round((D(b)-D(a))/864e5),fmt=v=>v?D(v).toLocaleDateString('ru-RU'):'—',dt=v=>v?new Date(v).toLocaleString('ru-RU'):'—';
