@@ -1,4 +1,4 @@
-name: Rollback favicon links
+name: Clean no-favicon cache bump v137
 
 on:
   workflow_dispatch:
@@ -15,28 +15,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Remove favicon links from index
+      - name: Clean index and bump assets
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          remove = [
-            "<link rel='icon' type='image/svg+xml' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
-            "<link rel='shortcut icon' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
-            "<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>\n",
-            "<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>\n",
-            "<meta name='theme-color' content='#0f172a'>\n"
-          ]
-          for x in remove:
+          for x in [
+              "<link rel='icon' type='image/svg+xml' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
+              "<link rel='shortcut icon' href='/project-tracker-site/favicon.svg?v=20260508-v136'>\n",
+              "<link rel='icon' type='image/svg+xml' href='assets/favicon.svg?v=20260508-v134'>\n",
+              "<link rel='shortcut icon' href='assets/favicon.svg?v=20260508-v134'>\n",
+              "<meta name='theme-color' content='#0f172a'>\n",
+          ]:
               s = s.replace(x, '')
+          s = s.replace('assets/app.css?v=20260508-v132', 'assets/app.css?v=20260508-v137')
+          s = s.replace('assets/app.js?v=20260508-v132', 'assets/app.js?v=20260508-v137')
           p.write_text(s, encoding='utf-8')
           PY
           ! grep -q "favicon.svg" index.html
+          grep -q "assets/app.css?v=20260508-v137" index.html
+          grep -q "assets/app.js?v=20260508-v137" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m "Rollback favicon links from index"
+          git commit -m "Clean favicon rollback and bump app cache"
           git push
-# rollback trigger 20260508-2255
+# clean trigger 20260508-2315
