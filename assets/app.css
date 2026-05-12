@@ -71,3 +71,10 @@
 #taskModal #taskCommentsBlock button.task-comment-send:active{transform:translateY(1px)!important}
 @media(max-width:700px){#taskModal #taskCommentsBlock .task-comment-form{grid-template-columns:minmax(0,1fr) 40px!important}#taskModal #taskCommentText{min-height:118px!important}#taskModal #taskCommentsBlock button.task-comment-send,#taskModal button.task-comment-send.btn,#taskModal #taskCommentsBlock button[data-action='add-task-comment']{width:40px!important;height:40px!important;min-width:40px!important;max-width:40px!important}}
 /* Task comment composer v132 end */
+
+/* Native week add task css v1 start */
+.week-date-title{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.week-add-task-btn{width:20px;height:20px;border:1px solid #dbe4ef;border-radius:999px;background:#fff;color:#2563eb;font-weight:900;font-size:15px;line-height:16px;padding:0;display:inline-grid;place-items:center;cursor:pointer;vertical-align:middle}
+.week-add-task-btn:hover{background:#eff6ff;border-color:#2563eb}
+.week-col h3{display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* Native week add task css v1 end */
