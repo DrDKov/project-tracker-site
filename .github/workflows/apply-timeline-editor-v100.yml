@@ -1,4 +1,4 @@
-name: Handle Supabase auth retryable fetch errors
+name: Inject safe favicon loader
 
 on:
   workflow_dispatch:
@@ -15,35 +15,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch auth restore fallback
+      - name: Add isolated favicon loader to app js
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-          app=Path('assets/app.js')
-          s=app.read_text(encoding='utf-8')
-          old="async function restore(){sb();let s=await S.sb.auth.getSession();S.user=s.data?.session?.user||null;if(!S.user){let u=await S.sb.auth.getUser();S.user=u.data?.user||null}if(!S.user){S.profile=null;if($('authState'))$('authState').textContent='Auth: не выполнен вход';return null}let p=await optional('profile/auth_user_id',S.sb.from('app_users').select('*').eq('auth_user_id',S.user.id).maybeSingle(),8000);p=Array.isArray(p)?null:p;if((!p)&&S.user.email){let e=await optional('profile/email',S.sb.from('app_users').select('*').eq('email',S.user.email).maybeSingle(),8000);p=Array.isArray(e)?null:e;if(p&&!p.auth_user_id)S.sb.from('app_users').update({auth_user_id:S.user.id}).eq('id',p.id).then(()=>0)}S.profile=p||null;if($('authState'))$('authState').textContent=S.profile?`Auth: ${S.user.email} · ${S.profile.display_name} · ${S.profile.role}`:`Auth: ${S.user.email} · профиль не привязан`;return S.user}"
-          new="async function restore(){sb();let sess=null;try{sess=await S.sb.auth.getSession()}catch(e){let msg=String(e&&e.message||e||'');console.warn('[auth] getSession failed',e);if(/AuthRetryableFetchError|Failed to fetch|NetworkError|fetch/i.test(msg)){try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('sb-')||k.includes('supabase.auth'))localStorage.removeItem(k)})}catch(_){}S.user=null;S.profile=null;if($('authState'))$('authState').textContent='Auth: локальная сессия сброшена после сетевой ошибки. Войдите снова.';status('Ошибка авторизации','Локальная Supabase-сессия сброшена. Войдите снова по email и паролю.');return null}throw e}S.user=sess.data?.session?.user||null;if(!S.user){try{let u=await S.sb.auth.getUser();S.user=u.data?.user||null}catch(e){let msg=String(e&&e.message||e||'');console.warn('[auth] getUser failed',e);if(/AuthRetryableFetchError|Failed to fetch|NetworkError|fetch/i.test(msg)){try{Object.keys(localStorage).forEach(k=>{if(k.startsWith('sb-')||k.includes('supabase.auth'))localStorage.removeItem(k)})}catch(_){}S.user=null;S.profile=null;if($('authState'))$('authState').textContent='Auth: локальная сессия сброшена после сетевой ошибки. Войдите снова.';status('Ошибка авторизации','Локальная Supabase-сессия сброшена. Войдите снова по email и паролю.');return null}throw e}}if(!S.user){S.profile=null;if($('authState'))$('authState').textContent='Auth: не выполнен вход';return null}let p=await optional('profile/auth_user_id',S.sb.from('app_users').select('*').eq('auth_user_id',S.user.id).maybeSingle(),8000);p=Array.isArray(p)?null:p;if((!p)&&S.user.email){let e=await optional('profile/email',S.sb.from('app_users').select('*').eq('email',S.user.email).maybeSingle(),8000);p=Array.isArray(e)?null:e;if(p&&!p.auth_user_id)S.sb.from('app_users').update({auth_user_id:S.user.id}).eq('id',p.id).then(()=>0)}S.profile=p||null;if($('authState'))$('authState').textContent=S.profile?`Auth: ${S.user.email} · ${S.profile.display_name} · ${S.profile.role}`:`Auth: ${S.user.email} · профиль не привязан`;return S.user}"
-          if old not in s:
-              raise SystemExit('restore function pattern not found')
-          s=s.replace(old,new,1)
-          app.write_text(s,encoding='utf-8')
-          idx=Path('index.html')
-          h=idx.read_text(encoding='utf-8')
-          h=re.sub(r"assets/app\.js\?v=[^'\"]+","assets/app.js?v=20260512-authfix1",h)
-          h=re.sub(r"assets/app\.css\?v=[^'\"]+","assets/app.css?v=20260508-v132",h)
-          for fp in ['favicon.svg','assets/favicon.svg','.github/workflows/connect-favicon-v134.yml','.github/workflows/apply-timeline-editor-v101.yml']:
-              p=Path(fp)
-              if p.exists(): p.unlink()
-          idx.write_text(h,encoding='utf-8')
+          app = Path('assets/app.js')
+          s = app.read_text(encoding='utf-8')
+          block = "/* Safe favicon loader v1 start */\n(()=>{try{if(window.__SAFE_APP_ICON_V1__)return;window.__SAFE_APP_ICON_V1__=1;var h=document.head||document.getElementsByTagName('head')[0];if(!h)return;if(document.querySelector('link[data-app-icon=\"project-tracker\"]'))return;var l=document.createElement('link');l.rel='icon';l.type='image/svg+xml';l.href='assets/app-icon.svg?v=1';l.setAttribute('data-app-icon','project-tracker');h.appendChild(l)}catch(e){console.warn('[favicon]',e)}})();\n/* Safe favicon loader v1 end */\n"
+          if 'Safe favicon loader v1' not in s:
+              s = block + s
+          app.write_text(s, encoding='utf-8')
           PY
           node --check assets/app.js
-          grep -q "20260512-authfix1" index.html
-          ! grep -q "favicon" index.html
+          grep -q "Safe favicon loader v1" assets/app.js
+          test -f assets/app-icon.svg
+          ! grep -q "favicon.svg" index.html
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add -A
+          git add assets/app.js assets/app-icon.svg
           git diff --cached --quiet && exit 0
-          git commit -m "Handle Supabase auth fetch failures"
+          git commit -m "Add safe browser tab icon loader"
           git push
-# auth retryable fetch fix 20260512
+# safe favicon loader 20260512
