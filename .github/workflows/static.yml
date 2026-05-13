@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -23,26 +23,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - name: Repair app event registration
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p=Path('assets/app.js')
-          s=p.read_text(encoding='utf-8')
-          s=s.replace("document.addEventListener('click'*[0,0].join(''),handle,true);", "document.addEventListener('click',handle,true);")
-          p.write_text(s, encoding='utf-8')
-          h=Path('index.html').read_text(encoding='utf-8')
-          h=h.replace('assets/app.js?v=20260512-native-integrated-v3','assets/app.js?v=20260513-week-click-registration-fix')
-          Path('index.html').write_text(h, encoding='utf-8')
-          PY
-          node --check assets/app.js
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add assets/app.js index.html
-          git commit -m "Repair app event registration" || true
-          git push || true
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
