@@ -11,10 +11,29 @@ const APP_SHELL = [
   'assets/icons/maskable-512.svg'
 ];
 
+const APP_SHELL_URLS = APP_SHELL.map(path => new URL(path, self.registration.scope).toString());
+const APP_SHELL_SET = new Set(APP_SHELL_URLS);
+
+function stripUrl(url) {
+  const clean = new URL(url.toString());
+  clean.search = '';
+  clean.hash = '';
+  return clean.toString();
+}
+
+function isSupabaseRequest(url) {
+  return url.hostname.endsWith('.supabase.co');
+}
+
+function appShellCacheKey(url) {
+  const cleanUrl = stripUrl(url);
+  return APP_SHELL_SET.has(cleanUrl) ? cleanUrl : null;
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL.map(path => new URL(path, self.registration.scope).toString())))
+      .then(cache => cache.addAll(APP_SHELL_URLS))
       .then(() => self.skipWaiting())
   );
 });
@@ -31,21 +50,6 @@ self.addEventListener('activate', event => {
   );
 });
 
-function isSupabaseRequest(url) {
-  return url.hostname.endsWith('.supabase.co');
-}
-
-const APP_SHELL_URLS = new Set(
-  APP_SHELL.map(path => new URL(path, self.registration.scope).toString())
-);
-
-function isAppShellRequest(url) {
-  const withoutQuery = new URL(url.toString());
-  withoutQuery.search = '';
-  withoutQuery.hash = '';
-  return APP_SHELL_URLS.has(withoutQuery.toString());
-}
-
 self.addEventListener('fetch', event => {
   const request = event.request;
 
@@ -56,15 +60,17 @@ self.addEventListener('fetch', event => {
   if (isSupabaseRequest(url)) return;
   if (url.origin !== self.location.origin) return;
 
-  if (isAppShellRequest(url)) {
+  const cacheKey = appShellCacheKey(url);
+
+  if (cacheKey) {
     event.respondWith(
-      caches.match(request).then(cached => {
+      caches.match(cacheKey).then(cached => {
         if (cached) return cached;
 
         return fetch(request).then(response => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+            caches.open(CACHE_NAME).then(cache => cache.put(cacheKey, copy));
           }
           return response;
         });
