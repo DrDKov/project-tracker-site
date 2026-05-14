@@ -9,24 +9,26 @@
     var el = document.createElement('link');
     el.rel = rel;
     el.href = href;
-    if(attrs){
-      Object.keys(attrs).forEach(function(key){ el.setAttribute(key, attrs[key]); });
-    }
+    if(attrs){ Object.keys(attrs).forEach(function(key){ el.setAttribute(key, attrs[key]); }); }
     document.head.appendChild(el);
     return el;
   }
 
   function ensureMeta(name, content){
     var existing = document.querySelector('meta[name="'+name+'"]');
-    if(existing){
-      existing.setAttribute('content', content);
-      return existing;
-    }
+    if(existing){ existing.setAttribute('content', content); return existing; }
     var el = document.createElement('meta');
     el.name = name;
     el.content = content;
     document.head.appendChild(el);
     return el;
+  }
+
+  function applyPwaMobileMode(){
+    if(!document.body) return;
+    var standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var mobile = window.innerWidth <= 768;
+    document.body.classList.toggle('pwa-mobile-mode', standalone && mobile);
   }
 
   ensureLink('manifest', 'manifest.webmanifest');
@@ -36,11 +38,15 @@
   ensureMeta('apple-mobile-web-app-title', 'Project Tracker');
   ensureLink('apple-touch-icon', 'assets/icons/icon-192.png');
 
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyPwaMobileMode, { once: true });
+  else applyPwaMobileMode();
+  window.addEventListener('resize', applyPwaMobileMode);
+  window.addEventListener('orientationchange', applyPwaMobileMode);
+
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
-      navigator.serviceWorker.register('service-worker.js').catch(function(err){
-        console.warn('Service worker registration failed', err);
-      });
+      applyPwaMobileMode();
+      navigator.serviceWorker.register('service-worker.js').catch(function(err){ console.warn('Service worker registration failed', err); });
     });
   }
 
