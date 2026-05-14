@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pt-pwa-v1';
+const CACHE_NAME = 'pt-pwa-v2';
 const PINNED_RUNTIME_URL = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@805be0b49a87b3f4d007f3d0de47340580369319/assets/app.js';
 
 const APP_SHELL = [
