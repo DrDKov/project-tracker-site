@@ -6,9 +6,9 @@ const APP_SHELL = [
   'assets/app.js',
   'assets/app.css',
   'manifest.webmanifest',
-  'assets/icons/icon-192.svg',
-  'assets/icons/icon-512.svg',
-  'assets/icons/maskable-512.svg'
+  'assets/icons/icon-192.png',
+  'assets/icons/icon-512.png',
+  'assets/icons/maskable-512.png'
 ];
 
 const APP_SHELL_URLS = APP_SHELL.map(path => new URL(path, self.registration.scope).toString());
