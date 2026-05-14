@@ -1,4 +1,5 @@
 const CACHE_NAME = 'pt-pwa-v1';
+const PINNED_RUNTIME_URL = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@805be0b49a87b3f4d007f3d0de47340580369319/assets/app.js';
 
 const APP_SHELL = [
   './',
@@ -8,7 +9,8 @@ const APP_SHELL = [
   'manifest.webmanifest',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png',
-  'assets/icons/maskable-512.png'
+  'assets/icons/maskable-512.png',
+  PINNED_RUNTIME_URL
 ];
 
 const APP_SHELL_URLS = APP_SHELL.map(path => new URL(path, self.registration.scope).toString());
@@ -58,7 +60,6 @@ self.addEventListener('fetch', event => {
   const url = new URL(request.url);
 
   if (isSupabaseRequest(url)) return;
-  if (url.origin !== self.location.origin) return;
 
   const cacheKey = appShellCacheKey(url);
 
@@ -78,6 +79,8 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
+
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(request).catch(() => caches.match(request))
