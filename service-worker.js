@@ -14,7 +14,7 @@ const APP_SHELL = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(APP_SHELL))
+      .then(cache => cache.addAll(APP_SHELL.map(path => new URL(path, self.registration.scope).toString())))
       .then(() => self.skipWaiting())
   );
 });
@@ -35,12 +35,15 @@ function isSupabaseRequest(url) {
   return url.hostname.endsWith('.supabase.co');
 }
 
+const APP_SHELL_URLS = new Set(
+  APP_SHELL.map(path => new URL(path, self.registration.scope).toString())
+);
+
 function isAppShellRequest(url) {
-  const path = url.pathname.replace(/^\//, '');
-  return APP_SHELL.some(item => {
-    const normalized = item.replace(/^\.\//, '');
-    return normalized === './' ? path === '' : path === normalized;
-  });
+  const withoutQuery = new URL(url.toString());
+  withoutQuery.search = '';
+  withoutQuery.hash = '';
+  return APP_SHELL_URLS.has(withoutQuery.toString());
 }
 
 self.addEventListener('fetch', event => {
@@ -55,11 +58,17 @@ self.addEventListener('fetch', event => {
 
   if (isAppShellRequest(url)) {
     event.respondWith(
-      caches.match(request).then(cached => cached || fetch(request).then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
-        return response;
-      }))
+      caches.match(request).then(cached => {
+        if (cached) return cached;
+
+        return fetch(request).then(response => {
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
+          }
+          return response;
+        });
+      })
     );
     return;
   }
