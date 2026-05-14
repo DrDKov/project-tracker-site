@@ -5,8 +5,9 @@ body.pwa-mobile-mode{overflow-x:hidden;background:#f6f7fb;-webkit-font-smoothing
 body.pwa-mobile-mode *{box-sizing:border-box}
 body.pwa-mobile-mode .app{display:block!important;width:100%!important;max-width:100%!important;min-height:100svh!important;overflow-x:hidden!important}
 body.pwa-mobile-mode .sidebar,body.pwa-mobile-mode .topbar{display:none!important}
-body.pwa-mobile-mode .main{width:100%!important;max-width:100%!important;min-width:0!important;padding:8px 10px 24px!important;overflow-x:hidden!important}
+body.pwa-mobile-mode .main{width:100%!important;max-width:100%!important;min-width:0!important;padding:8px 10px calc(96px + env(safe-area-inset-bottom,0px))!important;overflow-x:hidden!important}
 body.pwa-mobile-mode .view{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+body.pwa-mobile-mode #overview,body.pwa-mobile-mode #timeline,body.pwa-mobile-mode #audit{display:none!important}
 body.pwa-mobile-mode .toolbar,body.pwa-mobile-mode .timeline-filterbar{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;width:100%!important;max-width:100%!important;margin:0 0 10px!important}
 body.pwa-mobile-mode .toolbar .input,body.pwa-mobile-mode .toolbar select,body.pwa-mobile-mode .toolbar input,body.pwa-mobile-mode .timeline-filterbar .input,body.pwa-mobile-mode .timeline-filterbar select,body.pwa-mobile-mode .timeline-filterbar input{width:100%!important;min-width:0!important;max-width:100%!important;height:42px!important;border-radius:12px!important}
 body.pwa-mobile-mode .toolbar .btn,body.pwa-mobile-mode .timeline-filterbar .btn,body.pwa-mobile-mode .timeline-filterbar button{max-width:100%!important;height:42px!important;border-radius:12px!important;white-space:nowrap!important}
@@ -29,3 +30,8 @@ body.pwa-mobile-mode .form-grid{grid-template-columns:1fr!important}
 body.pwa-mobile-mode .chat-panel{height:auto!important;min-height:calc(100svh - 24px)!important}
 body.pwa-mobile-mode .chat-messages{max-height:55svh!important;min-height:280px!important}
 body.pwa-mobile-mode .message{max-width:100%!important}
+body:not(.pwa-mobile-mode) .pwa-mobile-bottom-nav{display:none!important}
+body.pwa-mobile-mode .pwa-mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:10000;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.94);border-top:1px solid #e5e7eb;box-shadow:0 -12px 32px rgba(15,23,42,.12);backdrop-filter:blur(16px)}
+body.pwa-mobile-mode .pwa-mobile-bottom-nav button{border:0;background:transparent;color:#64748b;border-radius:14px;min-width:0;height:50px;padding:5px 3px;display:grid;grid-template-rows:20px 1fr;align-items:center;justify-items:center;font-size:10px;font-weight:850;line-height:1;cursor:pointer}
+body.pwa-mobile-mode .pwa-mobile-bottom-nav button.active{background:#0f172a;color:#fff;box-shadow:0 8px 18px rgba(15,23,42,.18)}
+body.pwa-mobile-mode .pwa-mobile-nav-icon{font-size:16px;line-height:18px;font-weight:900}
