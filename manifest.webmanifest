@@ -1,1 +1,1 @@
-{"name":"Project Tracker","short_name":"Tracker","start_url":"./?source=pwa","scope":"./","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","orientation":"portrait"}
+{"name":"Project Tracker","short_name":"Tracker","start_url":"./?source=pwa","scope":"./","display":"standalone","background_color":"#f8fafc","theme_color":"#2563eb","orientation":"portrait","icons":[{"src":"assets/icons/icon-192.png","sizes":"192x192","type":"image/png"}]}
