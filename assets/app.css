@@ -24,12 +24,22 @@ body.pwa-mobile-mode .wk-tl{max-width:100%!important;overflow-x:auto!important;m
 body.pwa-mobile-mode .wk-tlhead,body.pwa-mobile-mode .wk-tlbody{min-width:720px!important}
 body.pwa-mobile-mode .week-board,body.pwa-mobile-mode .week-grid{max-width:100%!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch!important}
 body.pwa-mobile-mode .week-col{min-width:260px!important;max-width:280px!important}
+body.pwa-mobile-mode.pwa-mobile-week-day-mode .week-board,body.pwa-mobile-mode.pwa-mobile-week-day-mode .week-grid{display:block!important;overflow-x:hidden!important;width:100%!important;max-width:100%!important}
+body.pwa-mobile-mode.pwa-mobile-week-day-mode .week-col{display:none!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important}
+body.pwa-mobile-mode.pwa-mobile-week-day-mode .week-col.pwa-active-day{display:block!important}
+body.pwa-mobile-mode .pwa-mobile-day-controls{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:10px;margin:8px 0 10px;width:100%}
+body.pwa-mobile-mode .pwa-mobile-day-controls button{height:44px;border:1px solid #e5e7eb;border-radius:14px;background:#fff;color:#0f172a;font-weight:900;font-size:22px;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+body.pwa-mobile-mode .pwa-mobile-day-controls strong{text-align:center;font-size:18px;font-weight:950;color:#0f172a}
 body.pwa-mobile-mode .modal{width:calc(100vw - 16px)!important;max-width:calc(100vw - 16px)!important}
 body.pwa-mobile-mode .modal-body{max-height:calc(100svh - 18px)!important;overflow:auto!important}
 body.pwa-mobile-mode .form-grid{grid-template-columns:1fr!important}
 body.pwa-mobile-mode .chat-panel{height:auto!important;min-height:calc(100svh - 24px)!important}
 body.pwa-mobile-mode .chat-messages{max-height:55svh!important;min-height:280px!important}
 body.pwa-mobile-mode .message{max-width:100%!important}
+body.pwa-mobile-mode .chat-compose.wk-compact{grid-template-columns:44px minmax(0,1fr) 44px!important;gap:8px!important;align-items:end!important}
+body.pwa-mobile-mode .chat-compose.wk-compact #chatText{height:44px!important;min-height:44px!important;max-height:96px!important;padding:10px 12px!important;font-size:15px!important}
+body.pwa-mobile-mode .chat-compose.wk-compact .chat-send,body.pwa-mobile-mode #sendChatBtn{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;padding:0!important;border-radius:14px!important;font-size:0!important;overflow:hidden!important;display:grid!important;place-items:center!important}
+body.pwa-mobile-mode .chat-compose.wk-compact .chat-send:before,body.pwa-mobile-mode #sendChatBtn:before{content:'➤';font-size:19px;line-height:1;color:#fff}
 body:not(.pwa-mobile-mode) .pwa-mobile-bottom-nav{display:none!important}
 body.pwa-mobile-mode .pwa-mobile-bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:10000;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:7px 8px calc(7px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.94);border-top:1px solid #e5e7eb;box-shadow:0 -12px 32px rgba(15,23,42,.12);backdrop-filter:blur(16px)}
 body.pwa-mobile-mode .pwa-mobile-bottom-nav button{border:0;background:transparent;color:#64748b;border-radius:14px;min-width:0;height:50px;padding:5px 3px;display:grid;grid-template-rows:20px 1fr;align-items:center;justify-items:center;font-size:10px;font-weight:850;line-height:1;cursor:pointer}
