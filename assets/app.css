@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@a79b4f9b7e184aaa2db95ec8a4e579dcc740015e/assets/app.css');
+@import url('assets/app-base.css');
 
 /* PWA mobile shell: active only when assets/app.js adds body.pwa-mobile-mode. */
 body.pwa-mobile-mode{overflow-x:hidden;background:#f6f7fb;-webkit-font-smoothing:antialiased}
