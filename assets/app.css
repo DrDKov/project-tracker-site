@@ -1,4 +1,4 @@
-@import url('assets/app-base.css');
+@import url('app-base.css');
 
 /* PWA mobile shell: active only when assets/app.js adds body.pwa-mobile-mode. */
 body.pwa-mobile-mode{overflow-x:hidden;background:#f6f7fb;-webkit-font-smoothing:antialiased}
