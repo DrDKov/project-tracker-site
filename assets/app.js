@@ -235,7 +235,7 @@
   }
 
   var runtime = document.createElement('script');
-  runtime.src = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@805be0b49a87b3f4d007f3d0de47340580369319/assets/app.js';
+  runtime.src = 'assets/app-runtime.js';
   runtime.async = false;
   runtime.onload = function(){
     setTimeout(function(){ applyPwaMobileMode(); enforceMobileViewSet(); applyMobileWeekDayMode(); }, 0);
