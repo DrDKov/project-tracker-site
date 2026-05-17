@@ -10,10 +10,8 @@ self.addEventListener('activate', event => {
           .filter(key => key.startsWith('pt-pwa-'))
           .map(key => caches.delete(key))
       ))
-      .then(() => self.clients.claim())
+      .then(() => self.registration.unregister())
+      .then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true }))
+      .then(clients => clients.forEach(client => client.navigate(client.url)))
   );
-});
-
-self.addEventListener('fetch', event => {
-  return;
 });
