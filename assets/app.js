@@ -12,6 +12,7 @@
   ];
   var HIDDEN_MOBILE_VIEWS = ['overview', 'timeline', 'audit'];
   var mobileDayState = { ymd: toYmd(new Date()) };
+  var refreshTimer = null;
 
   function ensureLink(rel, href, attrs){
     var existing = document.querySelector('link[rel="'+rel+'"][href="'+href+'"]');
@@ -86,6 +87,20 @@
     setActiveMobileNav();
   }
 
+  function scheduleMobileRefresh(){
+    if(!isPwaMobileMode()) return;
+    if(refreshTimer) clearTimeout(refreshTimer);
+    var delays = [0, 160, 700, 1600];
+    delays.forEach(function(delay){
+      setTimeout(function(){
+        if(!isPwaMobileMode()) return;
+        renderMobileBottomNav();
+        applyMobileWeekDayMode();
+      }, delay);
+    });
+    refreshTimer = setTimeout(function(){ refreshTimer = null; }, 1700);
+  }
+
   function goMobileView(viewId){
     var desktopButton = document.querySelector('.nav button[data-view="'+viewId+'"]');
     if(desktopButton) desktopButton.click();
@@ -93,6 +108,7 @@
       if(getActiveViewId() !== viewId) activateViewFallback(viewId);
       setActiveMobileNav();
       applyMobileWeekDayMode();
+      scheduleMobileRefresh();
     }, 0);
   }
 
@@ -175,7 +191,9 @@
       document.body.classList.remove('pwa-mobile-week-day-mode');
       var oldControls = document.getElementById('pwaMobileDayControls');
       if(oldControls) oldControls.remove();
-      columns.forEach(function(col){ col.classList.remove('pwa-active-day'); });
+      if(document.body.classList.contains('pwa-mobile-mode')){
+        columns.forEach(function(col){ col.classList.remove('pwa-active-day'); });
+      }
       return;
     }
 
@@ -213,19 +231,10 @@
   else applyPwaMobileMode();
   window.addEventListener('resize', applyPwaMobileMode);
   window.addEventListener('orientationchange', applyPwaMobileMode);
-
-  var viewObserver = new MutationObserver(function(){
-    renderMobileBottomNav();
-    applyMobileWeekDayMode();
-  });
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      viewObserver.observe(document.body, { subtree: true, attributes: true, childList: true, attributeFilter: ['class'] });
-    }, { once: true });
-  } else if(document.body){
-    viewObserver.observe(document.body, { subtree: true, attributes: true, childList: true, attributeFilter: ['class'] });
-  }
-  setInterval(function(){ renderMobileBottomNav(); applyMobileWeekDayMode(); }, 800);
+  document.addEventListener('click', function(event){
+    if(!isPwaMobileMode()) return;
+    if(event.target.closest('.nav button[data-view], .pwa-mobile-bottom-nav button[data-mobile-view]')) scheduleMobileRefresh();
+  }, true);
 
   if('serviceWorker' in navigator){
     window.addEventListener('load', function(){
@@ -238,7 +247,7 @@
   runtime.src = 'assets/app-runtime.js';
   runtime.async = false;
   runtime.onload = function(){
-    setTimeout(function(){ applyPwaMobileMode(); enforceMobileViewSet(); applyMobileWeekDayMode(); }, 0);
+    setTimeout(function(){ applyPwaMobileMode(); enforceMobileViewSet(); applyMobileWeekDayMode(); scheduleMobileRefresh(); }, 0);
   };
   runtime.onerror = function(){
     console.error('Project Tracker runtime failed to load');
