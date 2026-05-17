@@ -1,16 +1,16 @@
-const CACHE_NAME = 'pt-pwa-v4';
-const PINNED_RUNTIME_URL = 'https://cdn.jsdelivr.net/gh/DrDKov/project-tracker-site@805be0b49a87b3f4d007f3d0de47340580369319/assets/app.js';
+const CACHE_NAME = 'pt-pwa-v5';
 
 const APP_SHELL = [
   './',
   'index.html',
   'assets/app.js',
+  'assets/app-runtime.js',
   'assets/app.css',
+  'assets/app-base.css',
   'manifest.webmanifest',
   'assets/icons/icon-192.png',
   'assets/icons/icon-512.png',
-  'assets/icons/maskable-512.png',
-  PINNED_RUNTIME_URL
+  'assets/icons/maskable-512.png'
 ];
 
 const APP_SHELL_URLS = APP_SHELL.map(path => new URL(path, self.registration.scope).toString());
