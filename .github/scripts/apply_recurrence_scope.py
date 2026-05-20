@@ -2,8 +2,8 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20260520-timeline-week-arrows-v1'
-js="""
+ver='20260520-timeline-week-nav-v4'
+scope_js="""
 /* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
 function recurrenceUpdateScope(){ensureTaskRecurrenceScopeUi();return qa('input[name="taskRecurrenceScope"]').find(x=>x.checked)?.value||'one'}
@@ -19,6 +19,13 @@ css="""
 /* Recurrence scope editing v3 start */
 .task-recurrence-scope{border:1px solid #dbe4ef;border-radius:14px;background:#fff;padding:12px;display:grid;gap:8px}.task-recurrence-scope.hidden{display:none!important}.task-recurrence-scope label{display:flex;align-items:center;gap:8px;font-size:13px}.task-recurrence-scope small{color:#64748b;line-height:1.35}
 /* Recurrence scope editing v3 end */
+"""
+calendar_handler="""
+/* Calendar timeline handlers v2 start */
+document.addEventListener('change',e=>{if(e.target&&e.target.id==='taskAllDay')syncTaskCalendarUi();if(e.target&&['tlP','tlU','tlS','tlR','tlDone'].includes(e.target.id)&&S.view==='timeline')renderTimeline()},true);
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='tlQ'&&S.view==='timeline')renderTimeline()},true);
+document.addEventListener('click',e=>{let b=e.target.closest?.('[data-action]');if(!b)return;let a=b.dataset.action;if(!String(a).startsWith('tl-'))return;e.preventDefault();e.stopPropagation();if(a==='tl-prev'){S.timelineDate=add(S.timelineDate||today(),-7);renderTimeline();return}if(a==='tl-next'){S.timelineDate=add(S.timelineDate||today(),7);renderTimeline();return}if(a==='tl-today'){S.timelineDate=today();renderTimeline();return}if(a==='tl-open'){openTask(b.dataset.id);return}if(a==='tl-add-day'){openTask(null);let d=b.dataset.date;if($('taskStart'))$('taskStart').value=d;if($('taskDue'))$('taskDue').value=d;fillTaskCalendarFields({});return}if(a==='tl-empty'){if(e.target.closest('.timeline-event'))return;let c=e.target.closest('.timeline-time-grid');if(!c)return;let r=c.getBoundingClientRect(),y=e.clientY-r.top,m=TL0*60+Math.round((y/TLP)/TLS)*TLS,tm=mt(m),en=mt(m+TLD),d=c.dataset.date;openTask(null);if($('taskStart'))$('taskStart').value=d;if($('taskDue'))$('taskDue').value=d;fillTaskCalendarFields({start_time:tm,end_time:en,duration_minutes:TLD,is_all_day:false});return}},true);
+/* Calendar timeline handlers v2 end */
 """
 def rep_func(src,name,repl):
     pos=src.find('async function '+name)
@@ -40,26 +47,19 @@ def rep_func(src,name,repl):
     raise SystemExit(name+' end not found')
 s=r.read_text(encoding='utf-8')
 s=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',s)
-s=s.replace('async function saveTask',js+'\nasync function saveTask',1)
+s=s.replace('async function saveTask',scope_js+'\nasync function saveTask',1)
 if 'setupTaskRecurrenceScope(t,id)' not in s:
     s=s.replace('fillTaskCalendarFields(t);','fillTaskCalendarFields(t);setupTaskRecurrenceScope(t,id);',1)
 sv="async function saveTask(e){e.preventDefault();ensureTaskCalendarUi();let id=$('taskId').value||null,row={title:$('taskTitle').value.trim(),project_id:$('taskProject').value,status:$('taskStatus').value,priority:$('taskPriority').value,start_date:$('taskStart').value||null,due_date:$('taskDue').value||null,notes:$('taskNotes').value||null};if(!row.title)return alert('Введите название задачи');try{Object.assign(row,readTaskCalendarFields())}catch(err){alert(err.message||String(err));return}let selected=qa('#taskAssignee option').filter(o=>o.selected).map(o=>o.value);row.assignee_id=selected[0]||null;if(!id&&typeof taskRecurrenceEnabled==='function'&&taskRecurrenceEnabled()){try{await createRecurringTasks(row,selected);$('taskModal').close();await load();return}catch(err){alert(err.message||String(err));return}}if(id){let cur=byId(S.tasks,id),scope=cur&&cur.recurrence_rule_id?recurrenceUpdateScope():'one';if(cur&&cur.recurrence_rule_id&&scope!=='one'){let ids=recurrenceScopedTasks(cur,scope).map(x=>x.id).filter(Boolean);if(!ids.length){alert('Не найдены задачи серии');return}let r=await S.sb.from('tasks').update(rowForRecurrenceSeriesUpdate(row)).in('id',ids).select('id');if(r.error)throw Error(r.error.message);$('taskModal').close();await load();return}}let r=id?await S.sb.from('tasks').update(row).eq('id',id).select().single():await S.sb.from('tasks').insert(row).select().single();if(r.error)throw Error(r.error.message);let taskId=r.data.id;let old=await S.sb.from('task_assignees').delete().eq('task_id',taskId);if(old.error)console.warn(old.error);if(selected.length)await S.sb.from('task_assignees').insert(selected.map(user_id=>({task_id:taskId,user_id}))).then(()=>0);$('taskModal').close();await load()}"
 s=rep_func(s,'saveTask',sv)
-# timeline arrow labels: arrows only, no text
 s=s.replace('data-action="tl-prev">← Неделя</button><button class="btn sm secondary" data-action="tl-next">Неделя →</button>','data-action="tl-prev" title="Предыдущая неделя">←</button><button class="btn sm secondary" data-action="tl-next" title="Следующая неделя">→</button>')
 s=s.replace('data-action="tl-prev">←</button><button class="btn sm secondary" data-action="tl-next">→</button>','data-action="tl-prev" title="Предыдущая неделя">←</button><button class="btn sm secondary" data-action="tl-next" title="Следующая неделя">→</button>')
-# hour scale alignment with all-day row
 s=s.replace("((h-TL0)*60*TLP)+'px\">'+pad(h)+':00", "((h-TL0)*60*TLP+58)+'px\">'+pad(h)+':00")
-# robust timeline week navigation handler
 s=re.sub(r'/\* Timeline week arrows v1 start \*/[\s\S]*?/\* Timeline week arrows v1 end \*/\n?','',s)
-nav="""
-/* Timeline week arrows v1 start */
-document.addEventListener('click',function(e){let b=e.target&&e.target.closest?e.target.closest('[data-action]'):null;if(!b)return;let a=b.dataset.action;if(a!=='tl-prev'&&a!=='tl-next'&&a!=='tl-today')return;e.preventDefault();if(a==='tl-prev')S.timelineDate=add(S.timelineDate||today(),-7);if(a==='tl-next')S.timelineDate=add(S.timelineDate||today(),7);if(a==='tl-today')S.timelineDate=today();renderTimeline()},true);
-/* Timeline week arrows v1 end */
-"""
+s=re.sub(r'/\* Calendar timeline handlers v[12] start \*/[\s\S]*?/\* Calendar timeline handlers v[12] end \*/\n?','',s)
 pos=s.rfind('})();')
 if pos<0: raise SystemExit('runtime closure end not found')
-s=s[:pos]+nav+s[pos:]
+s=s[:pos]+calendar_handler+s[pos:]
 r.write_text(s,encoding='utf-8')
 cs=c.read_text(encoding='utf-8') if c.exists() else ''
 cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',cs)
