@@ -26,25 +26,6 @@ jobs:
       - name: Prepare app files
         run: |
           python .github/scripts/apply_recurrence_scope.py
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p = Path('assets/app-runtime.js')
-          s = p.read_text(encoding='utf-8')
-          s = s.replace("((h-TL0)*60*TLP)+'px\">'+pad(h)+':00", "((h-TL0)*60*TLP+58)+'px\">'+pad(h)+':00")
-          s = s.replace("data-action=\"tl-prev\">←</button><button class=\"btn sm secondary\" data-action=\"tl-next\">→</button>", "data-action=\"tl-prev\">← Неделя</button><button class=\"btn sm secondary\" data-action=\"tl-next\">Неделя →</button>")
-          p.write_text(s, encoding='utf-8')
-          idx = Path('index.html')
-          h = idx.read_text(encoding='utf-8')
-          h = re.sub(r"assets/app\.js\?v=[^'\"]+", 'assets/app.js?v=20260520-timeline-scale-nav-fix', h)
-          h = re.sub(r"assets/app\.css\?v=[^'\"]+", 'assets/app.css?v=20260520-timeline-scale-nav-fix', h)
-          idx.write_text(h, encoding='utf-8')
-          loader = Path('assets/app.js')
-          if loader.exists():
-            a = loader.read_text(encoding='utf-8')
-            a = re.sub(r"assets/app-runtime\.js\?v=[^'\"]+", 'assets/app-runtime.js?v=20260520-timeline-scale-nav-fix', a)
-            loader.write_text(a, encoding='utf-8')
-          PY
           node --check assets/app-runtime.js
           node --check assets/app.js
       - name: Setup Pages
