@@ -1,6 +1,6 @@
 -- Calendar timeline task time fields v1
 -- Safe to re-run; all columns and constraints are guarded.
--- Also triggers Pages rebuild for recurrence-scope UI changes.
+-- Rebuild marker: timeline navigation handler is inside main runtime scope.
 alter table public.tasks
   add column if not exists start_time time,
   add column if not exists end_time time,
