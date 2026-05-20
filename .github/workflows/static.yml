@@ -23,6 +23,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Prepare app files
+        run: |
+          python .github/scripts/apply_recurrence_scope.py
+          node --check assets/app-runtime.js
+          node --check assets/app.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
