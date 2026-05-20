@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20260520-timeline-week-nav-v5'
+ver='20260520-no-task-links-rollback-v1'
 scope_js="""
 /* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
