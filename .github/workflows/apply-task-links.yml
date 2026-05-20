@@ -1,0 +1,28 @@
+name: Apply task links
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/apply-task-links.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Apply task links implementation
+        run: python .github/scripts/apply_task_links.py
+      - name: Check syntax
+        run: |
+          node --check assets/app-runtime.js
+          node --check assets/app.js
+      - name: Commit task links implementation
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Add native task links support" || exit 0
+          git push
