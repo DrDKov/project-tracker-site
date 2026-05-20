@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20260520-recurrence-scope-v3'
+ver='20260520-timeline-week-arrows-v1'
 js="""
 /* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
@@ -45,6 +45,21 @@ if 'setupTaskRecurrenceScope(t,id)' not in s:
     s=s.replace('fillTaskCalendarFields(t);','fillTaskCalendarFields(t);setupTaskRecurrenceScope(t,id);',1)
 sv="async function saveTask(e){e.preventDefault();ensureTaskCalendarUi();let id=$('taskId').value||null,row={title:$('taskTitle').value.trim(),project_id:$('taskProject').value,status:$('taskStatus').value,priority:$('taskPriority').value,start_date:$('taskStart').value||null,due_date:$('taskDue').value||null,notes:$('taskNotes').value||null};if(!row.title)return alert('Введите название задачи');try{Object.assign(row,readTaskCalendarFields())}catch(err){alert(err.message||String(err));return}let selected=qa('#taskAssignee option').filter(o=>o.selected).map(o=>o.value);row.assignee_id=selected[0]||null;if(!id&&typeof taskRecurrenceEnabled==='function'&&taskRecurrenceEnabled()){try{await createRecurringTasks(row,selected);$('taskModal').close();await load();return}catch(err){alert(err.message||String(err));return}}if(id){let cur=byId(S.tasks,id),scope=cur&&cur.recurrence_rule_id?recurrenceUpdateScope():'one';if(cur&&cur.recurrence_rule_id&&scope!=='one'){let ids=recurrenceScopedTasks(cur,scope).map(x=>x.id).filter(Boolean);if(!ids.length){alert('Не найдены задачи серии');return}let r=await S.sb.from('tasks').update(rowForRecurrenceSeriesUpdate(row)).in('id',ids).select('id');if(r.error)throw Error(r.error.message);$('taskModal').close();await load();return}}let r=id?await S.sb.from('tasks').update(row).eq('id',id).select().single():await S.sb.from('tasks').insert(row).select().single();if(r.error)throw Error(r.error.message);let taskId=r.data.id;let old=await S.sb.from('task_assignees').delete().eq('task_id',taskId);if(old.error)console.warn(old.error);if(selected.length)await S.sb.from('task_assignees').insert(selected.map(user_id=>({task_id:taskId,user_id}))).then(()=>0);$('taskModal').close();await load()}"
 s=rep_func(s,'saveTask',sv)
+# timeline arrow labels: arrows only, no text
+s=s.replace('data-action="tl-prev">← Неделя</button><button class="btn sm secondary" data-action="tl-next">Неделя →</button>','data-action="tl-prev" title="Предыдущая неделя">←</button><button class="btn sm secondary" data-action="tl-next" title="Следующая неделя">→</button>')
+s=s.replace('data-action="tl-prev">←</button><button class="btn sm secondary" data-action="tl-next">→</button>','data-action="tl-prev" title="Предыдущая неделя">←</button><button class="btn sm secondary" data-action="tl-next" title="Следующая неделя">→</button>')
+# hour scale alignment with all-day row
+s=s.replace("((h-TL0)*60*TLP)+'px\">'+pad(h)+':00", "((h-TL0)*60*TLP+58)+'px\">'+pad(h)+':00")
+# robust timeline week navigation handler
+s=re.sub(r'/\* Timeline week arrows v1 start \*/[\s\S]*?/\* Timeline week arrows v1 end \*/\n?','',s)
+nav="""
+/* Timeline week arrows v1 start */
+document.addEventListener('click',function(e){let b=e.target&&e.target.closest?e.target.closest('[data-action]'):null;if(!b)return;let a=b.dataset.action;if(a!=='tl-prev'&&a!=='tl-next'&&a!=='tl-today')return;e.preventDefault();if(a==='tl-prev')S.timelineDate=add(S.timelineDate||today(),-7);if(a==='tl-next')S.timelineDate=add(S.timelineDate||today(),7);if(a==='tl-today')S.timelineDate=today();renderTimeline()},true);
+/* Timeline week arrows v1 end */
+"""
+pos=s.rfind('})();')
+if pos<0: raise SystemExit('runtime closure end not found')
+s=s[:pos]+nav+s[pos:]
 r.write_text(s,encoding='utf-8')
 cs=c.read_text(encoding='utf-8') if c.exists() else ''
 cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',cs)
