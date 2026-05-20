@@ -2,23 +2,23 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20260520-recurrence-scope-v2'
+ver='20260520-recurrence-scope-v3'
 js="""
-/* Recurrence scope editing v2 start */
+/* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
 function recurrenceUpdateScope(){ensureTaskRecurrenceScopeUi();return qa('input[name="taskRecurrenceScope"]').find(x=>x.checked)?.value||'one'}
-function setupTaskRecurrenceScope(t,id){ensureTaskRecurrenceScopeUi();let b=$('taskRecurrenceScopeBox');if(!b)return;let is=!!(id&&t&&t.recurrence_rule_id);b.classList.toggle('hidden',!is);qa('input[name="taskRecurrenceScope"]').forEach(x=>x.checked=x.value==='one');let h=$('taskRecurrenceScopeHint');if(h&&is){let all=S.tasks.filter(x=>!x.deleted_at&&x.recurrence_rule_id===t.recurrence_rule_id),a=t.recurrence_date||t.start_date||t.due_date||today(),f=all.filter(x=>String(x.recurrence_date||x.start_date||x.due_date||'')>=a);h.textContent='Серия: '+all.length+' задач. Эта и будущие: '+f.length+'. Даты экземпляров не переносятся.'}}
+function setupTaskRecurrenceScope(t,id){ensureTaskRecurrenceScopeUi();let b=$('taskRecurrenceScopeBox');if(!b)return;let key=id||'';let is=!!(id&&t&&t.recurrence_rule_id);b.classList.toggle('hidden',!is);if(b.dataset.taskId!==key){b.dataset.taskId=key;qa('input[name="taskRecurrenceScope"]').forEach(x=>x.checked=x.value==='one')}let h=$('taskRecurrenceScopeHint');if(h&&is){let all=S.tasks.filter(x=>!x.deleted_at&&x.recurrence_rule_id===t.recurrence_rule_id),a=t.recurrence_date||t.start_date||t.due_date||today(),f=all.filter(x=>String(x.recurrence_date||x.start_date||x.due_date||'')>=a);h.textContent='Серия: '+all.length+' задач. Эта и будущие: '+f.length+'. Даты экземпляров не переносятся.'}}
 function refreshTaskRecurrenceScope(){let id=$('taskId')?.value||null;let t=id?byId(S.tasks,id):null;setupTaskRecurrenceScope(t,id)}
-function installTaskRecurrenceScopeObserver(){let m=$('taskModal');if(!m||m.__recurrenceScopeObserver)return;if(m.open)setTimeout(refreshTaskRecurrenceScope,0);let obs=new MutationObserver(()=>{if(m.open)setTimeout(refreshTaskRecurrenceScope,0)});obs.observe(m,{attributes:true,attributeFilter:['open']});m.__recurrenceScopeObserver=obs;document.addEventListener('click',()=>setTimeout(()=>{if(m.open)refreshTaskRecurrenceScope()},80),true)}
+function installTaskRecurrenceScopeObserver(){let m=$('taskModal');if(!m||m.__recurrenceScopeObserver)return;if(m.open)setTimeout(refreshTaskRecurrenceScope,0);let obs=new MutationObserver(()=>{if(m.open)setTimeout(refreshTaskRecurrenceScope,0)});obs.observe(m,{attributes:true,attributeFilter:['open']});m.__recurrenceScopeObserver=obs;document.addEventListener('change',e=>{if(e.target&&e.target.name==='taskRecurrenceScope')return;if(m.open)setTimeout(refreshTaskRecurrenceScope,80)},true)}
 function recurrenceScopedTasks(t,scope){if(!t||!t.recurrence_rule_id||scope==='one')return t?[t]:[];let rows=S.tasks.filter(x=>!x.deleted_at&&x.recurrence_rule_id===t.recurrence_rule_id);if(scope==='future'){let a=String(t.recurrence_date||t.start_date||t.due_date||today());rows=rows.filter(x=>String(x.recurrence_date||x.start_date||x.due_date||'')>=a)}return rows}
 function rowForRecurrenceSeriesUpdate(row){return{title:row.title,project_id:row.project_id,notes:row.notes||null,status:row.status,priority:row.priority,assignee_id:row.assignee_id||null,start_time:row.start_time||null,end_time:row.end_time||null,duration_minutes:row.duration_minutes||null,is_all_day:!!row.is_all_day}}
 setTimeout(installTaskRecurrenceScopeObserver,0);
-/* Recurrence scope editing v2 end */
+/* Recurrence scope editing v3 end */
 """
 css="""
-/* Recurrence scope editing v2 start */
+/* Recurrence scope editing v3 start */
 .task-recurrence-scope{border:1px solid #dbe4ef;border-radius:14px;background:#fff;padding:12px;display:grid;gap:8px}.task-recurrence-scope.hidden{display:none!important}.task-recurrence-scope label{display:flex;align-items:center;gap:8px;font-size:13px}.task-recurrence-scope small{color:#64748b;line-height:1.35}
-/* Recurrence scope editing v2 end */
+/* Recurrence scope editing v3 end */
 """
 def rep_func(src,name,repl):
     pos=src.find('async function '+name)
@@ -39,7 +39,7 @@ def rep_func(src,name,repl):
                 if depth==0: return src[:pos]+repl+src[j+1:]
     raise SystemExit(name+' end not found')
 s=r.read_text(encoding='utf-8')
-s=re.sub(r'/\* Recurrence scope editing v[12] start \*/[\s\S]*?/\* Recurrence scope editing v[12] end \*/\n?','',s)
+s=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',s)
 s=s.replace('async function saveTask',js+'\nasync function saveTask',1)
 if 'setupTaskRecurrenceScope(t,id)' not in s:
     s=s.replace('fillTaskCalendarFields(t);','fillTaskCalendarFields(t);setupTaskRecurrenceScope(t,id);',1)
@@ -47,7 +47,7 @@ sv="async function saveTask(e){e.preventDefault();ensureTaskCalendarUi();let id=
 s=rep_func(s,'saveTask',sv)
 r.write_text(s,encoding='utf-8')
 cs=c.read_text(encoding='utf-8') if c.exists() else ''
-cs=re.sub(r'/\* Recurrence scope editing v[12] start \*/[\s\S]*?/\* Recurrence scope editing v[12] end \*/\n?','',cs)
+cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',cs)
 c.write_text(cs.rstrip()+'\n'+css,encoding='utf-8')
 html=i.read_text(encoding='utf-8')
 html=re.sub(r"assets/app\.js\?v=[^'\"]+",'assets/app.js?v='+ver,html)
