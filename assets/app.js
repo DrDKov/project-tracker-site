@@ -126,7 +126,7 @@
     if(window.__PT_RUNTIME_LOADING__) return;
     window.__PT_RUNTIME_LOADING__ = true;
     var script = document.createElement('script');
-    script.src = 'assets/app-runtime.js?v=20260519-recurrence-insert-v1';
+    script.src = 'assets/app-runtime.js?v=20260520-calendar-timeline-v1';
     script.async = false;
     script.onload = scheduleEnhance;
     script.onerror = function(){
