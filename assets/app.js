@@ -122,13 +122,29 @@
     [0,150,400,900,1800,3000].forEach(function(delay){ setTimeout(enhanceAllFilters,delay); });
   }
 
+  function loadNotificationModule(){
+    if(window.__TASK_NOTIFICATIONS_MODULE_LOADING__ || window.__TASK_NOTIFICATIONS_V2__) return;
+    window.__TASK_NOTIFICATIONS_MODULE_LOADING__ = true;
+    var script = document.createElement('script');
+    script.src = 'assets/task-notifications.js?v=20260525-task-notifications-v1';
+    script.async = false;
+    script.onerror = function(){
+      window.__TASK_NOTIFICATIONS_MODULE_LOADING__ = false;
+      console.warn('Project Tracker task notifications module failed to load');
+    };
+    document.head.appendChild(script);
+  }
+
   function loadRuntime(){
     if(window.__PT_RUNTIME_LOADING__) return;
     window.__PT_RUNTIME_LOADING__ = true;
     var script = document.createElement('script');
     script.src = 'assets/app-runtime.js?v=20260520-calendar-timeline-v1';
     script.async = false;
-    script.onload = scheduleEnhance;
+    script.onload = function(){
+      scheduleEnhance();
+      loadNotificationModule();
+    };
     script.onerror = function(){
       var status = document.getElementById('sideStatusText');
       if(status) status.textContent = 'Не удалось загрузить основной runtime приложения.';
