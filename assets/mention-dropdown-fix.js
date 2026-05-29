@@ -1,0 +1,199 @@
+/* Workspace mention dropdown fix v1: compact @ user picker for task comments, no static hint. */
+(function(){
+  if(window.__MENTION_DROPDOWN_FIX_V1__) return;
+  window.__MENTION_DROPDOWN_FIX_V1__ = 1;
+
+  var state = { members:[], loadedAt:0, timer:null };
+  var TTL = 45000;
+
+  function $(id){ return document.getElementById(id); }
+  function esc(value){
+    return String(value == null ? '' : value).replace(/[&<>"']/g,function(ch){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
+    });
+  }
+  function users(){ try{ return Array.isArray(window.users) ? window.users : []; }catch(e){ return []; } }
+  function projects(){ try{ return Array.isArray(window.projects) ? window.projects : []; }catch(e){ return []; } }
+  function profile(){ try{ return window.currentProfile || null; }catch(e){ return null; } }
+  function sb(){ try{ return window.sb || null; }catch(e){ return null; } }
+  function displayName(user){ return (user && (user.display_name || user.email)) || 'Пользователь'; }
+  function initials(user){ return displayName(user).slice(0,2).toUpperCase(); }
+
+  function ensureCss(){
+    if($('mention-dropdown-fix-css')) return;
+    var st = document.createElement('style');
+    st.id = 'mention-dropdown-fix-css';
+    st.textContent = '.mention-hint{display:none!important}.mention-fix-menu{position:fixed;z-index:9000;width:min(340px,calc(100vw - 24px));max-height:260px;overflow:auto;border:1px solid #dbe4ef;border-radius:14px;background:#fff;box-shadow:0 20px 54px rgba(15,23,42,.22);padding:6px;display:none}.mention-fix-menu.open{display:block}.mention-fix-option{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:#0f172a;text-align:left;border-radius:10px;padding:8px 9px;cursor:pointer}.mention-fix-option:hover,.mention-fix-option.active{background:#eff6ff}.mention-fix-avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e2e8f0;color:#334155;font-size:11px;font-weight:900;flex:0 0 auto}.mention-fix-main{min-width:0}.mention-fix-main b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-fix-main span{display:block;font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-fix-empty{padding:9px 10px;color:#64748b;font-size:13px}';
+    document.head.appendChild(st);
+  }
+
+  function removeOldHints(){
+    document.querySelectorAll('.mention-hint').forEach(function(el){ if(el && el.parentNode) el.parentNode.removeChild(el); });
+  }
+
+  function ensureMenu(){
+    ensureCss();
+    removeOldHints();
+    var menu = $('mentionFixMenu');
+    if(menu) return menu;
+    menu = document.createElement('div');
+    menu.id = 'mentionFixMenu';
+    menu.className = 'mention-fix-menu';
+    document.body.appendChild(menu);
+    return menu;
+  }
+
+  function hideMenu(){
+    var menu = $('mentionFixMenu');
+    if(menu) menu.classList.remove('open');
+  }
+
+  function mentionQuery(text,pos){
+    var before = String(text || '').slice(0,pos == null ? 0 : pos);
+    var at = before.lastIndexOf('@');
+    if(at < 0) return null;
+    var chunk = before.slice(at + 1);
+    if(chunk.length > 60) return null;
+    if(/[\n\r]/.test(chunk)) return null;
+    if(/[,;.!?()\[\]{}]/.test(chunk)) return null;
+    return {start:at, query:chunk.trim().toLowerCase()};
+  }
+
+  async function refreshMembers(force){
+    var api = sb();
+    if(!api) return state.members;
+    if(!force && Date.now() - state.loadedAt < TTL) return state.members;
+    try{
+      var r = await api.from('project_members').select('*').order('created_at',{ascending:true});
+      if(!r.error && Array.isArray(r.data)){
+        state.members = r.data;
+        state.loadedAt = Date.now();
+      }
+    }catch(e){}
+    return state.members;
+  }
+
+  function projectIdsForUser(userId){
+    var ids = new Set();
+    projects().forEach(function(p){ if(p && p.owner_id === userId && !p.deleted_at) ids.add(p.id); });
+    state.members.forEach(function(m){ if(m && m.user_id === userId) ids.add(m.project_id); });
+    return ids;
+  }
+
+  function allowedUsers(){
+    var me = profile();
+    if(!me || !me.id) return [];
+    var all = users().filter(function(u){ return u && u.id && u.id !== me.id && u.is_active !== false; });
+    if(me.role === 'owner') return all;
+    var myProjects = projectIdsForUser(me.id);
+    var allowed = new Set();
+    projects().forEach(function(p){ if(p && myProjects.has(p.id) && p.owner_id) allowed.add(p.owner_id); });
+    state.members.forEach(function(m){ if(m && myProjects.has(m.project_id) && m.user_id) allowed.add(m.user_id); });
+    return all.filter(function(u){ return allowed.has(u.id); });
+  }
+
+  function positionMenu(menu,ta){
+    var r = ta.getBoundingClientRect();
+    var left = Math.max(10,Math.min(r.left,window.innerWidth - 360));
+    var top = r.bottom + 6;
+    if(top > window.innerHeight - 280) top = Math.max(10,r.top - 268);
+    menu.style.left = left + 'px';
+    menu.style.top = top + 'px';
+  }
+
+  function renderMenu(ta,list,q){
+    var menu = ensureMenu();
+    positionMenu(menu,ta);
+    if(!list.length){
+      menu.innerHTML = '<div class="mention-fix-empty">Нет доступных пользователей</div>';
+      menu.classList.add('open');
+      return;
+    }
+    menu.innerHTML = list.slice(0,8).map(function(u){
+      return '<button type="button" class="mention-fix-option" data-mention-fix-user="'+esc(u.id)+'"><span class="mention-fix-avatar">'+esc(initials(u))+'</span><span class="mention-fix-main"><b>'+esc(displayName(u))+'</b><span>'+esc(u.email || '')+'</span></span></button>';
+    }).join('');
+    menu.dataset.query = q || '';
+    menu.classList.add('open');
+  }
+
+  async function updateMenu(forceMembers){
+    var ta = $('taskCommentText');
+    if(!ta || document.activeElement !== ta){ hideMenu(); return; }
+    var q = mentionQuery(ta.value,ta.selectionStart);
+    if(!q){ hideMenu(); return; }
+    await refreshMembers(!!forceMembers || !state.loadedAt);
+    var list = allowedUsers().filter(function(u){
+      var hay = [u.display_name || '',u.email || ''].join(' ').toLowerCase();
+      return !q.query || hay.indexOf(q.query) !== -1;
+    });
+    renderMenu(ta,list,q.query);
+  }
+
+  function insertMention(userId){
+    var ta = $('taskCommentText');
+    var user = users().find(function(u){ return u && u.id === userId; });
+    if(!ta || !user) return;
+    var q = mentionQuery(ta.value,ta.selectionStart);
+    if(!q) return;
+    var label = '@' + displayName(user) + ' ';
+    ta.value = ta.value.slice(0,q.start) + label + ta.value.slice(ta.selectionStart);
+    var pos = q.start + label.length;
+    ta.focus();
+    ta.setSelectionRange(pos,pos);
+    ta.dispatchEvent(new Event('input',{bubbles:true}));
+    hideMenu();
+  }
+
+  function scheduleUpdate(forceMembers){
+    clearTimeout(state.timer);
+    state.timer = setTimeout(function(){ updateMenu(forceMembers); },30);
+  }
+
+  document.addEventListener('input',function(e){
+    if(e.target && e.target.id === 'taskCommentText') scheduleUpdate(false);
+  },true);
+  document.addEventListener('keyup',function(e){
+    if(e.target && e.target.id === 'taskCommentText') scheduleUpdate(false);
+  },true);
+  document.addEventListener('click',function(e){
+    var pick = e.target.closest('[data-mention-fix-user]');
+    if(pick){
+      e.preventDefault();
+      e.stopPropagation();
+      if(e.stopImmediatePropagation) e.stopImmediatePropagation();
+      insertMention(pick.getAttribute('data-mention-fix-user'));
+      return;
+    }
+    if(e.target && e.target.id === 'taskCommentText'){
+      scheduleUpdate(true);
+      return;
+    }
+    if(!e.target.closest('#mentionFixMenu')) hideMenu();
+  },true);
+  document.addEventListener('focusin',function(e){
+    if(e.target && e.target.id === 'taskCommentText') scheduleUpdate(true);
+  },true);
+  document.addEventListener('keydown',function(e){
+    var menu = $('mentionFixMenu');
+    if(!menu || !menu.classList.contains('open')) return;
+    if(e.key === 'Escape'){
+      hideMenu();
+      return;
+    }
+    if(e.key === 'Enter' || e.key === 'Tab'){
+      var first = menu.querySelector('[data-mention-fix-user]');
+      if(first){
+        e.preventDefault();
+        insertMention(first.getAttribute('data-mention-fix-user'));
+      }
+    }
+  },true);
+
+  function boot(){
+    ensureCss();
+    removeOldHints();
+    setInterval(removeOldHints,500);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
+  else boot();
+})();
