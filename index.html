@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ru">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Workspace &middot; Project Tracker
+  </title>
+  <link href="./assets/icons/icon-192.svg" rel="icon" type="image/svg+xml"/>
+  <link href="./assets/icons/icon-192.png" rel="apple-touch-icon"/>
+  <link href="./manifest.webmanifest" rel="manifest"/>
+  <script type="module" src="/config/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  </script>
+</head>
+ <body>
+  <div class="app">
+   <aside class="sidebar">
+    <div class="brand">
+     <div class="logo">
+      PT
+     </div>
+     <div>
+      <h1>
+       Workspace
+      </h1>
+      <p>
+       &Ocy;&bcy;&shchcy;&icy;&iecy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ycy; &icy; &zcy;&acy;&dcy;&acy;&chcy;&icy;
+      </p>
+     </div>
+    </div>
+    <nav class="nav">
+     <button class="active" data-view="overview">
+      ⌂ &Ocy;&bcy;&zcy;&ocy;&rcy;
+     </button>
+     <button data-view="projects">
+      ▦ &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ycy;
+     </button>
+     <button data-view="tasks">
+      ☑ &Zcy;&acy;&dcy;&acy;&chcy;&icy;
+     </button>
+     <button data-view="timeline">
+      ⌁ &Tcy;&acy;&jcy;&mcy;&lcy;&acy;&jcy;&ncy;
+     </button>
+     <button data-view="chat">
+      ✎ &CHcy;&acy;&tcy;&ycy;
+     </button>
+     <button data-view="team">
+      ◉ &Kcy;&ocy;&mcy;&acy;&ncy;&dcy;&acy;
+     </button>
+     <button data-view="audit">
+      ◷ &ZHcy;&ucy;&rcy;&ncy;&acy;&lcy;
+     </button>
+     <button data-view="settings">
+      ⚙ &Ncy;&acy;&scy;&tcy;&rcy;&ocy;&jcy;&kcy;&icy;
+     </button>
+    </nav>
+    <div class="side-footer">
+     <b id="sideStatusTitle">
+      &Bcy;&acy;&zcy;&acy; &pcy;&ocy;&dcy;&kcy;&lcy;&yucy;&chcy;&iecy;&ncy;&acy;
+     </b>
+     <br/>
+     <span id="sideStatusText">
+      &Pcy;&rcy;&ocy;&vcy;&iecy;&rcy;&yacy;&yucy; &tcy;&iecy;&kcy;&ucy;&shchcy;&ucy;&yucy; &scy;&iecy;&scy;&scy;&icy;&yucy;...
+     </span>
+    </div>
+   </aside>
+   <main class="main">
+    <header class="topbar">
+     <div>
+      <h2 id="pageTitle">
+       &Ocy;&bcy;&zcy;&ocy;&rcy;
+      </h2>
+      <p id="pageSubtitle">
+       &IEcy;&dcy;&icy;&ncy;&ocy;&iecy; &pcy;&rcy;&ocy;&scy;&tcy;&rcy;&acy;&ncy;&scy;&tcy;&vcy;&ocy; &ucy;&pcy;&rcy;&acy;&vcy;&lcy;&iecy;&ncy;&icy;&yacy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&acy;&mcy;&icy;
+      </p>
+     </div>
+     <div class="top-actions">
+      <button class="btn secondary" id="refreshBtn">
+       &Ocy;&bcy;&ncy;&ocy;&vcy;&icy;&tcy;&softcy;
+      </button>
+      <button class="btn secondary" id="openSettingsBtn">
+       &Ncy;&acy;&scy;&tcy;&rcy;&ocy;&jcy;&kcy;&icy;
+      </button>
+      <button class="btn blue" id="quickProjectBtn">
+       + &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;
+      </button>
+      <button class="btn primary" id="quickTaskBtn">
+       + &Zcy;&acy;&dcy;&acy;&chcy;&acy;
+      </button>
+     </div>
+    </header>
+    <section class="view active" id="overview">
+     <div class="cards-grid">
+      <div class="metric">
+       <span>
+        &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ocy;&vcy;
+       </span>
+       <b id="mProjects">
+        0
+       </b>
+      </div>
+      <div class="metric">
+       <span>
+        &Ocy;&tcy;&kcy;&rcy;&ycy;&tcy;&ycy;&khcy; &zcy;&acy;&dcy;&acy;&chcy;
+       </span>
+       <b id="mOpen">
+        0
+       </b>
+      </div>
+      <div class="metric">
+       <span>
+        &Pcy;&rcy;&ocy;&scy;&rcy;&ocy;&chcy;&iecy;&ncy;&ocy;
+       </span>
+       <b id="mOverdue">
+        0
+       </b>
+      </div>
+      <div class="metric">
+       <span>
+        &Ucy;&chcy;&acy;&scy;&tcy;&ncy;&icy;&kcy;&ocy;&vcy;
+       </span>
+       <b id="mUsers">
+        0
+       </b>
+      </div>
+     </div>
+     <div class="layout-2">
+      <div class="panel">
+       <div class="panel-head">
+        <div>
+         <h3>
+          &Acy;&kcy;&tcy;&icy;&vcy;&ncy;&ycy;&iecy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ycy;
+         </h3>
+         <p class="muted">
+          &Kcy;&acy;&rcy;&tcy;&ocy;&chcy;&kcy;&icy; &scy; &vcy;&lcy;&acy;&dcy;&iecy;&lcy;&softcy;&tscy;&acy;&mcy;&icy;, &scy;&rcy;&ocy;&kcy;&acy;&mcy;&icy;, &ucy;&chcy;&acy;&scy;&tcy;&ncy;&icy;&kcy;&acy;&mcy;&icy; &icy; &pcy;&rcy;&ocy;&gcy;&rcy;&iecy;&scy;&scy;&ocy;&mcy;
+         </p>
+        </div>
+       </div>
+       <div class="project-grid" id="overviewProjects">
+       </div>
+      </div>
+      <div class="panel">
+       <div class="panel-head">
+        <div>
+         <h3>
+          &Fcy;&ocy;&kcy;&ucy;&scy; &ncy;&iecy;&dcy;&iecy;&lcy;&icy;
+         </h3>
+         <p class="muted">
+          &Vcy;&ycy;&scy;&ocy;&kcy;&icy;&jcy; &pcy;&rcy;&icy;&ocy;&rcy;&icy;&tcy;&iecy;&tcy; &icy; &bcy;&lcy;&icy;&zhcy;&acy;&jcy;&shcy;&icy;&iecy; &scy;&rcy;&ocy;&kcy;&icy;
+         </p>
+        </div>
+       </div>
+       <div id="focusList">
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="view" id="projects">
+     <div class="toolbar">
+      <input class="input" id="projectSearch" placeholder="&Pcy;&ocy;&icy;&scy;&kcy; &pcy;&ocy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&acy;&mcy;"/>
+      <select class="input" id="projectStatusFilter" multiple="" size="4">
+       <option value="all">
+        &Vcy;&scy;&iecy; &scy;&tcy;&acy;&tcy;&ucy;&scy;&ycy;
+       </option>
+       <option value="idea">
+        &Icy;&dcy;&iecy;&yacy;
+       </option>
+       <option value="planned">
+        &Zcy;&acy;&pcy;&lcy;&acy;&ncy;&icy;&rcy;&ocy;&vcy;&acy;&ncy;&ocy;
+       </option>
+       <option value="in_progress">
+        &Vcy; &rcy;&acy;&bcy;&ocy;&tcy;&iecy;
+       </option>
+       <option value="waiting">
+        &Ocy;&zhcy;&icy;&dcy;&acy;&ncy;&icy;&iecy;
+       </option>
+       <option value="done">
+        &Zcy;&acy;&vcy;&iecy;&rcy;&shcy;&iecy;&ncy;&ocy;
+       </option>
+      </select>
+      <select class="input" id="projectOwnerFilter" multiple="" size="4">
+       <option value="all">
+        &Vcy;&scy;&iecy; &vcy;&lcy;&acy;&dcy;&iecy;&lcy;&softcy;&tscy;&ycy;
+       </option>
+      </select>
+      <button class="btn blue" id="newProjectBtn">
+       + &Scy;&ocy;&zcy;&dcy;&acy;&tcy;&softcy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;
+      </button>
+     </div>
+     <div class="project-grid" id="projectGrid">
+     </div>
+    </section>
+    <section class="view" id="tasks">
+     <div class="toolbar">
+      <input class="input" id="taskSearch" placeholder="&Pcy;&ocy;&icy;&scy;&kcy; &pcy;&ocy; &zcy;&acy;&dcy;&acy;&chcy;&acy;&mcy;"/>
+      <select class="input" id="taskProjectFilter" multiple="" size="4">
+       <option value="all">
+        &Vcy;&scy;&iecy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ycy;
+       </option>
+      </select>
+      <select class="input" id="taskAssigneeFilter" multiple="" size="4">
+       <option value="all">
+        &Vcy;&scy;&iecy; &icy;&scy;&pcy;&ocy;&lcy;&ncy;&icy;&tcy;&iecy;&lcy;&icy;
+       </option>
+      </select>
+      <button class="btn blue" id="newTaskBtn">
+       + &Scy;&ocy;&zcy;&dcy;&acy;&tcy;&softcy; &zcy;&acy;&dcy;&acy;&chcy;&ucy;
+      </button>
+     </div>
+     <div class="kanban" id="kanban">
+     </div>
+    </section>
+    <section class="view" id="timeline">
+     <div class="panel">
+      <div class="panel-head">
+       <div>
+        <h3>
+         &Vcy;&rcy;&iecy;&mcy;&iecy;&ncy;&ncy;&acy;&yacy; &shcy;&kcy;&acy;&lcy;&acy;
+        </h3>
+        <p class="muted">
+         &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ycy;, &scy;&rcy;&ocy;&kcy;&icy;, &zcy;&acy;&dcy;&acy;&chcy;&icy; &icy; &kcy;&ocy;&ncy;&tcy;&rcy;&ocy;&lcy;&softcy;&ncy;&ycy;&iecy; &tcy;&ocy;&chcy;&kcy;&icy;
+        </p>
+       </div>
+       <button class="btn blue" id="newMilestoneBtn">
+        + &Vcy;&iecy;&khcy;&acy;
+       </button>
+      </div>
+      <div class="timeline" id="timelineList">
+      </div>
+     </div>
+    </section>
+    <section class="view" id="audit">
+     <div class="panel">
+      <div class="panel-head">
+       <div>
+        <h3>
+         &ZHcy;&ucy;&rcy;&ncy;&acy;&lcy; &icy;&zcy;&mcy;&iecy;&ncy;&iecy;&ncy;&icy;&jcy;
+        </h3>
+        <p class="muted">
+         &Rcy;&acy;&zcy;&dcy;&iecy;&lcy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy;&iecy;&ncy; &vcy;&lcy;&acy;&dcy;&iecy;&lcy;&softcy;&tscy;&ucy; workspace. &Zcy;&dcy;&iecy;&scy;&softcy; &ocy;&tcy;&ocy;&bcy;&rcy;&acy;&zhcy;&acy;&yucy;&tcy;&scy;&yacy; &dcy;&iecy;&jcy;&scy;&tcy;&vcy;&icy;&yacy; &pcy;&ocy;&lcy;&softcy;&zcy;&ocy;&vcy;&acy;&tcy;&iecy;&lcy;&iecy;&jcy;.
+        </p>
+       </div>
+       <button class="btn secondary" data-action="reload-audit">
+        &Ocy;&bcy;&ncy;&ocy;&vcy;&icy;&tcy;&softcy;
+       </button>
+      </div>
+      <div id="auditList">
+      </div>
+     </div>
+    </section>
+    <section class="view" id="chat">
+     <div class="panel chat-panel">
+      <div class="panel-head">
+       <div>
+        <h3>
+         &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ncy;&ycy;&iecy; &chcy;&acy;&tcy;&ycy;
+        </h3>
+        <p class="muted">
+         &Ocy;&bcy;&scy;&ucy;&zhcy;&dcy;&iecy;&ncy;&icy;&iecy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&acy;, &tcy;&iecy;&kcy;&scy;&tcy;&ocy;&vcy;&ycy;&iecy; &scy;&ocy;&ocy;&bcy;&shchcy;&iecy;&ncy;&icy;&yacy;, &fcy;&acy;&jcy;&lcy;&ycy; &icy; &icy;&zcy;&ocy;&bcy;&rcy;&acy;&zhcy;&iecy;&ncy;&icy;&yacy;
+        </p>
+       </div>
+       <select class="input" id="chatProject">
+       </select>
+      </div>
+      <div class="chat-layout">
+       <div class="chat-messages" id="chatMessages">
+       </div>
+       <div class="chat-compose">
+        <textarea class="input textarea" id="chatText" placeholder="&Ncy;&acy;&pcy;&icy;&shcy;&icy;&tcy;&iecy; &scy;&ocy;&ocy;&bcy;&shchcy;&iecy;&ncy;&icy;&iecy; &pcy;&ocy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ucy;..."></textarea>
+        <input class="input" id="chatFiles" multiple="" type="file"/>
+        <div class="row">
+         <button class="btn primary" id="sendChatBtn">
+          &Ocy;&tcy;&pcy;&rcy;&acy;&vcy;&icy;&tcy;&softcy;
+         </button>
+         <span class="muted" id="chatHint">
+          &Fcy;&acy;&jcy;&lcy;&ycy; &scy;&ocy;&khcy;&rcy;&acy;&ncy;&yacy;&yucy;&tcy;&scy;&yacy; &vcy; Supabase Storage bucket project-chat-files.
+         </span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section>
+    <section class="view" id="team">
+     <div class="toolbar">
+      <button class="btn blue admin-only" id="newUserBtn">
+       + &Scy;&ocy;&zcy;&dcy;&acy;&tcy;&softcy; &pcy;&rcy;&ocy;&fcy;&icy;&lcy;&softcy; &pcy;&ocy;&lcy;&softcy;&zcy;&ocy;&vcy;&acy;&tcy;&iecy;&lcy;&yacy;
+      </button>
+     </div>
+     <div class="notice">
+      &Pcy;&acy;&rcy;&ocy;&lcy;&icy; &ucy;&pcy;&rcy;&acy;&vcy;&lcy;&yacy;&yucy;&tcy;&scy;&yacy; &tcy;&ocy;&lcy;&softcy;&kcy;&ocy; &chcy;&iecy;&rcy;&iecy;&zcy;
+      <b>
+       Supabase Auth
+      </b>
+      . &Acy;&dcy;&mcy;&icy;&ncy; &scy;&ocy;&zcy;&dcy;&acy;&iocy;&tcy; &pcy;&rcy;&ocy;&fcy;&icy;&lcy;&softcy;, &rcy;&ocy;&lcy;&softcy; &icy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy;&ycy; &kcy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&acy;&mcy;.
+     </div>
+     <br/>
+     <div class="user-grid" id="userGrid">
+     </div>
+    </section>
+    <section class="view" id="settings">
+     <div class="settings-grid">
+      <div class="panel">
+       <h3>
+        &Vcy;&khcy;&ocy;&dcy; &vcy; workspace
+       </h3>
+       <p class="muted">
+        &Bcy;&acy;&zcy;&acy; &ucy;&zhcy;&iecy; &pcy;&ocy;&dcy;&kcy;&lcy;&yucy;&chcy;&iecy;&ncy;&acy;. &Rcy;&iecy;&acy;&lcy;&softcy;&ncy;&ycy;&jcy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy; &vcy;&ycy;&pcy;&ocy;&lcy;&ncy;&yacy;&iecy;&tcy;&scy;&yacy; &chcy;&iecy;&rcy;&iecy;&zcy; email, &pcy;&acy;&rcy;&ocy;&lcy;&softcy; &icy; Supabase Auth/RLS.
+       </p>
+       <label>
+        <span class="muted">
+         Email
+        </span>
+        <input class="input" id="loginEmail" placeholder="email"/>
+       </label>
+       <label>
+        <span class="muted">
+         &Pcy;&acy;&rcy;&ocy;&lcy;&softcy;
+        </span>
+        <input class="input" id="loginPassword" placeholder="password" type="password"/>
+       </label>
+       <div class="row">
+        <button class="btn primary" id="signInBtn">
+         &Vcy;&ocy;&jcy;&tcy;&icy;
+        </button>
+        <button class="btn secondary" id="signUpBtn">
+         &Scy;&ocy;&zcy;&dcy;&acy;&tcy;&softcy; Auth-&acy;&kcy;&kcy;&acy;&ucy;&ncy;&tcy;
+        </button>
+        <button class="btn secondary" id="claimProfileBtn">
+         &Pcy;&rcy;&icy;&vcy;&yacy;&zcy;&acy;&tcy;&softcy; &pcy;&rcy;&ocy;&fcy;&icy;&lcy;&softcy;
+        </button>
+        <button class="btn secondary" id="logoutBtn">
+         &Vcy;&ycy;&jcy;&tcy;&icy;
+        </button>
+       </div>
+       <p class="muted" id="authState">
+        Auth: &ncy;&iecy; &vcy;&ycy;&pcy;&ocy;&lcy;&ncy;&iecy;&ncy; &vcy;&khcy;&ocy;&dcy;
+       </p>
+       <p class="muted" id="settingsStatus">
+        &Bcy;&acy;&zcy;&acy; &pcy;&ocy;&dcy;&kcy;&lcy;&yucy;&chcy;&iecy;&ncy;&acy; &middot; &vcy;&ocy;&jcy;&dcy;&icy;&tcy;&iecy; &pcy;&ocy; email &icy; &pcy;&acy;&rcy;&ocy;&lcy;&yucy;.
+       </p>
+       <input id="supabaseUrl" type="hidden"/>
+       <input id="supabaseKey" type="hidden"/>
+       <button class="hidden-auth-config" id="saveConnectionBtn" type="button">
+        &Scy;&ocy;&khcy;&rcy;&acy;&ncy;&icy;&tcy;&softcy;
+       </button>
+       <button class="hidden-auth-config" id="connectBtn" type="button">
+        &Pcy;&rcy;&ocy;&vcy;&iecy;&rcy;&icy;&tcy;&softcy; &pcy;&ocy;&dcy;&kcy;&lcy;&yucy;&chcy;&iecy;&ncy;&icy;&iecy;
+       </button>
+      </div>
+      <div class="panel">
+       <h3>
+        &Pcy;&iecy;&rcy;&vcy;&icy;&chcy;&ncy;&acy;&yacy; &ncy;&acy;&scy;&tcy;&rcy;&ocy;&jcy;&kcy;&acy; &vcy;&lcy;&acy;&dcy;&iecy;&lcy;&softcy;&tscy;&acy;
+       </h3>
+       <p class="muted">
+        &Kcy;&ncy;&ocy;&pcy;&kcy;&acy; &ncy;&ucy;&zhcy;&ncy;&acy; &tcy;&ocy;&lcy;&softcy;&kcy;&ocy; &ocy;&dcy;&icy;&ncy; &rcy;&acy;&zcy; &pcy;&ocy;&scy;&lcy;&iecy; &vcy;&kcy;&lcy;&yucy;&chcy;&iecy;&ncy;&icy;&yacy; RLS.
+       </p>
+       <div class="row">
+        <button class="btn danger" id="bootstrapOwnerBtn">
+         &Ncy;&acy;&zcy;&ncy;&acy;&chcy;&icy;&tcy;&softcy; &scy;&iecy;&bcy;&yacy; &vcy;&lcy;&acy;&dcy;&iecy;&lcy;&softcy;&tscy;&iecy;&mcy; workspace
+        </button>
+       </div>
+      </div>
+      <div class="panel admin-only">
+       <h3>
+        &Acy;&dcy;&mcy;&icy;&ncy;&icy;&scy;&tcy;&rcy;&icy;&rcy;&ocy;&vcy;&acy;&ncy;&icy;&iecy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy;&acy;
+       </h3>
+       <p class="muted">
+        &Acy;&dcy;&mcy;&icy;&ncy; &ucy;&pcy;&rcy;&acy;&vcy;&lcy;&yacy;&iecy;&tcy; &rcy;&ocy;&lcy;&yacy;&mcy;&icy;, &ucy;&chcy;&acy;&scy;&tcy;&ncy;&icy;&kcy;&acy;&mcy;&icy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ocy;&vcy; &icy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy;&ocy;&mcy; &kcy; &chcy;&acy;&tcy;&acy;&mcy;.
+       </p>
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+  <dialog class="modal" id="projectModal">
+   <form class="modal-body" id="projectForm" method="dialog">
+    <div class="modal-head">
+     <h3>
+      &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;
+     </h3>
+     <button class="x" data-close="projectModal" type="button">
+      ✕
+     </button>
+    </div>
+    <input id="projectId" type="hidden"/>
+    <div class="form-grid">
+     <label>
+      <span>
+       &Ncy;&acy;&zcy;&vcy;&acy;&ncy;&icy;&iecy;
+      </span>
+      <input class="input" id="projectName" required=""/>
+     </label>
+     <label>
+      <span>
+       &Vcy;&lcy;&acy;&dcy;&iecy;&lcy;&iecy;&tscy;
+      </span>
+      <select class="input" id="projectOwner">
+      </select>
+     </label>
+     <label>
+      <span>
+       &Scy;&tcy;&acy;&tcy;&ucy;&scy;
+      </span>
+      <select class="input" id="projectStatus">
+       <option value="idea">
+        &Icy;&dcy;&iecy;&yacy;
+       </option>
+       <option value="planned">
+        &Zcy;&acy;&pcy;&lcy;&acy;&ncy;&icy;&rcy;&ocy;&vcy;&acy;&ncy;&ocy;
+       </option>
+       <option value="in_progress">
+        &Vcy; &rcy;&acy;&bcy;&ocy;&tcy;&iecy;
+       </option>
+       <option value="waiting">
+        &Ocy;&zhcy;&icy;&dcy;&acy;&ncy;&icy;&iecy;
+       </option>
+       <option value="done">
+        &Zcy;&acy;&vcy;&iecy;&rcy;&shcy;&iecy;&ncy;&ocy;
+       </option>
+      </select>
+     </label>
+     <label>
+      <span>
+       &Pcy;&rcy;&icy;&ocy;&rcy;&icy;&tcy;&iecy;&tcy;
+      </span>
+      <select class="input" id="projectPriority">
+       <option value="high">
+        &Vcy;&ycy;&scy;&ocy;&kcy;&icy;&jcy;
+       </option>
+       <option value="medium">
+        &Scy;&rcy;&iecy;&dcy;&ncy;&icy;&jcy;
+       </option>
+       <option value="low">
+        &Ncy;&icy;&zcy;&kcy;&icy;&jcy;
+       </option>
+      </select>
+     </label>
+     <label>
+      <span>
+       &Dcy;&acy;&tcy;&acy; &scy;&tcy;&acy;&rcy;&tcy;&acy;
+      </span>
+      <input class="input" id="projectStart" type="date"/>
+     </label>
+     <label>
+      <span>
+       &Scy;&rcy;&ocy;&kcy;
+      </span>
+      <input class="input" id="projectDeadline" type="date"/>
+     </label>
+     <label>
+      <span>
+       &TScy;&vcy;&iecy;&tcy;
+      </span>
+      <input class="input" id="projectColor" type="color" value="#111827"/>
+     </label>
+     <label class="full">
+      <span>
+       &Scy;&lcy;&iecy;&dcy;&ucy;&yucy;&shchcy;&icy;&jcy; &shcy;&acy;&gcy;
+      </span>
+      <input class="input" id="projectNext"/>
+     </label>
+     <label class="full">
+      <span>
+       &Ocy;&pcy;&icy;&scy;&acy;&ncy;&icy;&iecy;
+      </span>
+      <textarea class="input textarea" id="projectDescription"></textarea>
+     </label>
+    </div>
+    <div class="modal-actions">
+     <button class="btn secondary" data-close="projectModal" type="button">
+      &Ocy;&tcy;&mcy;&iecy;&ncy;&acy;
+     </button>
+     <button class="btn primary">
+      &Scy;&ocy;&khcy;&rcy;&acy;&ncy;&icy;&tcy;&softcy;
+     </button>
+    </div>
+   </form>
+  </dialog>
+  <dialog class="modal" id="taskModal">
+   <form class="modal-body" id="taskForm" method="dialog">
+    <div class="modal-head">
+     <h3>
+      &Zcy;&acy;&dcy;&acy;&chcy;&acy;
+     </h3>
+     <button class="x" data-close="taskModal" type="button">
+      ✕
+     </button>
+    </div>
+    <input id="taskId" type="hidden"/>
+    <div class="form-grid">
+     <label>
+      <span>
+       &Ncy;&acy;&zcy;&vcy;&acy;&ncy;&icy;&iecy;
+      </span>
+      <input class="input" id="taskTitle" required=""/>
+     </label>
+     <label>
+      <span>
+       &Pcy;&rcy;&ocy;&iecy;&kcy;&tcy;
+      </span>
+      <select class="input" id="taskProject">
+      </select>
+     </label>
+     <label class="full">
+      <span>
+       &Icy;&scy;&pcy;&ocy;&lcy;&ncy;&icy;&tcy;&iecy;&lcy;&icy;
+      </span>
+      <select class="input multi" id="taskAssignee" multiple="" size="5">
+      </select>
+      <span class="muted">
+       &Mcy;&ocy;&zhcy;&ncy;&ocy; &vcy;&ycy;&bcy;&rcy;&acy;&tcy;&softcy; &ncy;&iecy;&scy;&kcy;&ocy;&lcy;&softcy;&kcy;&ocy; &icy;&scy;&pcy;&ocy;&lcy;&ncy;&icy;&tcy;&iecy;&lcy;&iecy;&jcy;: Ctrl/Shift + &kcy;&lcy;&icy;&kcy;.
+      </span>
+     </label>
+     <label>
+      <span>
+       &Scy;&tcy;&acy;&tcy;&ucy;&scy;
+      </span>
+      <select class="input" id="taskStatus">
+       <option value="planned">
+        &Zcy;&acy;&pcy;&lcy;&acy;&ncy;&icy;&rcy;&ocy;&vcy;&acy;&ncy;&ocy;
+       </option>
+       <option value="in_progress">
+        &Vcy; &rcy;&acy;&bcy;&ocy;&tcy;&iecy;
+       </option>
+       <option value="waiting">
+        &Ocy;&zhcy;&icy;&dcy;&acy;&ncy;&icy;&iecy;
+       </option>
+       <option value="done">
+        &Zcy;&acy;&vcy;&iecy;&rcy;&shcy;&iecy;&ncy;&ocy;
+       </option>
+      </select>
+     </label>
+     <label>
+      <span>
+       &Pcy;&rcy;&icy;&ocy;&rcy;&icy;&tcy;&iecy;&tcy;
+      </span>
+      <select class="input" id="taskPriority">
+       <option value="high">
+        &Vcy;&ycy;&scy;&ocy;&kcy;&icy;&jcy;
+       </option>
+       <option value="medium">
+        &Scy;&rcy;&iecy;&dcy;&ncy;&icy;&jcy;
+       </option>
+       <option value="low">
+        &Ncy;&icy;&zcy;&kcy;&icy;&jcy;
+       </option>
+      </select>
+     </label>
+     <label>
+      <span>
+       &Dcy;&acy;&tcy;&acy; &scy;&tcy;&acy;&rcy;&tcy;&acy;
+      </span>
+      <input class="input" id="taskStart" type="date"/>
+     </label>
+     <label>
+      <span>
+       &Scy;&rcy;&ocy;&kcy;
+      </span>
+      <input class="input" id="taskDue" type="date"/>
+     </label>
+     <div class="full task-calendar-box">
+      <label class="task-calendar-head">
+       <input id="taskAllDay" type="checkbox"/>
+       <span>
+        &Vcy;&iecy;&scy;&softcy; &dcy;&iecy;&ncy;&softcy; / &bcy;&iecy;&zcy; &kcy;&ocy;&ncy;&kcy;&rcy;&iecy;&tcy;&ncy;&ocy;&gcy;&ocy; &vcy;&rcy;&iecy;&mcy;&iecy;&ncy;&icy;
+       </span>
+      </label>
+      <div class="task-calendar-time-grid">
+       <label>
+        <span>
+         &Vcy;&rcy;&iecy;&mcy;&yacy; &ncy;&acy;&chcy;&acy;&lcy;&acy;
+        </span>
+        <input class="input" id="taskStartTime" type="time"/>
+       </label>
+       <label>
+        <span>
+         &Vcy;&rcy;&iecy;&mcy;&yacy; &ocy;&kcy;&ocy;&ncy;&chcy;&acy;&ncy;&icy;&yacy;
+        </span>
+        <input class="input" id="taskEndTime" type="time"/>
+       </label>
+       <label>
+        <span>
+         &Dcy;&lcy;&icy;&tcy;&iecy;&lcy;&softcy;&ncy;&ocy;&scy;&tcy;&softcy;, &mcy;&icy;&ncy;
+        </span>
+        <input class="input" id="taskDurationMinutes" min="1" placeholder="60" step="5" type="number"/>
+       </label>
+      </div>
+     </div>
+     <div class="full task-recurrence-box">
+      <label class="task-recurrence-head">
+       <input id="taskRepeatEnabled" type="checkbox"/>
+       <span>
+        &Pcy;&ocy;&vcy;&tcy;&ocy;&rcy;&yacy;&yucy;&shchcy;&acy;&yacy;&scy;&yacy; &zcy;&acy;&dcy;&acy;&chcy;&acy;
+       </span>
+      </label>
+      <div class="task-repeat-options hidden" id="taskRepeatOptions">
+       <label>
+        <span>
+         &Tcy;&icy;&pcy; &pcy;&ocy;&vcy;&tcy;&ocy;&rcy;&iecy;&ncy;&icy;&yacy;
+        </span>
+        <select class="input" id="taskRepeatType">
+         <option value="daily">
+          &IEcy;&zhcy;&iecy;&dcy;&ncy;&iecy;&vcy;&ncy;&ocy;
+         </option>
+         <option value="weekdays">
+          &Pcy;&ocy; &dcy;&ncy;&yacy;&mcy; &ncy;&iecy;&dcy;&iecy;&lcy;&icy;
+         </option>
+         <option value="weekly">
+          &Rcy;&acy;&zcy; &vcy; &ncy;&iecy;&dcy;&iecy;&lcy;&yucy;
+         </option>
+         <option value="monthly">
+          &Rcy;&acy;&zcy; &vcy; &mcy;&iecy;&scy;&yacy;&tscy;
+         </option>
+        </select>
+       </label>
+       <label>
+        <span>
+         &Pcy;&ocy;&vcy;&tcy;&ocy;&rcy;&yacy;&tcy;&softcy; &dcy;&ocy;
+        </span>
+        <input class="input" id="taskRepeatUntil" type="date"/>
+       </label>
+       <div class="task-repeat-weekdays full hidden" id="taskRepeatWeekdaysBox">
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="1"/>
+         &Pcy;&ncy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="2"/>
+         &Vcy;&tcy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="3"/>
+         &Scy;&rcy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="4"/>
+         &CHcy;&tcy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="5"/>
+         &Pcy;&tcy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="6"/>
+         &Scy;&bcy;
+        </label>
+        <label>
+         <input class="task-repeat-weekday" type="checkbox" value="7"/>
+         &Vcy;&scy;
+        </label>
+       </div>
+      </div>
+      <div class="task-repeat-existing-note" id="taskRepeatExistingNote">
+      </div>
+     </div>
+     <label class="full">
+      <span>
+       &Ocy;&pcy;&icy;&scy;&acy;&ncy;&icy;&iecy;
+      </span>
+      <textarea class="input textarea" id="taskNotes" placeholder="&Ocy;&pcy;&icy;&scy;&acy;&ncy;&icy;&iecy; &zcy;&acy;&dcy;&acy;&chcy;&icy;, &kcy;&ocy;&ncy;&tcy;&iecy;&kcy;&scy;&tcy;, &dcy;&iecy;&tcy;&acy;&lcy;&icy; &vcy;&ycy;&pcy;&ocy;&lcy;&ncy;&iecy;&ncy;&icy;&yacy;"></textarea>
+     </label>
+    </div>
+    <div class="task-comments-block" id="taskCommentsBlock">
+     <div class="task-comments-head">
+      <h4>
+       &Kcy;&ocy;&mcy;&mcy;&iecy;&ncy;&tcy;&acy;&rcy;&icy;&icy;
+      </h4>
+      <span class="muted">
+       💬
+       <span id="taskCommentsCount">
+        0
+       </span>
+      </span>
+     </div>
+     <div class="task-comments-list" id="taskCommentsList">
+      <div class="empty">
+       &Kcy;&ocy;&mcy;&mcy;&iecy;&ncy;&tcy;&acy;&rcy;&icy;&iecy;&vcy; &pcy;&ocy;&kcy;&acy; &ncy;&iecy;&tcy;
+      </div>
+     </div>
+     <div class="task-comment-form">
+      <textarea class="input textarea" id="taskCommentText" placeholder="&Dcy;&ocy;&bcy;&acy;&vcy;&icy;&tcy;&softcy; &kcy;&ocy;&mcy;&mcy;&iecy;&ncy;&tcy;&acy;&rcy;&icy;&jcy;"></textarea>
+      <button aria-label="&Dcy;&ocy;&bcy;&acy;&vcy;&icy;&tcy;&softcy; &kcy;&ocy;&mcy;&mcy;&iecy;&ncy;&tcy;&acy;&rcy;&icy;&jcy;" class="btn secondary task-comment-send" data-action="add-task-comment" title="&Dcy;&ocy;&bcy;&acy;&vcy;&icy;&tcy;&softcy; &kcy;&ocy;&mcy;&mcy;&iecy;&ncy;&tcy;&acy;&rcy;&icy;&jcy;" type="button">
+       ➤
+      </button>
+     </div>
+    </div>
+    <div class="modal-actions">
+     <button class="btn secondary" data-close="taskModal" type="button">
+      &Ocy;&tcy;&mcy;&iecy;&ncy;&acy;
+     </button>
+     <button class="btn primary">
+      &Scy;&ocy;&khcy;&rcy;&acy;&ncy;&icy;&tcy;&softcy;
+     </button>
+    </div>
+   </form>
+  </dialog>
+  <dialog class="modal" id="userModal">
+   <form class="modal-body" id="userForm" method="dialog">
+    <div class="modal-head">
+     <h3>
+      &Pcy;&rcy;&ocy;&fcy;&icy;&lcy;&softcy; &pcy;&ocy;&lcy;&softcy;&zcy;&ocy;&vcy;&acy;&tcy;&iecy;&lcy;&yacy;
+     </h3>
+     <button class="x" data-close="userModal" type="button">
+      ✕
+     </button>
+    </div>
+    <input id="userId" type="hidden"/>
+    <div class="form-grid">
+     <label>
+      <span>
+       &Icy;&mcy;&yacy;
+      </span>
+      <input class="input" id="userName" required=""/>
+     </label>
+     <label>
+      <span>
+       Email
+      </span>
+      <input class="input" id="userEmail" type="email"/>
+     </label>
+     <label>
+      <span>
+       &Rcy;&ocy;&lcy;&softcy;
+      </span>
+      <select class="input" id="userRole">
+       <option value="owner">
+        owner
+       </option>
+       <option value="admin">
+        admin
+       </option>
+       <option value="member">
+        member
+       </option>
+       <option value="viewer">
+        viewer
+       </option>
+      </select>
+     </label>
+     <label>
+      <span>
+       &Dcy;&ocy;&lcy;&zhcy;&ncy;&ocy;&scy;&tcy;&softcy; / &zcy;&ocy;&ncy;&acy; &ocy;&tcy;&vcy;&iecy;&tcy;&scy;&tcy;&vcy;&iecy;&ncy;&ncy;&ocy;&scy;&tcy;&icy;
+      </span>
+      <input class="input" id="userPosition"/>
+     </label>
+    </div>
+    <div class="modal-actions">
+     <button class="btn secondary" data-close="userModal" type="button">
+      &Ocy;&tcy;&mcy;&iecy;&ncy;&acy;
+     </button>
+     <button class="btn primary">
+      &Scy;&ocy;&khcy;&rcy;&acy;&ncy;&icy;&tcy;&softcy;
+     </button>
+    </div>
+   </form>
+  </dialog>
+  <dialog class="modal" id="accessModal">
+   <form class="modal-body" id="accessForm" method="dialog">
+    <div class="modal-head">
+     <h3>
+      &Ucy;&chcy;&acy;&scy;&tcy;&ncy;&icy;&kcy;&icy; &icy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy; &kcy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&ucy;
+     </h3>
+     <button class="x" data-close="accessModal" type="button">
+      ✕
+     </button>
+    </div>
+    <input id="accessProjectId" type="hidden"/>
+    <div class="notice">
+     &Ucy;&chcy;&acy;&scy;&tcy;&ncy;&icy;&kcy;&icy; &pcy;&rcy;&ocy;&iecy;&kcy;&tcy;&acy; &ucy;&pcy;&rcy;&acy;&vcy;&lcy;&yacy;&yucy;&tcy;&scy;&yacy; &zcy;&dcy;&iecy;&scy;&softcy;. &Dcy;&ocy;&scy;&tcy;&ucy;&pcy; &rcy;&iecy;&acy;&lcy;&softcy;&ncy;&ocy; &pcy;&rcy;&icy;&mcy;&iecy;&ncy;&yacy;&iecy;&tcy;&scy;&yacy; &ncy;&acy; &ucy;&rcy;&ocy;&vcy;&ncy;&iecy; PostgreSQL RLS.
+    </div>
+    <br/>
+    <div class="muted" id="accessProjectTitle">
+    </div>
+    <br/>
+    <div class="form-grid">
+     <label>
+      <span>
+       &Pcy;&ocy;&lcy;&softcy;&zcy;&ocy;&vcy;&acy;&tcy;&iecy;&lcy;&softcy;
+      </span>
+      <select class="input" id="accessUser">
+      </select>
+     </label>
+     <label>
+      <span>
+       &Pcy;&rcy;&acy;&vcy;&acy;
+      </span>
+      <select class="input" id="accessRole">
+       <option value="viewer">
+        viewer &mdash; &pcy;&rcy;&ocy;&scy;&mcy;&ocy;&tcy;&rcy;
+       </option>
+       <option value="editor">
+        editor &mdash; &zcy;&acy;&dcy;&acy;&chcy;&icy; &icy; &vcy;&iecy;&khcy;&icy;
+       </option>
+       <option value="owner">
+        owner &mdash; &ucy;&pcy;&rcy;&acy;&vcy;&lcy;&iecy;&ncy;&icy;&iecy; &dcy;&ocy;&scy;&tcy;&ucy;&pcy;&ocy;&mcy;
+       </option>
+      </select>
+     </label>
+    </div>
+    <div class="modal-actions">
+     <button class="btn secondary" data-close="accessModal" type="button">
+      &Zcy;&acy;&kcy;&rcy;&ycy;&tcy;&softcy;
+     </button>
+     <button class="btn primary">
+      &Dcy;&ocy;&bcy;&acy;&vcy;&icy;&tcy;&softcy; / &ocy;&bcy;&ncy;&ocy;&vcy;&icy;&tcy;&softcy;
+     </button>
+    </div>
+    <br/>
+    <div id="accessList">
+    </div>
+   </form>
+  </dialog>
+  <script type="module" src="/src/app/bootstrap.js"></script>
+ </body>
+</html>

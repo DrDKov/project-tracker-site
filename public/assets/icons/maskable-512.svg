@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Project Tracker">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="178" fill="rgba(255,255,255,0.12)"/>
+  <rect x="142" y="138" width="228" height="216" rx="40" fill="rgba(255,255,255,0.18)" stroke="rgba(255,255,255,0.36)" stroke-width="10"/>
+  <path d="M186 210h82M186 260h140M186 310h110" stroke="#ffffff" stroke-width="24" stroke-linecap="round"/>
+  <path d="M333 190l29 29 58-68" fill="none" stroke="#bfdbfe" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="256" y="430" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" fill="#ffffff">PT</text>
+</svg>
