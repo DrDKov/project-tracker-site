@@ -7,6 +7,7 @@ const MODULES = [
   { name: 'permissions', load: () => import('../features/permissions/index.js') },
   { name: 'materials', load: () => import('../features/materials/index.js') },
   { name: 'notifications', load: () => import('../features/notifications/index.js') },
+  { name: 'notification-project-labels', load: () => import('../features/notifications/project-labels.js') },
   { name: 'mentions', load: () => import('../features/mentions/dropdown.js') },
   { name: 'ui', load: () => import('../features/ui/index.js') }
 ];
