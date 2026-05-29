@@ -8,7 +8,6 @@ const MODULES = [
   { name: 'materials', load: () => import('../features/materials/index.js') },
   { name: 'notifications', load: () => import('../features/notifications/index.js') },
   { name: 'mentions', load: () => import('../features/mentions/dropdown.js') },
-  { name: 'notification-polling-fallback', load: () => import('../features/notifications/polling-fallback.js') },
   { name: 'ui', load: () => import('../features/ui/index.js') }
 ];
 
