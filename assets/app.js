@@ -13,7 +13,7 @@
       s('assets/task-comments.js?v=20260529-task-comments-v1');
       s('assets/mention-dropdown-v6.js?v=20260529-mention-dropdown-v6');
       s('assets/notification-polling-rescue-lite.js?v=20260529-notification-rescue-lite-v1');
-      s('assets/materials.js?v=20260529-materials-v1');
+      s('assets/materials-v2.js?v=20260529-materials-v2');
     });
   });
 })();
