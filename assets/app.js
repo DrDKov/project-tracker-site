@@ -126,7 +126,7 @@
     if(window.__PT_MENTION_DROPDOWN_FIX_LOADING__) return;
     window.__PT_MENTION_DROPDOWN_FIX_LOADING__ = true;
     var script = document.createElement('script');
-    script.src = 'assets/mention-dropdown-fix.js?v=20260529-mention-dropdown-v1';
+    script.src = 'assets/mention-dropdown-fix.js?v=20260529-mention-dropdown-v3';
     script.async = false;
     script.onerror = function(){ console.warn('Mention dropdown fix module failed to load'); };
     document.head.appendChild(script);
