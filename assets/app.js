@@ -122,13 +122,24 @@
     [0,150,400,900,1800,3000].forEach(function(delay){ setTimeout(enhanceAllFilters,delay); });
   }
 
+  function loadMentionDropdownFix(){
+    if(window.__PT_MENTION_DROPDOWN_FIX_LOADING__) return;
+    window.__PT_MENTION_DROPDOWN_FIX_LOADING__ = true;
+    var script = document.createElement('script');
+    script.src = 'assets/mention-dropdown-fix.js?v=20260529-mention-dropdown-v1';
+    script.async = false;
+    script.onerror = function(){ console.warn('Mention dropdown fix module failed to load'); };
+    document.head.appendChild(script);
+  }
+
   function loadAssignmentNotifications(){
     if(window.__PT_ASSIGNMENT_NOTIFICATIONS_LOADING__) return;
     window.__PT_ASSIGNMENT_NOTIFICATIONS_LOADING__ = true;
     var script = document.createElement('script');
     script.src = 'assets/assignment-notifications.js?v=20260529-assignment-alerts-v1';
     script.async = false;
-    script.onerror = function(){ console.warn('Assignment notifications module failed to load'); };
+    script.onload = loadMentionDropdownFix;
+    script.onerror = function(){ console.warn('Assignment notifications module failed to load'); loadMentionDropdownFix(); };
     document.head.appendChild(script);
   }
 
