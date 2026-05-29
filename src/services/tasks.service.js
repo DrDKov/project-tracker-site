@@ -25,12 +25,40 @@ export async function saveTaskRecord(client, id, row) {
   return dataOrThrow(await request, 'Не удалось сохранить задачу');
 }
 
+function normalizeUserIds(userIds) {
+  const seen = new Set();
+  const out = [];
+  (userIds || []).forEach((userId) => {
+    const value = userId && userId !== '__none__' ? String(userId) : '';
+    if (!value || seen.has(value)) return;
+    seen.add(value);
+    out.push(value);
+  });
+  return out;
+}
+
 export async function replaceTaskAssignees(client, taskId, userIds) {
-  await client.from('task_assignees').delete().eq('task_id', taskId);
-  if (!userIds || !userIds.length) return [];
-  const result = await client.from('task_assignees').insert(userIds.map((user_id) => ({ task_id: taskId, user_id })));
-  dataOrThrow(result, 'Не удалось сохранить исполнителей задачи');
-  return userIds.map((user_id) => ({ task_id: taskId, user_id }));
+  const desired = normalizeUserIds(userIds);
+  const existingResult = await client.from('task_assignees').select('user_id').eq('task_id', taskId);
+  const existingRows = listOrThrow(existingResult, 'Не удалось загрузить текущих исполнителей задачи');
+  const existing = normalizeUserIds(existingRows.map((row) => row.user_id));
+
+  const desiredSet = new Set(desired);
+  const existingSet = new Set(existing);
+  const toDelete = existing.filter((userId) => !desiredSet.has(userId));
+  const toInsert = desired.filter((userId) => !existingSet.has(userId));
+
+  if (toDelete.length) {
+    const deleteResult = await client.from('task_assignees').delete().eq('task_id', taskId).in('user_id', toDelete);
+    dataOrThrow(deleteResult, 'Не удалось удалить снятых исполнителей задачи');
+  }
+
+  if (toInsert.length) {
+    const insertResult = await client.from('task_assignees').insert(toInsert.map((user_id) => ({ task_id: taskId, user_id })));
+    dataOrThrow(insertResult, 'Не удалось сохранить новых исполнителей задачи');
+  }
+
+  return desired.map((user_id) => ({ task_id: taskId, user_id }));
 }
 
 export async function setTaskFavorite(client, taskId, isFavorite) {
@@ -55,15 +83,16 @@ export async function saveTaskOrder(client, taskIds, start = 1000, step = 1000) 
 }
 
 export async function setTaskPrimaryAssignee(client, taskId, userId) {
-  const value = userId && userId !== '__none__' ? userId : null;
-  const result = await client.from('tasks').update({ assignee_id: value, updated_at: new Date().toISOString() }).eq('id', taskId);
-  if (result.error) throw new Error(`tasks.assignee_id: ${result.error.message}`);
-  const deleteResult = await client.from('task_assignees').delete().eq('task_id', taskId);
-  if (deleteResult.error) throw new Error(`task_assignees delete: ${deleteResult.error.message}`);
-  if (value) {
-    const insertResult = await client.from('task_assignees').insert({ task_id: taskId, user_id: value });
-    if (insertResult.error) throw new Error(`task_assignees insert: ${insertResult.error.message}`);
+  const value = userId && userId !== '__none__' ? String(userId) : null;
+  const currentResult = await client.from('tasks').select('assignee_id').eq('id', taskId).maybeSingle();
+  if (currentResult.error) throw new Error(`tasks.assignee_id select: ${currentResult.error.message}`);
+
+  if ((currentResult.data && currentResult.data.assignee_id ? String(currentResult.data.assignee_id) : null) !== value) {
+    const result = await client.from('tasks').update({ assignee_id: value, updated_at: new Date().toISOString() }).eq('id', taskId);
+    if (result.error) throw new Error(`tasks.assignee_id: ${result.error.message}`);
   }
+
+  await replaceTaskAssignees(client, taskId, value ? [value] : []);
   return value;
 }
 
