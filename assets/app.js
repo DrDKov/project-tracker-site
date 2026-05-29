@@ -122,13 +122,26 @@
     [0,150,400,900,1800,3000].forEach(function(delay){ setTimeout(enhanceAllFilters,delay); });
   }
 
+  function loadAssignmentNotifications(){
+    if(window.__PT_ASSIGNMENT_NOTIFICATIONS_LOADING__) return;
+    window.__PT_ASSIGNMENT_NOTIFICATIONS_LOADING__ = true;
+    var script = document.createElement('script');
+    script.src = 'assets/assignment-notifications.js?v=20260529-assignment-alerts-v1';
+    script.async = false;
+    script.onerror = function(){ console.warn('Assignment notifications module failed to load'); };
+    document.head.appendChild(script);
+  }
+
   function loadRuntime(){
     if(window.__PT_RUNTIME_LOADING__) return;
     window.__PT_RUNTIME_LOADING__ = true;
     var script = document.createElement('script');
     script.src = 'assets/app-runtime.js?v=20260520-calendar-timeline-v1';
     script.async = false;
-    script.onload = scheduleEnhance;
+    script.onload = function(){
+      scheduleEnhance();
+      loadAssignmentNotifications();
+    };
     script.onerror = function(){
       var status = document.getElementById('sideStatusText');
       if(status) status.textContent = 'Не удалось загрузить основной runtime приложения.';
