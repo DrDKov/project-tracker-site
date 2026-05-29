@@ -55,8 +55,33 @@ export async function softDeleteFolder(client, id) {
   return true;
 }
 
+function safeStorageSegment(value, fallback = 'file') {
+  const text = String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+  return text || fallback;
+}
+
+function safeStoragePath(workspaceId, folderId, fileId, fileName) {
+  const rawName = String(fileName || 'file');
+  const dot = rawName.lastIndexOf('.');
+  const rawExt = dot > -1 ? rawName.slice(dot + 1).toLowerCase() : '';
+  const ext = /^[a-z0-9]{1,12}$/.test(rawExt) ? `.${rawExt}` : '';
+  const base = dot > -1 ? rawName.slice(0, dot) : rawName;
+  const safeName = safeStorageSegment(base, 'file');
+  return [
+    safeStorageSegment(workspaceId, 'workspace'),
+    safeStorageSegment(folderId, 'folder'),
+    `${safeStorageSegment(fileId, 'file')}_${safeName}${ext}`
+  ].join('/');
+}
+
 export async function uploadMaterialFile(client, bucket, workspaceId, folderId, currentUserId, file, id, path) {
-  const upload = await client.storage.from(bucket).upload(path, file, {
+  const storagePath = safeStoragePath(workspaceId, folderId, id, file.name || path);
+  const upload = await client.storage.from(bucket).upload(storagePath, file, {
     cacheControl: '3600',
     upsert: false,
     contentType: file.type || undefined
@@ -67,14 +92,14 @@ export async function uploadMaterialFile(client, bucket, workspaceId, folderId, 
     workspace_id: workspaceId,
     folder_id: folderId,
     original_name: file.name,
-    storage_path: path,
+    storage_path: storagePath,
     mime_type: file.type || null,
     size_bytes: file.size,
     created_by: currentUserId
   };
   const result = await client.from('material_files').insert(row).select().single();
   if (result.error) {
-    await client.storage.from(bucket).remove([path]);
+    await client.storage.from(bucket).remove([storagePath]);
     throw new Error(result.error.message);
   }
   return result.data;
