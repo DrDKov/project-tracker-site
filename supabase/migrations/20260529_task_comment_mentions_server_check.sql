@@ -261,7 +261,11 @@ using (
   or public.is_app_admin()
 );
 
-create or replace function public.soft_delete_task_comment(p_comment_id uuid)
+-- PostgreSQL cannot change a function return type with CREATE OR REPLACE.
+-- The legacy version may return void/boolean, so drop it before recreating it.
+drop function if exists public.soft_delete_task_comment(uuid);
+
+create function public.soft_delete_task_comment(p_comment_id uuid)
 returns public.task_comments
 language plpgsql
 security definer
