@@ -1,9 +1,9 @@
-/* Workspace mention dropdown fix v2: visible @ user picker inside task dialog, no static hint. */
+/* Workspace mention dropdown fix v3: fetch app_users directly for @ picker inside task dialog, no static hint. */
 (function(){
-  if(window.__MENTION_DROPDOWN_FIX_V2__) return;
-  window.__MENTION_DROPDOWN_FIX_V2__ = 1;
+  if(window.__MENTION_DROPDOWN_FIX_V3__) return;
+  window.__MENTION_DROPDOWN_FIX_V3__ = 1;
 
-  var state = { members:[], loadedAt:0, timer:null, activeTextarea:null };
+  var state = { members:[], membersLoadedAt:0, appUsers:[], usersLoadedAt:0, timer:null, activeTextarea:null };
   var TTL = 45000;
 
   function $(id){ return document.getElementById(id); }
@@ -12,7 +12,16 @@
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];
     });
   }
-  function users(){ try{ return Array.isArray(window.users) ? window.users : []; }catch(e){ return []; } }
+  function localUsers(){ try{ return Array.isArray(window.users) ? window.users : []; }catch(e){ return []; } }
+  function users(){
+    var seen = new Set(), out = [];
+    localUsers().concat(state.appUsers || []).forEach(function(u){
+      if(!u || !u.id || seen.has(u.id)) return;
+      seen.add(u.id);
+      out.push(u);
+    });
+    return out;
+  }
   function projects(){ try{ return Array.isArray(window.projects) ? window.projects : []; }catch(e){ return []; } }
   function assignees(){ try{ return Array.isArray(window.taskAssigneesV4) ? window.taskAssigneesV4 : []; }catch(e){ return []; } }
   function tasks(){ try{ return Array.isArray(window.tasks) ? window.tasks : []; }catch(e){ return []; } }
@@ -35,8 +44,8 @@
 
   function commentTextareaFromTarget(target){
     if(target && target.id === 'taskCommentText') return target;
-    if(target && target.matches && target.matches('textarea') && target.closest('.task-comment-form,.task-comments-block,#taskModal')) return target;
-    return $('taskCommentText') || document.querySelector('#taskModal textarea, .task-comments-block textarea, .task-comment-form textarea');
+    if(target && target.matches && target.matches('textarea') && target.closest('.task-comment-form,.task-comments-block,#taskModal,dialog')) return target;
+    return $('taskCommentText') || document.querySelector('#taskModal textarea, dialog textarea, .task-comments-block textarea, .task-comment-form textarea');
   }
 
   function ensureMenu(ta){
@@ -69,18 +78,44 @@
     return {start:at, query:chunk.trim().toLowerCase()};
   }
 
+  async function refreshUsers(force){
+    var api = sb();
+    if(!api) return state.appUsers;
+    if(!force && Date.now() - state.usersLoadedAt < TTL && state.appUsers.length) return state.appUsers;
+    try{
+      var r = await api.from('app_users').select('id,display_name,email,role,is_active').order('display_name',{ascending:true});
+      if(!r.error && Array.isArray(r.data)){
+        state.appUsers = r.data;
+        state.usersLoadedAt = Date.now();
+        try{ window.users = users(); }catch(e){}
+      }
+    }catch(e){}
+    return state.appUsers;
+  }
+
   async function refreshMembers(force){
     var api = sb();
     if(!api) return state.members;
-    if(!force && Date.now() - state.loadedAt < TTL) return state.members;
+    if(!force && Date.now() - state.membersLoadedAt < TTL) return state.members;
     try{
       var r = await api.from('project_members').select('*').order('created_at',{ascending:true});
       if(!r.error && Array.isArray(r.data)){
         state.members = r.data;
-        state.loadedAt = Date.now();
+        state.membersLoadedAt = Date.now();
       }
     }catch(e){}
     return state.members;
+  }
+
+  function currentUserFromList(){
+    var me = profile();
+    if(!me || !me.id) return me;
+    return users().find(function(u){ return u && u.id === me.id; }) || me;
+  }
+
+  function isOwnerProfile(){
+    var me = currentUserFromList();
+    return !!(me && me.role === 'owner');
   }
 
   function projectIdsForUser(userId){
@@ -98,10 +133,10 @@
   }
 
   function allowedUsers(){
-    var me = profile();
+    var me = currentUserFromList();
     var all = users().filter(function(u){ return u && u.id && (!me || u.id !== me.id) && u.is_active !== false; });
     if(!me || !me.id) return all;
-    if(me.role === 'owner') return all;
+    if(isOwnerProfile()) return all;
     var myProjects = projectIdsForUser(me.id);
     var allowed = new Set();
     projects().forEach(function(p){ if(p && myProjects.has(p.id) && p.owner_id) allowed.add(p.owner_id); });
@@ -132,19 +167,19 @@
       menu.classList.add('open');
       return;
     }
-    menu.innerHTML = list.slice(0,8).map(function(u){
+    menu.innerHTML = list.slice(0,12).map(function(u){
       return '<button type="button" class="mention-fix-option" data-mention-fix-user="'+esc(u.id)+'"><span class="mention-fix-avatar">'+esc(initials(u))+'</span><span class="mention-fix-main"><b>'+esc(displayName(u))+'</b><span>'+esc(u.email || '')+'</span></span></button>';
     }).join('');
     menu.dataset.query = q || '';
     menu.classList.add('open');
   }
 
-  async function updateMenu(forceMembers){
+  async function updateMenu(force){
     var ta = state.activeTextarea || commentTextareaFromTarget(document.activeElement);
     if(!ta || document.activeElement !== ta){ hideMenu(); return; }
     var q = mentionQuery(ta.value,ta.selectionStart);
     if(!q){ hideMenu(); return; }
-    await refreshMembers(!!forceMembers || !state.loadedAt);
+    await Promise.all([refreshUsers(!!force || !users().length), refreshMembers(!!force || !state.membersLoadedAt)]);
     var list = allowedUsers().filter(function(u){
       var hay = [u.display_name || '',u.email || ''].join(' ').toLowerCase();
       return !q.query || hay.indexOf(q.query) !== -1;
@@ -167,11 +202,11 @@
     hideMenu();
   }
 
-  function scheduleUpdate(forceMembers,target){
+  function scheduleUpdate(force,target){
     var ta = commentTextareaFromTarget(target || document.activeElement);
     if(ta) state.activeTextarea = ta;
     clearTimeout(state.timer);
-    state.timer = setTimeout(function(){ updateMenu(forceMembers); },30);
+    state.timer = setTimeout(function(){ updateMenu(force); },30);
   }
 
   document.addEventListener('input',function(e){
@@ -223,6 +258,7 @@
   function boot(){
     ensureCss();
     removeOldHints();
+    refreshUsers(true);
     setInterval(removeOldHints,500);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
