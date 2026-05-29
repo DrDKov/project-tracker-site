@@ -1,7 +1,7 @@
-/* Workspace mention dropdown fix v3: fetch app_users directly for @ picker inside task dialog, no static hint. */
+/* Workspace mention dropdown fix v4: @ picker uses runtime, Supabase and DOM select fallbacks, no static hint. */
 (function(){
-  if(window.__MENTION_DROPDOWN_FIX_V3__) return;
-  window.__MENTION_DROPDOWN_FIX_V3__ = 1;
+  if(window.__MENTION_DROPDOWN_FIX_V4__) return;
+  window.__MENTION_DROPDOWN_FIX_V4__ = 1;
 
   var state = { members:[], membersLoadedAt:0, appUsers:[], usersLoadedAt:0, timer:null, activeTextarea:null };
   var TTL = 45000;
@@ -13,9 +13,23 @@
     });
   }
   function localUsers(){ try{ return Array.isArray(window.users) ? window.users : []; }catch(e){ return []; } }
+  function domUsers(){
+    var out = [];
+    ['taskAssignee','accessUser','projectOwner','taskAssigneeFilter','projectOwnerFilter'].forEach(function(id){
+      var sel = $(id);
+      if(!sel) return;
+      Array.prototype.slice.call(sel.options || []).forEach(function(o){
+        var value = String(o.value || '').trim();
+        var text = String(o.textContent || '').trim();
+        if(!value || value === 'all' || !text || /^все\s/i.test(text) || /^не назнач/i.test(text)) return;
+        out.push({id:value,display_name:text,email:'',role:'member',is_active:true,source:'dom'});
+      });
+    });
+    return out;
+  }
   function users(){
     var seen = new Set(), out = [];
-    localUsers().concat(state.appUsers || []).forEach(function(u){
+    localUsers().concat(state.appUsers || []).concat(domUsers()).forEach(function(u){
       if(!u || !u.id || seen.has(u.id)) return;
       seen.add(u.id);
       out.push(u);
@@ -88,8 +102,10 @@
         state.appUsers = r.data;
         state.usersLoadedAt = Date.now();
         try{ window.users = users(); }catch(e){}
+      }else if(r.error){
+        console.warn('[mention] app_users unavailable:',r.error.message || r.error);
       }
-    }catch(e){}
+    }catch(e){ console.warn('[mention] app_users fetch failed:',e); }
     return state.appUsers;
   }
 
