@@ -53,8 +53,9 @@ function TaskModal({ state, actions, onClose }: any) {
   const draft = ui.modals.taskDraft || {};
   const task = id ? (state.tasks || []).find((item: any) => item.id === id) : null;
   const source = task || draft || {};
-  const selectedUsers = new Set((state.assignees || []).filter((item: any) => item.task_id === id).map((item: any) => item.user_id));
-  if (task?.assignee_id) selectedUsers.add(task.assignee_id);
+  const selectedUsers = new Set<string>((state.assignees || []).filter((item: any) => item.task_id === id).map((item: any) => String(item.user_id || '')).filter(Boolean));
+  if (task?.assignee_id) selectedUsers.add(String(task.assignee_id));
+  const selectedUserValues = Array.from(selectedUsers);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -86,7 +87,7 @@ function TaskModal({ state, actions, onClose }: any) {
           <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
           <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
           <label>Срок<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
-          <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={[...selectedUsers]}>{(state.users || []).map((user: any) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
+          <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user: any) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
           <label className="wide">Описание<textarea className="input" name="notes" defaultValue={source.notes || source.description || ''} rows={5} /></label>
         </div>
         <div className="modal-actions"><button type="button" className="btn secondary" onClick={onClose}>Отмена</button><button className="btn primary" type="submit">Сохранить</button></div>
@@ -97,7 +98,7 @@ function TaskModal({ state, actions, onClose }: any) {
 
 function ProjectModal({ state, actions, onClose }: any) {
   const ui = useWorkspaceUiStore();
-  const id = ui.modals.projectId;
+  const id = ui.modals.projectId === '__new__' ? null : ui.modals.projectId;
   const project = id ? (state.projects || []).find((item: any) => item.id === id) : null;
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
