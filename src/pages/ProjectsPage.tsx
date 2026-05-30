@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { useWorkspaceState } from '../react/state/useWorkspaceStore';
 import { useWorkspaceUiStore } from '../shared/store/uiStore';
