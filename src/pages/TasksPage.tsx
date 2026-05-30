@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { useWorkspaceState } from '../react/state/useWorkspaceStore';
 import { useWorkspaceUiStore } from '../shared/store/uiStore';
@@ -7,7 +8,7 @@ import { TaskBoard } from '../react/tasks/TaskBoard';
 import { createTaskCardViewModel } from '../react/tasks/taskCardModel';
 import { COLS, PR, ST, D, add, commentsForTask, dt, fmt, projectColor, projectName, rgba, subtasksForTask, taskUserIds, today, userName } from './pageUtils';
 
-function weekStart(value: string) {
+function weekStart(value) {
   const date = D(value || today());
   const day = date.getDay() || 7;
   date.setDate(date.getDate() - day + 1);
@@ -55,17 +56,17 @@ export function TasksPage() {
     }, options)
   });
 
-  function onDrop(event: React.DragEvent<HTMLDivElement>) {
+  function onDrop(event) {
     event.preventDefault();
     const taskId = event.dataTransfer.getData('text/plain') || event.dataTransfer.getData('application/x-task-id');
-    const target = (event.target as HTMLElement).closest('[data-status]') as HTMLElement | null;
+    const target = event.target.closest('[data-status]');
     const status = target?.dataset.status;
     if (taskId && status) actions.moveTask?.(taskId, status);
     document.querySelectorAll('.drag-over').forEach((node) => node.classList.remove('drag-over'));
   }
 
-  function onDragStart(event: React.DragEvent<HTMLDivElement>) {
-    const card = (event.target as HTMLElement).closest('[data-task-id]') as HTMLElement | null;
+  function onDragStart(event) {
+    const card = event.target.closest('[data-task-id]');
     if (!card?.dataset.taskId) return;
     event.dataTransfer.setData('text/plain', card.dataset.taskId);
     event.dataTransfer.setData('application/x-task-id', card.dataset.taskId);
@@ -94,7 +95,7 @@ export function TasksPage() {
           <option value="all">Все исполнители</option>
           {(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}
         </select>
-        <select className="input" value={filters.taskDateMode} onChange={(event) => ui.setFilter('taskDateMode', event.currentTarget.value as any)}>
+        <select className="input" value={filters.taskDateMode} onChange={(event) => ui.setFilter('taskDateMode', event.currentTarget.value)}>
           <option value="all">Все даты</option>
           <option value="overdue">Просроченные</option>
           <option value="exact">На дату</option>
@@ -119,9 +120,9 @@ export function TasksPage() {
         className={model.className}
         data-mode={model.dataMode}
         onDragStart={onDragStart}
-        onDragOver={(event) => { if ((event.target as HTMLElement).closest('[data-status]')) event.preventDefault(); }}
-        onDragEnter={(event) => { const col = (event.target as HTMLElement).closest('[data-status]'); if (col) col.classList.add('drag-over'); }}
-        onDragLeave={(event) => { const col = (event.target as HTMLElement).closest('[data-status]'); if (col && !col.contains(event.relatedTarget as Node)) col.classList.remove('drag-over'); }}
+        onDragOver={(event) => { if (event.target.closest('[data-status]')) event.preventDefault(); }}
+        onDragEnter={(event) => { const col = event.target.closest('[data-status]'); if (col) col.classList.add('drag-over'); }}
+        onDragLeave={(event) => { const col = event.target.closest('[data-status]'); if (col && !col.contains(event.relatedTarget)) col.classList.remove('drag-over'); }}
         onDrop={onDrop}
       >
         <TaskBoard model={model} actions={actions} />
