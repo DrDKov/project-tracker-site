@@ -151,16 +151,14 @@ function NotificationPanel({ state, actions, onClose }: any) {
   );
 }
 
-function WorkspaceModals({ state, actions }: any) {
+function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotifications }: any) {
   const ui = useWorkspaceUiStore();
-  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
-  (window as any).__PT_OPEN_NOTIFICATIONS__ = () => setNotificationsOpen(true);
   const close = () => ui.closeModals();
   return (
     <>
       {(ui.modals.taskId !== null || ui.modals.taskDraft !== null) ? <TaskModal state={state} actions={actions} onClose={close} /> : null}
       {ui.modals.projectId !== null ? <ProjectModal state={state} actions={actions} onClose={close} /> : null}
-      {notificationsOpen ? <NotificationPanel state={state} actions={actions} onClose={() => setNotificationsOpen(false)} /> : null}
+      {notificationsOpen ? <NotificationPanel state={state} actions={actions} onClose={onCloseNotifications} /> : null}
     </>
   );
 }
@@ -168,6 +166,7 @@ function WorkspaceModals({ state, actions }: any) {
 function MainPage() {
   const state = useWorkspaceState();
   const route = useWorkspaceRoute();
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const permissions = getWorkspacePermissionSnapshot(state.profile || null, state.projects || [], state.members || []);
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
   const shell = createAppShellModel({
@@ -210,7 +209,7 @@ function MainPage() {
             onOpenSettings={() => route.navigateToView('settings')}
             onCreateProject={() => actions.openProject?.()}
             onCreateTask={() => actions.openTask?.()}
-            onOpenNotifications={() => (window as any).__PT_OPEN_NOTIFICATIONS__?.()}
+            onOpenNotifications={() => setNotificationsOpen(true)}
           />
         </header>
         <section className="react-page-panel" data-route={route.routeId}>
@@ -219,7 +218,7 @@ function MainPage() {
           </React.Suspense>
         </section>
       </main>
-      <WorkspaceModals state={state} actions={actions} />
+      <WorkspaceModals state={state} actions={actions} notificationsOpen={notificationsOpen} onCloseNotifications={() => setNotificationsOpen(false)} />
     </div>
   );
 }
