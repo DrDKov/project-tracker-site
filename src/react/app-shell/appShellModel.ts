@@ -20,6 +20,7 @@ export function createAppShellMetrics(state, today) {
   const projects = Array.isArray(state?.projects) ? state.projects : [];
   const tasks = Array.isArray(state?.tasks) ? state.tasks : [];
   const users = Array.isArray(state?.users) ? state.users : [];
+  const notifications = Array.isArray(state?.notifications) ? state.notifications : [];
   const openTasks = tasks.filter((task) => task.status !== 'done').length;
   const overdueTasks = tasks.filter((task) => task.status !== 'done' && task.due_date && task.due_date < today).length;
 
@@ -27,7 +28,8 @@ export function createAppShellMetrics(state, today) {
     projects: projects.length,
     openTasks,
     overdueTasks,
-    users: users.length
+    users: users.length,
+    notifications: notifications.filter((item) => item && item.is_read !== true).length
   };
 }
 
