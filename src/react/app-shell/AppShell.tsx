@@ -48,17 +48,15 @@ export function AppSidebar({ model, onSelectView }) {
   );
 }
 
-/**
- * @param {{
- *   model: AppShellModel,
- *   onRefresh: () => void,
- *   onOpenSettings: () => void,
- *   onCreateProject: () => void,
- *   onCreateTask: () => void,
- *   onOpenNotifications?: () => void
- * }} props
- */
-export function AppTopbar({ model, onRefresh, onOpenSettings, onCreateProject, onCreateTask, onOpenNotifications }) {
+export function AppTopbar(props) {
+  const {
+    model,
+    onRefresh,
+    onOpenSettings,
+    onCreateProject,
+    onCreateTask,
+    onOpenNotifications = () => undefined
+  } = props;
   const count = Number(model.metrics?.notifications || 0);
   return (
     <>
