@@ -1,0 +1,9 @@
+export { DashboardPage } from './DashboardPage';
+export { ProjectsPage } from './ProjectsPage';
+export { TasksPage } from './TasksPage';
+export { TimelinePage } from './TimelinePage';
+export { ChatPage } from './ChatPage';
+export { TeamPage } from './TeamPage';
+export { MaterialsPage } from './MaterialsPage';
+export { AuditPage } from './AuditPage';
+export { SettingsPage } from './SettingsPage';
