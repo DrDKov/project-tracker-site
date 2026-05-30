@@ -54,10 +54,12 @@ export function AppSidebar({ model, onSelectView }) {
  *   onRefresh: () => void,
  *   onOpenSettings: () => void,
  *   onCreateProject: () => void,
- *   onCreateTask: () => void
+ *   onCreateTask: () => void,
+ *   onOpenNotifications?: () => void
  * }} props
  */
-export function AppTopbar({ model, onRefresh, onOpenSettings, onCreateProject, onCreateTask }) {
+export function AppTopbar({ model, onRefresh, onOpenSettings, onCreateProject, onCreateTask, onOpenNotifications }) {
+  const count = Number(model.metrics?.notifications || 0);
   return (
     <>
       <div className="react-topbar-title">
@@ -67,6 +69,9 @@ export function AppTopbar({ model, onRefresh, onOpenSettings, onCreateProject, o
       <div className="top-actions react-top-actions">
         <Button variant="secondary" id="refreshBtn" onClick={onRefresh}>Обновить</Button>
         <Button variant="secondary" id="openSettingsBtn" onClick={onOpenSettings}>Настройки</Button>
+        <Button variant="secondary" id="notificationBellBtn" className={count ? 'has-unread' : ''} onClick={onOpenNotifications} title="Оповещения">
+          🔔{count ? <span className="notification-count">{count}</span> : null}
+        </Button>
         <Button variant="blue" id="quickProjectBtn" onClick={onCreateProject}>+ Проект</Button>
         <Button variant="primary" id="quickTaskBtn" onClick={onCreateTask}>+ Задача</Button>
       </div>
