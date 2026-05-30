@@ -20,20 +20,43 @@ function byId(items, id) { return (items || []).find((item) => item && item.id =
 function subtasksForTask(taskId) { return (state().subtasks || []).filter((item) => item && item.task_id === taskId && !item.deleted_at); }
 function currentUserId() { const s = state(); return s.profile?.id || s.user?.id || null; }
 function currentView() { return useWorkspaceUiStore.getState().activeView || 'overview'; }
+function refreshLocalState(source = 'react-action-local') {
+  const s = state();
+  appStore.setState({
+    tasks: [...(s.tasks || [])],
+    subtasks: [...(s.subtasks || [])],
+    taskComments: [...(s.taskComments || [])],
+    projects: [...(s.projects || [])],
+    notifications: [...(s.notifications || [])]
+  }, { source, stage: 'react-actions' });
+}
 
 function message(value) { return value && typeof value === 'object' && 'message' in value ? String(value.message) : String(value || ''); }
 async function guarded(fn) { try { return await fn(); } catch (error) { console.warn('[workspace-action]', error); if (typeof alert === 'function') alert(message(error)); throw error; } }
 async function invalidateWorkspace() {
   await workspaceQueryClient.invalidateQueries({ queryKey: workspaceQueryKeys.root });
   await workspaceQueryClient.invalidateQueries({ queryKey: workspaceQueryKeys.bootstrap() });
+  const mod = await import('../../app/workspaceRuntime');
+  return mod.invalidateWorkspaceData();
 }
 
 function taskController() {
-  return createTaskActionController({ state: state(), repository: repositories().tasks, reload: invalidateWorkspace, render: () => undefined, renderTasks: () => undefined, renderTimeline: () => undefined, byId, subtasksForTask, currentView, currentUserId });
+  return createTaskActionController({
+    state: state(),
+    repository: repositories().tasks,
+    reload: invalidateWorkspace,
+    render: () => refreshLocalState('react-task-render'),
+    renderTasks: () => refreshLocalState('react-task-render-tasks'),
+    renderTimeline: () => refreshLocalState('react-task-render-timeline'),
+    byId,
+    subtasksForTask,
+    currentView,
+    currentUserId
+  });
 }
-function projectController() { return createProjectActionController({ repository: repositories().projects, reload: invalidateWorkspace, renderAccess: () => undefined }); }
+function projectController() { return createProjectActionController({ repository: repositories().projects, reload: invalidateWorkspace, renderAccess: () => refreshLocalState('react-project-access') }); }
 function teamController() { return createTeamActionController({ repository: repositories().users, reload: invalidateWorkspace }); }
-function chatController() { return createChatActionController({ state: state(), repository: repositories().chat, bucket: CHAT_BUCKET, currentUserId, renderChat: () => undefined }); }
+function chatController() { return createChatActionController({ state: state(), repository: repositories().chat, bucket: CHAT_BUCKET, currentUserId, renderChat: () => refreshLocalState('react-chat-render') }); }
 function deleteController() { return createDeleteActionController({ repository: repositories().delete, reload: invalidateWorkspace, confirmDelete: (text) => (typeof confirm === 'function' ? confirm(text) : true) }); }
 
 export function createWorkspaceReactActions() {
@@ -43,13 +66,15 @@ export function createWorkspaceReactActions() {
     refresh() { return invalidateWorkspace(); },
     openProject(id = null) { return ui.openProject(id); },
     openTask(id = null) { return ui.openTask(id); },
-    openTaskOnDate(_date, _projectId) { return ui.openTask(null); },
+    openTaskOnDate(date, projectId = null) { return ui.openTaskDraft({ start_date: date, due_date: date, project_id: projectId || '' }); },
+    createTaskForProject(projectId) { return ui.openTaskDraft({ project_id: projectId || '' }); },
     openUser(id = null) { return ui.openUser(id); },
     openAccess(projectId = null) { return ui.openAccess(projectId); },
 
     saveProjectData(id, row) { return guarded(() => projectController().saveProject(id || null, row)); },
     saveUserData(id, row) { return guarded(() => teamController().saveUser(id || null, row)); },
     saveAccessData(row) { return guarded(() => projectController().saveAccess(row)); },
+    saveTaskData(id, row) { return guarded(() => taskController().saveTask(row, { id: id || null })); },
 
     deleteProject(id) { return guarded(() => deleteController().softDelete('projects', id)); },
     deleteTask(id) { return guarded(() => deleteController().softDelete('tasks', id)); },
