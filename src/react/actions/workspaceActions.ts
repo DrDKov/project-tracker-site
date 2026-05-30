@@ -64,14 +64,14 @@ export function createWorkspaceReactActions() {
   return {
     setView(view) { ui.setActiveView(view); return navigateWorkspaceRoute(view); },
     refresh() { return invalidateWorkspace(); },
-    openProject(id = null) { return ui.openProject(id); },
-    openTask(id = null) { return ui.openTask(id); },
+    openProject(id = null) { return ui.openProject(id || '__new__'); },
+    openTask(id = null) { return id ? ui.openTask(id) : ui.openTaskDraft({}); },
     openTaskOnDate(date, projectId = null) { return ui.openTaskDraft({ start_date: date, due_date: date, project_id: projectId || '' }); },
     createTaskForProject(projectId) { return ui.openTaskDraft({ project_id: projectId || '' }); },
     openUser(id = null) { return ui.openUser(id); },
     openAccess(projectId = null) { return ui.openAccess(projectId); },
 
-    saveProjectData(id, row) { return guarded(() => projectController().saveProject(id || null, row)); },
+    saveProjectData(id, row) { return guarded(() => projectController().saveProject(id === '__new__' ? null : id || null, row)); },
     saveUserData(id, row) { return guarded(() => teamController().saveUser(id || null, row)); },
     saveAccessData(row) { return guarded(() => projectController().saveAccess(row)); },
     saveTaskData(id, row) { return guarded(() => taskController().saveTask(row, { id: id || null })); },
