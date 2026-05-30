@@ -4,6 +4,7 @@ import { getAuthUser, getSessionUser, isRetryableAuthError, clearSupabaseAuthSto
 import { bindProfileToAuthUser, fetchProfileByAuthUserId, fetchProfileByEmail } from '../services/workspace.service.js';
 import { getWorkspacePermissionSnapshot } from '../core/permissions/index.js';
 import { loadWorkspaceBootstrapData, createWorkspaceBootstrapStatePatch } from '../react/data/queries/workspaceBootstrapQuery';
+import { createWorkspaceRepositorySet } from '../repositories/index.ts';
 import type { AppState, AppUser } from '../types/entities';
 
 const INITIAL_STATE: Partial<AppState> = {
@@ -19,7 +20,9 @@ const INITIAL_STATE: Partial<AppState> = {
   subtasks: [],
   taskComments: [],
   messages: [],
-  logs: [],
+  materialTemplates: [],
+  materialFolders: [],
+  materialFiles: [],
   notifications: [],
   warnings: [],
   taskError: '',
@@ -66,6 +69,40 @@ async function resolveWorkspaceProfile(client: any, user: any): Promise<AppUser 
   return profile || null;
 }
 
+async function loadOptionalRuntimeData(client: any, profile: AppUser | null, warnings: string[]) {
+  const repositories = createWorkspaceRepositorySet(client);
+  const patch: Partial<AppState> = {};
+  try {
+    const bundle = await repositories.materials.bundle();
+    patch.materialTemplates = (bundle.templates || []).filter((item: any) => !item?.deleted_at);
+    patch.materialFolders = (bundle.folders || []).filter((item: any) => !item?.deleted_at);
+    patch.materialFiles = (bundle.files || []).filter((item: any) => !item?.deleted_at);
+  } catch (error: any) {
+    warnings.push(`materials: ${error?.message || String(error)}`);
+  }
+  try {
+    if (profile?.id) {
+      const since = new Date(Date.now() - 45 * 86400000).toISOString();
+      const rows = await repositories.notifications.recentTaskAssignees(profile.id, since);
+      patch.notifications = (rows || []).map((row: any) => ({
+        id: `assignment:${row.task_id}:${row.created_at || ''}`,
+        type: 'task_assigned',
+        task_id: row.task_id,
+        user_id: profile.id,
+        title: 'Вам назначена задача',
+        body: '',
+        unread: true,
+        is_read: false,
+        created_at: row.created_at
+      }));
+    }
+  } catch (error: any) {
+    warnings.push(`notifications: ${error?.message || String(error)}`);
+  }
+  patch.warnings = warnings;
+  return patch;
+}
+
 export async function restoreWorkspaceSession(): Promise<AppState> {
   installWorkspaceStore();
   if (restoreInFlight) return restoreInFlight;
@@ -103,7 +140,8 @@ export async function restoreWorkspaceSession(): Promise<AppState> {
       const bootstrap = await loadWorkspaceBootstrapData(client, { owner: profile.role === 'owner', warnings });
       const permissions = getWorkspacePermissionSnapshot(profile, bootstrap.projects, bootstrap.members);
       const patch = createWorkspaceBootstrapStatePatch(bootstrap, profile, permissions);
-      setWorkspacePatch({ ...patch, user, profile, sb: client, loading: false, statusTitle: 'Подключено', statusText: `${profile.display_name || user.email || 'Пользователь'} · ${profile.role || 'member'} · проектов: ${bootstrap.projects.length} · задач: ${bootstrap.tasks.length}` }, 'react-bootstrap-loaded');
+      const optionalPatch = await loadOptionalRuntimeData(client, profile, warnings);
+      setWorkspacePatch({ ...patch, ...optionalPatch, user, profile, sb: client, loading: false, statusTitle: 'Подключено', statusText: `${profile.display_name || user.email || 'Пользователь'} · ${profile.role || 'member'} · проектов: ${bootstrap.projects.length} · задач: ${bootstrap.tasks.length}` }, 'react-bootstrap-loaded');
       return appStore.getState();
     } catch (error: any) {
       setWorkspacePatch({ loading: false, statusTitle: 'Ошибка загрузки базы', statusText: error?.message || String(error) }, 'react-bootstrap-error');
