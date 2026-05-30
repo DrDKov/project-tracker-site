@@ -10,7 +10,36 @@ export function ProjectsPage() {
   const state = useWorkspaceState();
   const ui = useWorkspaceUiStore();
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
-  const model = createProjectsPageViewModel({ projects: state.projects || [], tasks: state.tasks || [], users: state.users || [], filters: { query: ui.filters.projectSearch, statuses: ['all'], ownerIds: ['all'] }, statusLabels: ST, priorityLabels: PR, fmt, rgba });
-  return <section className="panel project-grid react-projects-page"><input className="input" placeholder="Поиск проектов" value={ui.filters.projectSearch} onChange={(event) => ui.setFilter('projectSearch', event.currentTarget.value)} /><ProjectsPageView model={model} actions={actions} /></section>;
+  const filters = ui.filters;
+  const model = createProjectsPageViewModel({
+    projects: state.projects || [],
+    tasks: state.tasks || [],
+    users: state.users || [],
+    filters: { query: filters.projectSearch, statuses: [filters.projectStatus || 'all'], ownerIds: [filters.projectOwnerId || 'all'] },
+    statusLabels: ST,
+    priorityLabels: PR,
+    fmt,
+    rgba
+  });
+  return (
+    <section className="panel project-grid react-projects-page">
+      <div className="panel-head">
+        <h3>Проекты</h3>
+        <button className="btn primary" onClick={() => actions.openProject?.()}>+ Проект</button>
+      </div>
+      <div className="project-filterbar react-filterbar">
+        <input className="input" placeholder="Поиск проектов" value={filters.projectSearch} onChange={(event) => ui.setFilter('projectSearch', event.currentTarget.value)} />
+        <select className="input" value={filters.projectStatus} onChange={(event) => ui.setFilter('projectStatus', event.currentTarget.value)}>
+          <option value="all">Все статусы</option>
+          {Object.entries(ST).map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+        </select>
+        <select className="input" value={filters.projectOwnerId} onChange={(event) => ui.setFilter('projectOwnerId', event.currentTarget.value)}>
+          <option value="all">Все владельцы</option>
+          {(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}
+        </select>
+      </div>
+      <ProjectsPageView model={model} actions={actions} />
+    </section>
+  );
 }
 export default ProjectsPage;
