@@ -1,0 +1,151 @@
+{
+  "stage": 28,
+  "version": "28.0.0",
+  "scope": "Supabase RLS, helper functions, storage buckets and frontend permission alignment",
+  "principles": [
+    "anon role must not have table policies or grants for workspace data",
+    "authenticated access must always pass RLS helper functions",
+    "workspace-materials must be owner-only in table RLS and storage policies",
+    "project data must be visible only to owner/admin or project members",
+    "write access must require owner/admin/project editor according to domain rules",
+    "storage buckets must remain private; file access must use signed URLs or authenticated storage policies"
+  ],
+  "tables": {
+    "app_users": {
+      "select": "authenticated users can read active workspace users",
+      "insert": "admin/owner only",
+      "update": "admin/owner or self safe fields",
+      "delete": "admin/owner only",
+      "helper": "is_workspace_admin / current_app_user_id"
+    },
+    "projects": {
+      "select": "visible project or workspace admin",
+      "insert": "authenticated owner/admin",
+      "update": "project owner/editor/admin",
+      "delete": "project owner/admin",
+      "helper": "can_view_project / can_write_project / can_manage_project_members"
+    },
+    "project_members": {
+      "select": "visible project/admin/self",
+      "insert": "workspace admin or project owner",
+      "update": "workspace admin or project owner",
+      "delete": "workspace admin or project owner",
+      "helper": "can_manage_project_members"
+    },
+    "tasks": {
+      "select": "visible project",
+      "insert": "project writer",
+      "update": "project writer",
+      "delete": "project writer",
+      "helper": "can_view_project / can_write_project"
+    },
+    "task_assignees": {
+      "select": "visible project",
+      "insert": "project writer",
+      "update": "project writer",
+      "delete": "project writer",
+      "helper": "can_write_project"
+    },
+    "task_subtasks": {
+      "select": "visible project",
+      "insert": "project writer",
+      "update": "project writer",
+      "delete": "project writer",
+      "helper": "can_write_project"
+    },
+    "task_comments": {
+      "select": "visible project",
+      "insert": "authenticated visible project user as self",
+      "update": "author or workspace admin",
+      "delete": "author or workspace admin",
+      "helper": "can_view_project / is_workspace_admin"
+    },
+    "task_recurrence_rules": {
+      "select": "visible project",
+      "insert": "project writer",
+      "update": "project writer",
+      "delete": "project writer",
+      "helper": "can_write_project"
+    },
+    "project_messages": {
+      "select": "visible project",
+      "insert": "visible project authenticated user",
+      "update": "author or project editor/admin",
+      "delete": "author or project editor/admin",
+      "helper": "can_view_project / can_write_project"
+    },
+    "project_message_reads": {
+      "select": "self",
+      "insert": "self",
+      "update": "self",
+      "delete": "self",
+      "helper": "current_app_user_id"
+    },
+    "workspace_templates": {
+      "select": "workspace owner only",
+      "insert": "workspace owner only",
+      "update": "workspace owner only",
+      "delete": "workspace owner only",
+      "helper": "is_workspace_owner"
+    },
+    "material_folders": {
+      "select": "workspace owner only",
+      "insert": "workspace owner only",
+      "update": "workspace owner only",
+      "delete": "workspace owner only",
+      "helper": "is_workspace_owner"
+    },
+    "material_files": {
+      "select": "workspace owner only",
+      "insert": "workspace owner only",
+      "update": "workspace owner only",
+      "delete": "workspace owner only",
+      "helper": "is_workspace_owner"
+    },
+    "activity_log": {
+      "select": "workspace owner/admin",
+      "insert": "authenticated",
+      "update": "not allowed by normal app flow",
+      "delete": "not allowed by normal app flow",
+      "helper": "is_workspace_admin"
+    },
+    "settings": {
+      "select": "workspace owner/admin",
+      "insert": "workspace owner/admin",
+      "update": "workspace owner/admin",
+      "delete": "workspace owner/admin",
+      "helper": "is_workspace_admin"
+    },
+    "user_presence": {
+      "select": "workspace owner or project visibility depending policy",
+      "insert": "self",
+      "update": "self",
+      "delete": "not used",
+      "helper": "current_app_user_id"
+    }
+  },
+  "storage": {
+    "project-chat-files": {
+      "public": false,
+      "select": "authenticated users with visible project",
+      "insert": "authenticated users with visible project",
+      "update": "author/project editor or authenticated policy equivalent",
+      "delete": "author/project editor or authenticated policy equivalent",
+      "path_contract": "project_id/random_safe_filename"
+    },
+    "workspace-materials": {
+      "public": false,
+      "select": "workspace owner only",
+      "insert": "workspace owner only",
+      "update": "workspace owner only",
+      "delete": "workspace owner only",
+      "path_contract": "workspace_id/folder_id/file_id_safe_filename"
+    }
+  },
+  "forbidden": [
+    "active public table policies to anon",
+    "using (true) or with check (true) policies for anon",
+    "public storage buckets for project-chat-files or workspace-materials",
+    "React/controllers/repositories bypassing repository layer to call Supabase directly"
+  ]
+}

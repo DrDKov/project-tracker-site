@@ -1,0 +1,37 @@
+{
+  "name": "workspace-project-tracker-vite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "node tools/check-project.mjs && npm run typecheck && npm run test:unit && npm run check:runtime && npm run check:architecture && npm run check:tests && npm run check:security && npm run check:production",
+    "validate": "npm run check && npm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:smoke": "playwright test",
+    "test:unit": "node tools/run-unit-tests.mjs",
+    "check:architecture": "node tools/check-architecture.mjs",
+    "check:runtime": "node tools/check-runtime-inventory.mjs",
+    "check:tests": "node tools/check-test-coverage.mjs",
+    "check:security": "node tools/check-supabase-security.mjs",
+    "check:production": "node tools/check-production-hardening.mjs"
+  },
+  "version": "40.0.0",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "tsx": "^4.22.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.0"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.11",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "zustand": "^5.0.8"
+  }
+}

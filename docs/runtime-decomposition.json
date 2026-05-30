@@ -1,0 +1,37 @@
+{
+  "stage": "26F",
+  "runtimeFile": null,
+  "policy": "runtime-core.js and runtime-compatibility.js are deleted. Runtime responsibilities have moved to React App, WorkspaceRuntime, TanStack Query, Zustand UI store, controllers, repositories and shared realtime/query layers.",
+  "functions": [],
+  "removedInStage15": [
+    { "name": "fetchProfileByEmail import", "reason": "unused import; superseded by React workspace runtime/session bootstrap" },
+    { "name": "subBlock", "reason": "TaskCard React component owns subtask rendering" },
+    { "name": "doneWho", "reason": "TaskCard React component owns completion metadata rendering" },
+    { "name": "clearChat", "reason": "Chat controller owns clear action" },
+    { "name": "teardownRealtime", "reason": "shared realtime provider owns teardown" }
+  ],
+  "removedInStage25": [
+    { "name": "cardP", "reason": "Dashboard project cards moved to React DashboardOverview" },
+    { "name": "cardT", "reason": "Dashboard task cards moved to React DashboardOverview" }
+  ],
+  "removedInStage26": [
+    { "name": "src/app/runtime-core.js", "reason": "central legacy runtime core removed" },
+    { "name": "runtime.js import of runtime-core.js", "reason": "runtime-core entry removed" }
+  ],
+  "removedInStage26D": [
+    { "name": "realtime rtUpsert/rtRemove mutation helpers", "reason": "realtime now uses typed events and query invalidation" },
+    { "name": "realtime scheduleRender sync", "reason": "React refresh comes from TanStack Query invalidation" },
+    { "name": "realtime soft snapshot mutation", "reason": "soft sync dispatches typed realtime invalidation" }
+  ],
+  "removedInStage26E": [
+    { "name": "src/app/bootstrap.js", "reason": "Replaced by React root entry src/app/main.tsx" },
+    { "name": "legacy index.html application shell", "reason": "Removed from index.html and replaced by React root" }
+  ],
+  "removedInStage26F": [
+    { "name": "src/app/runtime-compatibility.js", "reason": "Final compatibility bridge removed; App.tsx and workspaceRuntime.ts own bootstrap/session/store" },
+    { "name": "src/app/runtime.js", "reason": "Runtime entry removed; main.tsx imports App directly" },
+    { "name": "src/app/data-loader.js", "reason": "Query-owned workspaceBootstrapQuery replaces legacy data loader" },
+    { "name": "src/app/session-controller.js", "reason": "workspaceRuntime.ts owns session restore/sign-in/logout" },
+    { "name": "src/app/legacy/legacyDomTemplate.ts", "reason": "React App renders shell/pages directly without legacy DOM template" }
+  ]
+}

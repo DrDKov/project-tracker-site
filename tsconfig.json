@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "types": [
+      "vite/client"
+    ]
+  },
+  "include": [
+    "src/types/**/*.d.ts",
+    "src/types/**/*.js",
+    "src/core/**/*.js",
+    "src/services/**/*.js",
+    "src/features/projects/render.js",
+    "src/features/tasks/card-renderer.js",
+    "src/features/team/render.js",
+    "src/features/access/render.js",
+    "src/features/audit/render.js",
+    "src/features/app-shell/render.js",
+    "src/features/modals/workspace-modals.js",
+    "src/react/**/*.js",
+    "src/react/**/*.jsx",
+    "src/features/tasks/board-renderer.js",
+    "src/react/projects/**/*.js",
+    "src/react/projects/**/*.jsx",
+    "src/types/**/*.ts",
+    "src/react/**/*.ts",
+    "src/react/**/*.tsx",
+    "src/repositories/**/*.ts",
+    "src/controllers/**/*.ts",
+    "src/shared/**/*.ts",
+    "src/shared/**/*.tsx",
+    "src/app/**/*.ts",
+    "src/app/**/*.tsx",
+    "src/pages/**/*.ts",
+    "src/pages/**/*.tsx"
+  ]
+}
