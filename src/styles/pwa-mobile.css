@@ -1,0 +1,81 @@
+:root {
+  --pwa-banner-bottom: max(14px, env(safe-area-inset-bottom));
+}
+
+html.is-pwa-standalone body {
+  overscroll-behavior-y: contain;
+}
+
+html.is-pwa-standalone .react-shell-sidebar,
+html.is-pwa-standalone .react-shell-topbar {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+html.is-pwa-offline .react-shell-topbar {
+  border-bottom-color: rgba(37, 99, 235, .35);
+}
+
+.pwa-banner-stack {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  right: max(14px, env(safe-area-inset-right));
+  bottom: var(--pwa-banner-bottom);
+  z-index: 10000;
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pwa-banner {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(148, 163, 184, .35);
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, .18);
+  backdrop-filter: blur(14px);
+}
+
+.pwa-banner strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ds-text, #0f172a);
+  font-size: 14px;
+}
+
+.pwa-banner p {
+  margin: 0;
+  color: var(--ds-muted, #64748b);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pwa-offline-banner {
+  border-color: rgba(37, 99, 235, .32);
+}
+
+@media (max-width: 720px) {
+  html.is-pwa-standalone .app.react-pure-app {
+    min-height: 100dvh;
+  }
+
+  .pwa-banner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pwa-banner-actions {
+    justify-content: flex-end;
+  }
+}

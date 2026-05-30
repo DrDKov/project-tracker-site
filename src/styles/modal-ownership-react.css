@@ -1,0 +1,8 @@
+.react-controlled-modal-head h3{margin:0}
+.react-controlled-modal-head .muted{margin:4px 0 0;font-size:12px}
+.react-controlled-modal-grid label span{font-weight:800;color:#334155}
+.react-controlled-modal-error{margin-top:12px;border-color:#fecaca;background:#fef2f2;color:#991b1b}
+.react-access-list{max-height:280px;overflow:auto;border-top:1px solid #e5e7eb;padding-top:10px}
+.react-access-list .access-table{width:100%;border-collapse:collapse}
+.react-access-list .access-table th,.react-access-list .access-table td{padding:8px 6px;border-bottom:1px solid #edf2f7;text-align:left;font-size:13px}
+.react-access-list .access-table th{color:#64748b;font-weight:900}

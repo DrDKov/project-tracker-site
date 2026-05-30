@@ -1,0 +1,5 @@
+.react-task-modal-head{align-items:flex-start;gap:16px}
+.react-task-modal-head h3{margin:0}
+.react-task-modal-subtitle{margin:.25rem 0 0;font-size:12px}
+.react-task-modal-grid{align-items:start}
+#taskForm[data-react-task-modal-mounted="1"] .task-comments-block{margin-top:16px}
