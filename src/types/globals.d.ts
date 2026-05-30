@@ -24,6 +24,7 @@ declare global {
     appState?: AppState;
     __PT_APP_BOOTSTRAPPED__?: boolean;
     __PT_LOADED_MODULES__?: string[];
+    __PT_OPEN_NOTIFICATIONS__?: () => void;
 
     __ReactWorkspaceModals?: {
       openProject?: (project?: any, options?: any) => void;
