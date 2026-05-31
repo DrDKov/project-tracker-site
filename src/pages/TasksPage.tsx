@@ -15,12 +15,19 @@ function weekStart(value) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+function closestElement(target, selector) {
+  let node = target;
+  if (node && node.nodeType !== 1) node = node.parentElement;
+  return node && typeof node.closest === 'function' ? node.closest(selector) : null;
+}
+
 export function TasksPage() {
   const state = useWorkspaceState();
   const ui = useWorkspaceUiStore();
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
   const filters = ui.filters;
-  const model = createTaskBoardViewModel({
+
+  const model = React.useMemo(() => createTaskBoardViewModel({
     tasks: state.tasks || [],
     users: state.users || [],
     mode: ui.taskBoardMode,
@@ -54,19 +61,42 @@ export function TasksPage() {
       ST,
       taskCommentList: (id) => commentsForTask(state, id)
     }, options)
-  });
+  }), [
+    state.tasks,
+    state.users,
+    state.assignees,
+    state.subtasks,
+    state.taskComments,
+    state.projects,
+    state.tasksLoading,
+    state.taskError,
+    ui.taskBoardMode,
+    ui.tasksWeekStart,
+    filters.taskSearch,
+    filters.taskProjectId,
+    filters.taskUserId,
+    filters.taskDateMode,
+    filters.taskDateFrom,
+    filters.taskDateTo,
+    filters.tasksShowDone
+  ]);
+
+  function dropTarget(event) {
+    return closestElement(event.target, '[data-status]');
+  }
 
   function onDrop(event) {
+    const target = dropTarget(event);
+    if (!target) return;
     event.preventDefault();
     const taskId = event.dataTransfer.getData('text/plain') || event.dataTransfer.getData('application/x-task-id');
-    const target = event.target.closest('[data-status]');
-    const status = target?.dataset.status;
+    const status = target.dataset.status;
     if (taskId && status) actions.moveTask?.(taskId, status);
     document.querySelectorAll('.drag-over').forEach((node) => node.classList.remove('drag-over'));
   }
 
   function onDragStart(event) {
-    const card = event.target.closest('[data-task-id]');
+    const card = closestElement(event.target, '[data-task-id]');
     if (!card?.dataset.taskId) return;
     event.dataTransfer.setData('text/plain', card.dataset.taskId);
     event.dataTransfer.setData('application/x-task-id', card.dataset.taskId);
@@ -78,9 +108,9 @@ export function TasksPage() {
       <div className="panel-head">
         <h3>Задачи</h3>
         <div className="row">
-          <button className="btn secondary" onClick={() => ui.setTaskBoardMode('status')}>По статусам</button>
-          <button className="btn secondary" onClick={() => ui.setTaskBoardMode('assignee')}>По исполнителям</button>
-          <button className="btn secondary" onClick={() => ui.setTaskBoardMode('week')}>По неделе</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'status' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('status')}>По статусам</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'assignee' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('assignee')}>По исполнителям</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'week' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('week')}>По неделе</button>
           <button className="btn primary" onClick={() => actions.openTask?.()}>+ Задача</button>
         </div>
       </div>
@@ -104,7 +134,7 @@ export function TasksPage() {
         </select>
         <input className="input" type="date" value={filters.taskDateFrom} onChange={(event) => ui.setFilter('taskDateFrom', event.currentTarget.value)} />
         <input className="input" type="date" value={filters.taskDateTo} onChange={(event) => ui.setFilter('taskDateTo', event.currentTarget.value)} />
-        <label className="check-inline"><input type="checkbox" checked={filters.tasksShowDone} onChange={(event) => ui.setFilter('tasksShowDone', event.currentTarget.checked)} /> показывать выполненные</label>
+        <label className="check-inline"><input type="checkbox" checked={filters.tasksShowDone} onChange={(event) => ui.setFilter('tasksShowDone', event.currentTarget.checked)} /> выполненные</label>
       </div>
 
       {ui.taskBoardMode === 'week' ? (
@@ -120,9 +150,9 @@ export function TasksPage() {
         className={model.className}
         data-mode={model.dataMode}
         onDragStart={onDragStart}
-        onDragOver={(event) => { if (event.target.closest('[data-status]')) event.preventDefault(); }}
-        onDragEnter={(event) => { const col = event.target.closest('[data-status]'); if (col) col.classList.add('drag-over'); }}
-        onDragLeave={(event) => { const col = event.target.closest('[data-status]'); if (col && !col.contains(event.relatedTarget)) col.classList.remove('drag-over'); }}
+        onDragOver={(event) => { if (dropTarget(event)) event.preventDefault(); }}
+        onDragEnter={(event) => { const col = dropTarget(event); if (col) col.classList.add('drag-over'); }}
+        onDragLeave={(event) => { const col = dropTarget(event); if (col && !col.contains(event.relatedTarget)) col.classList.remove('drag-over'); }}
         onDrop={onDrop}
       >
         <TaskBoard model={model} actions={actions} />
