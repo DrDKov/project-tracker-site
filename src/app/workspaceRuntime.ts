@@ -35,6 +35,36 @@ const INITIAL_STATE = {
 let initialized = false;
 let restoreInFlight = null;
 
+function normalizeMentionText(value) {
+  return String(value || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9@._\-/\s]+/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function mentionAliases(user) {
+  const out = new Set();
+  const display = String(user?.display_name || '').trim();
+  const email = String(user?.email || '').trim();
+  if (display) {
+    out.add(display);
+    const first = display.split(/\s+/).filter(Boolean)[0];
+    if (first) out.add(first);
+  }
+  if (email) {
+    out.add(email);
+    out.add(email.split('@')[0]);
+  }
+  return Array.from(out).filter(Boolean).map((item) => normalizeMentionText(`@${item}`));
+}
+
+function commentMentionsUser(body, user) {
+  const text = normalizeMentionText(body);
+  if (!text || !user) return false;
+  return mentionAliases(user).some((alias) => alias && text.includes(alias));
+}
+
+function taskTitleById(tasks) {
+  return new Map((tasks || []).map((task) => [task.id, task.title || 'Задача']));
+}
+
 export function installWorkspaceStore() {
   if (!initialized) {
     appStore.replaceState({ ...INITIAL_STATE }, { source: 'react-runtime-init', stage: '26F' });
@@ -69,7 +99,7 @@ async function resolveWorkspaceProfile(client, user) {
   return profile || null;
 }
 
-async function loadOptionalRuntimeData(client, profile, warnings) {
+async function loadOptionalRuntimeData(client, profile, warnings, bootstrap = null) {
   const repositories = createWorkspaceRepositorySet(client);
   const patch = {};
   try {
@@ -84,17 +114,35 @@ async function loadOptionalRuntimeData(client, profile, warnings) {
     if (profile?.id) {
       const since = new Date(Date.now() - 45 * 86400000).toISOString();
       const rows = await repositories.notifications.recentTaskAssignees(profile.id, since);
-      patch.notifications = (rows || []).map((row) => ({
+      const titleMap = taskTitleById(bootstrap?.tasks || []);
+      const assignmentNotifications = (rows || []).map((row) => ({
         id: `assignment:${row.task_id}:${row.created_at || ''}`,
         type: 'task_assigned',
         task_id: row.task_id,
         user_id: profile.id,
         title: 'Вам назначена задача',
-        body: '',
+        body: titleMap.get(row.task_id) || '',
         unread: true,
         is_read: false,
         created_at: row.created_at
       }));
+
+      const recentComments = await repositories.notifications.recentComments(since, 200).catch(() => []);
+      const mentionNotifications = (recentComments || [])
+        .filter((comment) => comment?.task_id && comment?.user_id !== profile.id && commentMentionsUser(comment.body || comment.content || '', profile))
+        .map((comment) => ({
+          id: `mention:${comment.id || comment.task_id}:${comment.created_at || ''}`,
+          type: 'task_mention',
+          task_id: comment.task_id,
+          user_id: profile.id,
+          title: 'Вас упомянули в комментарии',
+          body: `${titleMap.get(comment.task_id) || 'Задача'} · ${String(comment.body || comment.content || '').slice(0, 160)}`,
+          unread: true,
+          is_read: false,
+          created_at: comment.created_at
+        }));
+
+      patch.notifications = assignmentNotifications.concat(mentionNotifications);
     }
   } catch (error) {
     warnings.push(`notifications: ${error?.message || String(error)}`);
@@ -140,7 +188,7 @@ export async function restoreWorkspaceSession() {
       const bootstrap = await loadWorkspaceBootstrapData(client, { owner: profile.role === 'owner', warnings });
       const permissions = getWorkspacePermissionSnapshot(profile, bootstrap.projects, bootstrap.members);
       const patch = createWorkspaceBootstrapStatePatch(bootstrap, profile, permissions);
-      const optionalPatch = await loadOptionalRuntimeData(client, profile, warnings);
+      const optionalPatch = await loadOptionalRuntimeData(client, profile, warnings, bootstrap);
       setWorkspacePatch({ ...patch, ...optionalPatch, user, profile, sb: client, loading: false, statusTitle: 'Подключено', statusText: `${profile.display_name || user.email || 'Пользователь'} · ${profile.role || 'member'} · проектов: ${bootstrap.projects.length} · задач: ${bootstrap.tasks.length}` }, 'react-bootstrap-loaded');
       return appStore.getState();
     } catch (error) {
