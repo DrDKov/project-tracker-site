@@ -1,6 +1,6 @@
 -- Enable realtime payloads for the React workspace.
 -- Run this migration in Supabase SQL editor / migrations if realtime changes are not reaching other open clients.
--- The migration is intentionally tolerant: older databases may not have every materials table yet.
+-- The migration is intentionally tolerant: older databases may not have every table yet.
 
 DO $$
 DECLARE
@@ -13,7 +13,7 @@ DECLARE
     'task_subtasks',
     'task_comments',
     'project_messages',
-    'material_templates',
+    'workspace_templates',
     'material_folders',
     'material_files',
     'project_members',
