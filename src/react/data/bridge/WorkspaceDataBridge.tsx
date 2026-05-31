@@ -4,10 +4,15 @@ import { useWorkspaceState } from '../../state/useWorkspaceStore';
 import { workspaceQueryKeys } from '../queries/workspaceQueryKeys';
 import { useWorkspaceBootstrapQuerySync } from '../queries/workspaceBootstrapQuery';
 
-function seedQueryIfMissing<T>(queryClient: ReturnType<typeof useQueryClient>, queryKey: readonly unknown[], value: T[] | undefined) {
-  if (!Array.isArray(value) || !value.length) return;
+function activeRows<T extends { deleted_at?: string | null }>(rows: T[] | undefined) {
+  return Array.isArray(rows) ? rows.filter((item) => !item?.deleted_at) : [];
+}
+
+function seedQueryIfMissing<T extends { deleted_at?: string | null }>(queryClient: ReturnType<typeof useQueryClient>, queryKey: readonly unknown[], value: T[] | undefined) {
+  const rows = activeRows(value);
+  if (!rows.length) return;
   const existing = queryClient.getQueryData(queryKey);
-  if (existing === undefined) queryClient.setQueryData(queryKey, value);
+  if (existing === undefined) queryClient.setQueryData(queryKey, rows);
 }
 
 export function WorkspaceDataBridge() {
