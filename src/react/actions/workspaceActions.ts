@@ -84,10 +84,17 @@ export function createWorkspaceReactActions() {
     toggleTask(id, done) { return guarded(() => taskController().toggleTask(id, done)); },
     moveTask(id, status) { return guarded(() => taskController().moveTask(id, status)); },
     updateTaskTimeline(id, startDate, dueDate) { return guarded(() => taskController().updateTaskTimeline(id, startDate, dueDate)); },
+    assignTask(id, userId) {
+      const task = byId(state().tasks || [], id);
+      if (!task) return null;
+      return guarded(() => taskController().saveTask({ ...task, assignee_id: userId === '__none__' ? null : userId, assigneeIds: userId === '__none__' ? [] : [userId] }, { id }));
+    },
     toggleTaskFavorite(id) { return guarded(() => taskController().toggleFavorite(id)); },
     addSubtask(taskId, title) { return guarded(() => taskController().addSubtask(taskId, title)); },
     toggleSubtask(id, done) { return guarded(() => taskController().toggleSubtask(id, done)); },
     deleteSubtask(id) { return guarded(() => taskController().deleteSubtask(id)); },
+    addTaskComment(taskId, body) { return guarded(() => taskController().addComment(taskId, body)); },
+    deleteTaskComment(id) { return guarded(() => taskController().deleteComment(id)); },
 
     deleteChatMessage(id) { return guarded(() => chatController().deleteMessage(id)); }
   };
