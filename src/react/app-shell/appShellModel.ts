@@ -20,7 +20,6 @@ export function createAppShellMetrics(state, today) {
   const projects = Array.isArray(state?.projects) ? state.projects : [];
   const tasks = Array.isArray(state?.tasks) ? state.tasks : [];
   const users = Array.isArray(state?.users) ? state.users : [];
-  const notifications = Array.isArray(state?.notifications) ? state.notifications : [];
   const openTasks = tasks.filter((task) => task.status !== 'done').length;
   const overdueTasks = tasks.filter((task) => task.status !== 'done' && task.due_date && task.due_date < today).length;
 
@@ -28,8 +27,7 @@ export function createAppShellMetrics(state, today) {
     projects: projects.length,
     openTasks,
     overdueTasks,
-    users: users.length,
-    notifications: notifications.filter((item) => item && item.is_read !== true).length
+    users: users.length
   };
 }
 
@@ -70,6 +68,8 @@ export function createAppShellModel(input = {}) {
   const pages = createVisibleAppPages(input.permissions || {}, { hasMaterialsSection: Boolean(input.hasMaterialsSection) });
   const visibleView = pages.some((page) => page.id === view) ? view : 'overview';
   const visibleActivePage = getAppShellPage(visibleView);
+  const notifications = Array.isArray(state.notifications) ? state.notifications : [];
+  const notificationCount = notifications.filter((item) => item && item.is_read !== true).length;
 
   return {
     view: visibleView,
@@ -84,6 +84,7 @@ export function createAppShellModel(input = {}) {
     statusTitle: input.statusTitle || 'База подключена',
     statusText: input.statusText || 'Проверяю текущую сессию...',
     metrics: createAppShellMetrics(state, input.today || new Date().toISOString().slice(0, 10)),
+    notificationCount,
     actions: {
       canCreateProject: true,
       canCreateTask: true,
