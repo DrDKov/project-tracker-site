@@ -72,6 +72,84 @@ function updateRows(items, eventType, row, old) {
   if (eventType === 'DELETE' || isSoftDeleted(row)) return removeById(items || [], target);
   return upsertById(items || [], row);
 }
+function taskTitle(taskId, state) {
+  const task = (state.tasks || []).find((item) => String(item.id) === String(taskId));
+  return task?.title || 'Задача';
+}
+function notificationExists(items, id) {
+  return (items || []).some((item) => String(item.id || item.notification_id || '') === String(id));
+}
+function normalizeMentionText(value) {
+  return String(value || '').toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9@._\-/\s]+/gi, ' ').replace(/\s+/g, ' ').trim();
+}
+function mentionAliases(user) {
+  const out = new Set();
+  const display = String(user?.display_name || '').trim();
+  const email = String(user?.email || '').trim();
+  if (display) {
+    out.add(display);
+    const first = display.split(/\s+/).filter(Boolean)[0];
+    if (first) out.add(first);
+  }
+  if (email) {
+    out.add(email);
+    out.add(email.split('@')[0]);
+  }
+  return Array.from(out).filter(Boolean).map((item) => normalizeMentionText(`@${item}`));
+}
+function commentMentionsUser(body, user) {
+  const text = normalizeMentionText(body);
+  if (!text || !user) return false;
+  return mentionAliases(user).some((alias) => alias && text.includes(alias));
+}
+function pushNotification(notification) {
+  if (!notification?.id) return;
+  const state = appStore.getState() || {};
+  const current = state.notifications || [];
+  if (notificationExists(current, notification.id)) return;
+  appStore.setState({ notifications: [notification, ...current] }, { source: 'realtime:notifications', stage: 'react-realtime-local' });
+}
+function synthesizeNotification(table, change) {
+  const eventType = String(change.eventType || '').toUpperCase();
+  if (eventType !== 'INSERT') return;
+  const row = change.row || null;
+  if (!row) return;
+  const state = appStore.getState() || {};
+  const profile = state.profile;
+  if (!profile?.id) return;
+
+  if (table === 'task_assignees' && String(row.user_id || '') === String(profile.id)) {
+    const id = `assignment:${row.task_id}:${row.created_at || row.id || ''}`;
+    pushNotification({
+      id,
+      type: 'task_assigned',
+      task_id: row.task_id,
+      user_id: profile.id,
+      title: 'Вам назначена задача',
+      body: taskTitle(row.task_id, state),
+      unread: true,
+      is_read: false,
+      created_at: row.created_at || new Date().toISOString()
+    });
+  }
+
+  if (table === 'task_comments' && row.task_id && String(row.user_id || row.author_id || '') !== String(profile.id)) {
+    const body = row.body || row.content || '';
+    if (!commentMentionsUser(body, profile)) return;
+    const id = `mention:${row.id || row.task_id}:${row.created_at || ''}`;
+    pushNotification({
+      id,
+      type: 'task_mention',
+      task_id: row.task_id,
+      user_id: profile.id,
+      title: 'Вас упомянули в комментарии',
+      body: `${taskTitle(row.task_id, state)} · ${String(body).slice(0, 160)}`,
+      unread: true,
+      is_read: false,
+      created_at: row.created_at || new Date().toISOString()
+    });
+  }
+}
 function applyRealtimePayload(table, change) {
   const key = TABLE_TO_STATE_KEY[table];
   if (!key) return;
@@ -111,6 +189,7 @@ export function useWorkspaceRealtimeInvalidation() {
         };
         window.__workspaceRealtimeLastEvent = { table, eventType: change.eventType, at: new Date().toISOString(), rowId: rowId(change.row || change.old) };
         applyRealtimePayload(table, change);
+        synthesizeNotification(table, change);
         queryClient.setQueryData(workspaceQueryKeys.bootstrap(), (previous) => patchBootstrapCache(previous, table, change));
         const tableQueryKey = QUERY_KEY_BY_TABLE[table];
         if (tableQueryKey) {
