@@ -5,7 +5,6 @@ import { subscribeWorkspaceRealtimeChanges, dispatchWorkspaceRealtimeChange } fr
 import { invalidateRealtimeChange } from './realtimeInvalidation';
 import { useWorkspaceState } from '../../react/state/useWorkspaceStore';
 import { workspaceQueryKeys } from '../../react/data/queries/workspaceQueryKeys';
-import { invalidateWorkspaceData } from '../../app/workspaceRuntime';
 import { appStore } from '../../core/state/store';
 
 const REALTIME_TABLES = [
@@ -15,7 +14,7 @@ const REALTIME_TABLES = [
   'task_subtasks',
   'task_comments',
   'project_messages',
-  'material_templates',
+  'workspace_templates',
   'material_folders',
   'material_files',
   'project_members',
@@ -29,7 +28,7 @@ const TABLE_TO_STATE_KEY = {
   task_subtasks: 'subtasks',
   task_comments: 'taskComments',
   project_messages: 'messages',
-  material_templates: 'materialTemplates',
+  workspace_templates: 'materialTemplates',
   material_folders: 'materialFolders',
   material_files: 'materialFiles',
   project_members: 'members',
@@ -70,13 +69,6 @@ function applyRealtimePayload(table, payload) {
   appStore.setState({ [key]: next }, { source: `realtime:${table}`, stage: 'react-realtime-local' });
 }
 
-function softRefreshWorkspace(source = 'react-realtime-refresh') {
-  window.clearTimeout(window.__workspaceRealtimeReloadTimer);
-  window.__workspaceRealtimeReloadTimer = window.setTimeout(() => {
-    invalidateWorkspaceData().catch((error) => console.warn(`[${source}] failed`, error));
-  }, 250);
-}
-
 export function useWorkspaceRealtimeInvalidation() {
   const queryClient = useQueryClient();
   const state = useWorkspaceState();
@@ -91,11 +83,9 @@ export function useWorkspaceRealtimeInvalidation() {
 
   React.useEffect(() => {
     if (!client || !profileId || typeof client.channel !== 'function') return undefined;
-    let subscribed = false;
-    const channel = client.channel(`workspace-react-realtime:${profileId}`);
+    const channel = client.channel(`workspace-react-realtime:${profileId}:${Date.now()}`);
     REALTIME_TABLES.forEach((table) => {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-        subscribed = true;
         const change = {
           table,
           eventType: payload.eventType || payload.type || 'UPDATE',
@@ -103,35 +93,31 @@ export function useWorkspaceRealtimeInvalidation() {
           old: payload.old || null,
           source: 'supabase'
         };
+        window.__workspaceRealtimeLastEvent = { table, eventType: change.eventType, at: new Date().toISOString(), rowId: rowId(change.row || change.old) };
         applyRealtimePayload(table, change);
         dispatchWorkspaceRealtimeChange(change);
-        queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.bootstrap() });
-        softRefreshWorkspace('react-realtime-event');
+        queryClient.setQueryData(workspaceQueryKeys.bootstrap(), (previous) => {
+          if (!previous) return previous;
+          const key = TABLE_TO_STATE_KEY[table];
+          if (!key || !Array.isArray(previous[key])) return previous;
+          const eventType = String(change.eventType || '').toUpperCase();
+          const row = change.row;
+          const old = change.old;
+          const target = row || old;
+          if (!target) return previous;
+          const nextRows = (eventType === 'DELETE' || isSoftDeleted(row)) ? removeById(previous[key], target) : upsertById(previous[key], row);
+          return { ...previous, [key]: nextRows };
+        });
       });
     });
     channel.subscribe((status) => {
       window.__workspaceRealtimeStatus = status;
-      if (status === 'SUBSCRIBED') {
-        subscribed = true;
-        console.info('[workspace-realtime] subscribed');
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-        console.warn('[workspace-realtime] status', status);
-      }
+      if (status === 'SUBSCRIBED') console.info('[workspace-realtime] subscribed');
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') console.warn('[workspace-realtime] status', status);
     });
     return () => {
       if (typeof client.removeChannel === 'function') client.removeChannel(channel);
       else if (typeof channel.unsubscribe === 'function') channel.unsubscribe();
     };
   }, [client, profileId, queryClient]);
-
-  React.useEffect(() => {
-    if (!client || !profileId) return undefined;
-    const interval = window.setInterval(() => {
-      const current = appStore.getState() || {};
-      if (!current.profile?.id) return;
-      if (document.visibilityState !== 'visible') return;
-      invalidateWorkspaceData().catch((error) => console.warn('[workspace-polling-fallback] failed', error));
-    }, 5000);
-    return () => window.clearInterval(interval);
-  }, [client, profileId]);
 }
