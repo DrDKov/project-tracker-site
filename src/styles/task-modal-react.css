@@ -1,5 +1,148 @@
+/* React modal and restored task UI polish. */
+.react-modal-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:12000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  background:rgba(15,23,42,.48);
+  backdrop-filter:blur(8px);
+}
+.react-modal-backdrop .modal{
+  background:#fff;
+  border:1px solid #dbe4ef;
+  border-radius:24px;
+  box-shadow:0 34px 90px rgba(15,23,42,.34);
+  max-height:calc(100vh - 48px);
+  overflow:auto;
+}
+.react-task-modal,.react-project-modal{
+  width:min(920px,calc(100vw - 48px));
+  padding:22px;
+}
+.react-task-modal .modal-head,.react-project-modal .modal-head,.notification-modal .modal-head{
+  align-items:flex-start;
+  gap:16px;
+  padding-bottom:14px;
+  border-bottom:1px solid #eef2f7;
+}
+.react-task-modal .modal-head p,.react-project-modal .modal-head p,.notification-modal .modal-head p{
+  margin:4px 0 0;
+  color:#64748b;
+  font-size:13px;
+}
+.react-task-modal .form-grid,.react-project-modal .form-grid{
+  padding-top:14px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:13px 14px;
+}
+.react-task-modal label,.react-project-modal label{
+  display:grid;
+  gap:6px;
+  color:#334155;
+  font-size:13px;
+  font-weight:800;
+}
+.react-task-modal label.wide,.react-project-modal label.wide{
+  grid-column:1/-1;
+}
+.react-task-modal textarea,.react-project-modal textarea{
+  resize:vertical;
+}
+.react-task-modal select[multiple]{
+  min-height:116px;
+}
+.react-task-modal .modal-actions,.react-project-modal .modal-actions{
+  position:sticky;
+  bottom:-22px;
+  margin:18px -22px -22px;
+  padding:14px 22px 18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.84),#fff 55%);
+  border-top:1px solid #eef2f7;
+}
+.notification-modal{
+  width:min(520px,calc(100vw - 48px));
+  padding:18px;
+}
+.notification-list{
+  display:grid;
+  gap:8px;
+  max-height:min(560px,calc(100vh - 180px));
+  overflow:auto;
+  padding-top:10px;
+}
+.notification-row{
+  display:grid;
+  gap:4px;
+  width:100%;
+  text-align:left;
+  border:1px solid #e2e8f0;
+  border-radius:14px;
+  background:#fff;
+  color:#0f172a;
+  padding:10px 12px;
+  cursor:pointer;
+}
+.notification-row:hover{
+  background:#eff6ff;
+  border-color:#bfdbfe;
+}
+.notification-row b{
+  font-size:13px;
+}
+.notification-row span{
+  color:#64748b;
+  font-size:12px;
+  overflow-wrap:anywhere;
+}
+.react-filterbar{
+  display:grid;
+  grid-template-columns:minmax(220px,1.4fr) repeat(3,minmax(150px,.8fr)) repeat(2,minmax(132px,.62fr)) auto;
+  gap:8px;
+  align-items:center;
+  margin:0 0 14px;
+  padding:10px;
+  border:1px solid #e2e8f0;
+  border-radius:18px;
+  background:#f8fafc;
+}
+.react-filterbar .input{
+  min-height:40px;
+  border-radius:12px;
+  background:#fff;
+}
+.react-filterbar .check-inline{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:40px;
+  white-space:nowrap;
+  border:1px solid #dbe4ef;
+  border-radius:12px;
+  background:#fff;
+  padding:0 11px;
+  color:#334155;
+  font-size:13px;
+  font-weight:800;
+}
+.task-filterbar.react-filterbar{grid-template-columns:minmax(240px,1.4fr) repeat(3,minmax(150px,.8fr)) repeat(2,minmax(130px,.62fr)) auto}
+.project-filterbar.react-filterbar{grid-template-columns:minmax(260px,1.5fr) minmax(160px,.8fr) minmax(180px,.8fr)}
+.timeline-filterbar.react-filterbar{grid-template-columns:minmax(220px,1.4fr) repeat(4,minmax(145px,.75fr)) auto}
 .react-task-modal-head{align-items:flex-start;gap:16px}
 .react-task-modal-head h3{margin:0}
 .react-task-modal-subtitle{margin:.25rem 0 0;font-size:12px}
 .react-task-modal-grid{align-items:start}
 #taskForm[data-react-task-modal-mounted="1"] .task-comments-block{margin-top:16px}
+@media(max-width:1100px){
+  .react-filterbar,.task-filterbar.react-filterbar,.project-filterbar.react-filterbar,.timeline-filterbar.react-filterbar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .react-modal-backdrop{align-items:flex-start;padding:12px}
+  .react-task-modal,.react-project-modal,.notification-modal{width:100%;max-height:calc(100vh - 24px);padding:16px;border-radius:20px}
+  .react-task-modal .form-grid,.react-project-modal .form-grid{grid-template-columns:1fr}
+  .react-task-modal .modal-actions,.react-project-modal .modal-actions{margin:16px -16px -16px;padding:12px 16px 16px}
+  .react-filterbar,.task-filterbar.react-filterbar,.project-filterbar.react-filterbar,.timeline-filterbar.react-filterbar{grid-template-columns:1fr}
+}
