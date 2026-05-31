@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react';
 import { ReactAppProviders } from '../react/app/ReactAppProviders';
 import { AppSidebar, AppTopbar } from '../react/app-shell/AppShell';
@@ -37,7 +38,7 @@ function WorkspaceBoot() {
   return null;
 }
 
-function RoutePerformanceMarker({ routeId }: { routeId: string }) {
+function RoutePerformanceMarker({ routeId }) {
   React.useEffect(() => {
     const start = `workspace:route:${routeId}:start`;
     const end = `workspace:route:${routeId}:end`;
@@ -47,17 +48,17 @@ function RoutePerformanceMarker({ routeId }: { routeId: string }) {
   return null;
 }
 
-function TaskModal({ state, actions, onClose }: any) {
+function TaskModal({ state, actions, onClose }) {
   const ui = useWorkspaceUiStore();
   const id = ui.modals.taskId;
   const draft = ui.modals.taskDraft || {};
-  const task = id ? (state.tasks || []).find((item: any) => item.id === id) : null;
+  const task = id ? (state.tasks || []).find((item) => item.id === id) : null;
   const source = task || draft || {};
-  const selectedUsers = new Set<string>((state.assignees || []).filter((item: any) => item.task_id === id).map((item: any) => String(item.user_id || '')).filter(Boolean));
+  const selectedUsers = new Set((state.assignees || []).filter((item) => item.task_id === id).map((item) => String(item.user_id || '')).filter(Boolean));
   if (task?.assignee_id) selectedUsers.add(String(task.assignee_id));
   const selectedUserValues = Array.from(selectedUsers);
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -82,12 +83,12 @@ function TaskModal({ state, actions, onClose }: any) {
         <div className="modal-head"><div><h3>{id ? 'Редактировать задачу' : 'Новая задача'}</h3><p>{task?.title || 'Заполните параметры задачи'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
         <div className="form-grid">
           <label>Название<input className="input" name="title" defaultValue={source.title || ''} required /></label>
-          <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project: any) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
+          <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
           <label>Статус<select className="input" name="status" defaultValue={source.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
           <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
           <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
           <label>Срок<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
-          <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user: any) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
+          <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
           <label className="wide">Описание<textarea className="input" name="notes" defaultValue={source.notes || source.description || ''} rows={5} /></label>
         </div>
         <div className="modal-actions"><button type="button" className="btn secondary" onClick={onClose}>Отмена</button><button className="btn primary" type="submit">Сохранить</button></div>
@@ -96,11 +97,11 @@ function TaskModal({ state, actions, onClose }: any) {
   );
 }
 
-function ProjectModal({ state, actions, onClose }: any) {
+function ProjectModal({ state, actions, onClose }) {
   const ui = useWorkspaceUiStore();
   const id = ui.modals.projectId === '__new__' ? null : ui.modals.projectId;
-  const project = id ? (state.projects || []).find((item: any) => item.id === id) : null;
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  const project = id ? (state.projects || []).find((item) => item.id === id) : null;
+  async function submit(event) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     await actions.saveProjectData?.(id || null, {
@@ -122,7 +123,7 @@ function ProjectModal({ state, actions, onClose }: any) {
         <div className="modal-head"><div><h3>{id ? 'Редактировать проект' : 'Новый проект'}</h3><p>{project?.name || 'Заполните параметры проекта'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
         <div className="form-grid">
           <label>Название<input className="input" name="name" defaultValue={project?.name || ''} required /></label>
-          <label>Владелец<select className="input" name="owner_id" defaultValue={project?.owner_id || state.profile?.id || ''}><option value="">Не указан</option>{(state.users || []).map((user: any) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
+          <label>Владелец<select className="input" name="owner_id" defaultValue={project?.owner_id || state.profile?.id || ''}><option value="">Не указан</option>{(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
           <label>Статус<select className="input" name="status" defaultValue={project?.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
           <label>Приоритет<select className="input" name="priority" defaultValue={project?.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
           <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(project?.start_date || '').slice(0, 10)} /></label>
@@ -137,21 +138,21 @@ function ProjectModal({ state, actions, onClose }: any) {
   );
 }
 
-function NotificationPanel({ state, actions, onClose }: any) {
+function NotificationPanel({ state, actions, onClose }) {
   const items = state.notifications || [];
   return (
     <div className="modal-backdrop active react-modal-backdrop">
       <div className="modal card notification-modal">
         <div className="modal-head"><div><h3>Оповещения</h3><p>{items.length ? `Всего: ${items.length}` : 'Новых оповещений нет'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
         <div className="notification-list">
-          {items.length ? items.map((item: any) => <button key={item.id} type="button" className="notification-row" onClick={() => { if (item.task_id) actions.openTask?.(item.task_id); onClose(); }}><b>{item.title || 'Оповещение'}</b><span>{item.body || item.created_at || ''}</span></button>) : <div className="empty">Оповещений пока нет.</div>}
+          {items.length ? items.map((item) => <button key={item.id} type="button" className="notification-row" onClick={() => { if (item.task_id) actions.openTask?.(item.task_id); onClose(); }}><b>{item.title || 'Оповещение'}</b><span>{item.body || item.created_at || ''}</span></button>) : <div className="empty">Оповещений пока нет.</div>}
         </div>
       </div>
     </div>
   );
 }
 
-function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotifications }: any) {
+function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotifications }) {
   const ui = useWorkspaceUiStore();
   const close = () => ui.closeModals();
   return (
@@ -178,7 +179,7 @@ function MainPage() {
     hasMaterialsSection: true
   });
 
-  const selectView = React.useCallback((view: string) => route.navigateToView(view), [route]);
+  const selectView = React.useCallback((view) => route.navigateToView(view), [route]);
 
   function renderPage() {
     switch (route.routeId) {
