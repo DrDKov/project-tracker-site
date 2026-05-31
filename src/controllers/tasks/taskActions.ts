@@ -24,6 +24,18 @@ function restoreTask(task: Task | undefined, snapshot: Task | null): void { if (
 function renderTimelineIfVisible(deps: TaskActionControllerDeps): void { if (deps.currentView() === 'timeline') deps.renderTimeline(); }
 function isOwner(state: AppState) { return state?.profile?.role === 'owner'; }
 function sameId(a: unknown, b: unknown) { return a && b && String(a) === String(b); }
+function upsertById(items, row) {
+  const id = row?.id;
+  if (!id) return items || [];
+  let found = false;
+  const next = (items || []).map((item) => {
+    if (String(item?.id) === String(id)) { found = true; return { ...item, ...row }; }
+    return item;
+  });
+  if (!found) next.push(row);
+  return next;
+}
+function assigneeKey(row) { return `${row?.task_id || ''}:${row?.user_id || ''}`; }
 
 export function createTaskActionController(deps: TaskActionControllerDeps) {
   async function saveTask(input: TaskFormInput, options: { id?: string | null; createRecurring?: (row: TaskSaveInput, assigneeIds: string[]) => Promise<unknown> } = {}) {
@@ -34,13 +46,28 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
 
     if (!id && options.createRecurring) {
       await options.createRecurring(row, assigneeIds);
+      // Recurring creation produces a set of rows. Keep one explicit reload here because the
+      // createRecurringTaskSet service currently returns only id/date pairs, not full task rows.
       await deps.reload();
       return null;
     }
 
     const saved = await deps.repository.save(id, row);
-    await deps.repository.replaceAssignees(saved.id, assigneeIds);
-    await deps.reload();
+    const assigneeRows = await deps.repository.replaceAssignees(saved.id, assigneeIds);
+
+    deps.state.tasks = upsertById(deps.state.tasks || [], saved);
+    const otherAssignees = (deps.state.assignees || []).filter((item) => String(item.task_id) !== String(saved.id));
+    const normalizedAssignees = (assigneeRows || []).map((item) => ({ ...item, task_id: saved.id }));
+    const seen = new Set();
+    deps.state.assignees = otherAssignees.concat(normalizedAssignees).filter((item) => {
+      const key = assigneeKey(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    deps.render();
+    deps.renderTasks();
+    renderTimelineIfVisible(deps);
     return saved;
   }
 
