@@ -167,8 +167,7 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
     const row = await deps.repository.addComment({
       task_id: taskId,
       body: cleanBody,
-      user_id: deps.currentUserId() || undefined,
-      author_id: deps.currentUserId() || undefined
+      user_id: deps.currentUserId() || undefined
     });
     deps.state.taskComments = [...(deps.state.taskComments || []), row];
     deps.render();
