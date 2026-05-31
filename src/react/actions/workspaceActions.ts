@@ -27,6 +27,7 @@ function refreshLocalState(source = 'react-action-local') {
     subtasks: [...(s.subtasks || [])],
     taskComments: [...(s.taskComments || [])],
     projects: [...(s.projects || [])],
+    messages: [...(s.messages || [])],
     notifications: [...(s.notifications || [])]
   }, { source, stage: 'react-actions' });
 }
@@ -96,6 +97,8 @@ export function createWorkspaceReactActions() {
     addTaskComment(taskId, body) { return guarded(() => taskController().addComment(taskId, body)); },
     deleteTaskComment(id) { return guarded(() => taskController().deleteComment(id)); },
 
+    sendChatMessage(projectId, text, files = []) { return guarded(() => chatController().sendMessage(projectId, text, files)); },
+    clearChatProject(projectId) { return guarded(() => chatController().clearProject(projectId)); },
     deleteChatMessage(id) { return guarded(() => chatController().deleteMessage(id)); }
   };
 }
