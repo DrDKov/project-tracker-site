@@ -1,6 +1,7 @@
 // @ts-nocheck
 import type { AppState, Subtask, Task } from '../../types/entities';
 import type { TaskRepository, TaskSaveInput } from '../../repositories';
+import { PERFORMANCE_BUDGETS, recordWorkspacePerformanceMetric } from '../../shared/production';
 
 export interface TaskFormInput extends TaskSaveInput {
   assigneeIds: string[];
@@ -19,6 +20,7 @@ export interface TaskActionControllerDeps {
   currentUserId: () => string | null | undefined;
 }
 
+function nowMs() { return typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now(); }
 function cloneTask(task: Task | undefined): Task | null { return task ? { ...task } : null; }
 function restoreTask(task: Task | undefined, snapshot: Task | null): void { if (task && snapshot) Object.assign(task, snapshot); }
 function renderTimelineIfVisible(deps: TaskActionControllerDeps): void { if (deps.currentView() === 'timeline') deps.renderTimeline(); }
@@ -39,6 +41,7 @@ function assigneeKey(row) { return `${row?.task_id || ''}:${row?.user_id || ''}`
 
 export function createTaskActionController(deps: TaskActionControllerDeps) {
   async function saveTask(input: TaskFormInput, options: { id?: string | null; createRecurring?: (row: TaskSaveInput, assigneeIds: string[]) => Promise<unknown> } = {}) {
+    const startedAt = nowMs();
     const id = options.id || null;
     const { assigneeIds, ...row } = input;
     if (!row.title?.trim()) throw new Error('Введите название задачи');
@@ -49,12 +52,19 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
       // Recurring creation produces a set of rows. Keep one explicit reload here because the
       // createRecurringTaskSet service currently returns only id/date pairs, not full task rows.
       await deps.reload();
+      recordWorkspacePerformanceMetric('tasks:save-recurring', nowMs() - startedAt, { assignees: assigneeIds.length }, PERFORMANCE_BUDGETS.taskSaveMs);
       return null;
     }
 
+    const saveStartedAt = nowMs();
     const saved = await deps.repository.save(id, row);
-    const assigneeRows = await deps.repository.replaceAssignees(saved.id, assigneeIds);
+    recordWorkspacePerformanceMetric('tasks:save-db-task', nowMs() - saveStartedAt, { mode: id ? 'edit' : 'create' }, PERFORMANCE_BUDGETS.taskSaveMs);
 
+    const assigneesStartedAt = nowMs();
+    const assigneeRows = await deps.repository.replaceAssignees(saved.id, assigneeIds);
+    recordWorkspacePerformanceMetric('tasks:save-db-assignees', nowMs() - assigneesStartedAt, { assignees: assigneeIds.length }, PERFORMANCE_BUDGETS.taskSaveMs);
+
+    const localPatchStartedAt = nowMs();
     deps.state.tasks = upsertById(deps.state.tasks || [], saved);
     const otherAssignees = (deps.state.assignees || []).filter((item) => String(item.task_id) !== String(saved.id));
     const normalizedAssignees = (assigneeRows || []).map((item) => ({ ...item, task_id: saved.id }));
@@ -68,6 +78,8 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
     deps.render();
     deps.renderTasks();
     renderTimelineIfVisible(deps);
+    recordWorkspacePerformanceMetric('tasks:save-local-patch', nowMs() - localPatchStartedAt, { tasks: (deps.state.tasks || []).length, assignees: (deps.state.assignees || []).length }, PERFORMANCE_BUDGETS.interactionMs);
+    recordWorkspacePerformanceMetric('tasks:save-total', nowMs() - startedAt, { mode: id ? 'edit' : 'create', assignees: assigneeIds.length }, PERFORMANCE_BUDGETS.taskSaveMs);
     return saved;
   }
 
