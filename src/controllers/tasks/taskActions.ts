@@ -19,17 +19,11 @@ export interface TaskActionControllerDeps {
   currentUserId: () => string | null | undefined;
 }
 
-function cloneTask(task: Task | undefined): Task | null {
-  return task ? { ...task } : null;
-}
-
-function restoreTask(task: Task | undefined, snapshot: Task | null): void {
-  if (task && snapshot) Object.assign(task, snapshot);
-}
-
-function renderTimelineIfVisible(deps: TaskActionControllerDeps): void {
-  if (deps.currentView() === 'timeline') deps.renderTimeline();
-}
+function cloneTask(task: Task | undefined): Task | null { return task ? { ...task } : null; }
+function restoreTask(task: Task | undefined, snapshot: Task | null): void { if (task && snapshot) Object.assign(task, snapshot); }
+function renderTimelineIfVisible(deps: TaskActionControllerDeps): void { if (deps.currentView() === 'timeline') deps.renderTimeline(); }
+function isOwner(state: AppState) { return state?.profile?.role === 'owner'; }
+function sameId(a: unknown, b: unknown) { return a && b && String(a) === String(b); }
 
 export function createTaskActionController(deps: TaskActionControllerDeps) {
   async function saveTask(input: TaskFormInput, options: { id?: string | null; createRecurring?: (row: TaskSaveInput, assigneeIds: string[]) => Promise<unknown> } = {}) {
@@ -60,9 +54,8 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
       deps.renderTasks();
       renderTimelineIfVisible(deps);
     }
-    try {
-      await deps.repository.updateCompletion(id, done, deps.currentUserId());
-    } catch (error) {
+    try { await deps.repository.updateCompletion(id, done, deps.currentUserId()); }
+    catch (error) {
       restoreTask(task, snapshot);
       deps.renderTasks();
       renderTimelineIfVisible(deps);
@@ -85,9 +78,8 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
       deps.renderTasks();
       renderTimelineIfVisible(deps);
     }
-    try {
-      await deps.repository.updateStatus(id, status, deps.currentUserId());
-    } catch (error) {
+    try { await deps.repository.updateStatus(id, status, deps.currentUserId()); }
+    catch (error) {
       restoreTask(task, snapshot);
       deps.renderTasks();
       renderTimelineIfVisible(deps);
@@ -104,9 +96,8 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
       deps.renderTasks();
       renderTimelineIfVisible(deps);
     }
-    try {
-      await deps.repository.updateTimeline(id, startDate, dueDate);
-    } catch (error) {
+    try { await deps.repository.updateTimeline(id, startDate, dueDate); }
+    catch (error) {
       restoreTask(task, snapshot);
       deps.renderTasks();
       renderTimelineIfVisible(deps);
@@ -122,9 +113,8 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
     if (!previous) task.sort_order = -Date.now();
     deps.renderTasks();
     renderTimelineIfVisible(deps);
-    try {
-      await deps.repository.setFavorite(id, !previous);
-    } catch (error) {
+    try { await deps.repository.setFavorite(id, !previous); }
+    catch (error) {
       task.is_favorite = previous;
       deps.renderTasks();
       renderTimelineIfVisible(deps);
@@ -164,11 +154,7 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
   async function addComment(taskId: string, body: string) {
     const cleanBody = String(body || '').trim();
     if (!taskId || !cleanBody) return null;
-    const row = await deps.repository.addComment({
-      task_id: taskId,
-      body: cleanBody,
-      user_id: deps.currentUserId() || undefined
-    });
+    const row = await deps.repository.addComment({ task_id: taskId, body: cleanBody, user_id: deps.currentUserId() || undefined });
     deps.state.taskComments = [...(deps.state.taskComments || []), row];
     deps.render();
     return row;
@@ -176,22 +162,16 @@ export function createTaskActionController(deps: TaskActionControllerDeps) {
 
   async function deleteComment(id: string) {
     if (!id) return null;
+    const comment = deps.byId(deps.state.taskComments || [], id);
+    const userId = deps.currentUserId();
+    if (comment && !isOwner(deps.state) && !sameId(comment.user_id || comment.author_id || comment.created_by, userId)) {
+      throw new Error('Удалять комментарий может только автор комментария или владелец workspace');
+    }
     await deps.repository.deleteComment(id);
     deps.state.taskComments = (deps.state.taskComments || []).filter((item) => item.id !== id);
     deps.render();
     return true;
   }
 
-  return {
-    saveTask,
-    toggleTask,
-    moveTask,
-    updateTaskTimeline,
-    toggleFavorite,
-    addSubtask,
-    toggleSubtask,
-    deleteSubtask,
-    addComment,
-    deleteComment
-  };
+  return { saveTask, toggleTask, moveTask, updateTaskTimeline, toggleFavorite, addSubtask, toggleSubtask, deleteSubtask, addComment, deleteComment };
 }
