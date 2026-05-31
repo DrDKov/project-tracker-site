@@ -8,7 +8,8 @@ export interface ProductionLogEvent {
   timestamp: string;
 }
 
-const isProduction = import.meta.env.PROD;
+const runtimeEnv = (import.meta as ImportMeta & { env?: { PROD?: boolean } }).env;
+const isProduction = Boolean(runtimeEnv?.PROD);
 
 function normalizeError(error: unknown) {
   if (!error) return undefined;
