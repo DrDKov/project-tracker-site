@@ -52,11 +52,16 @@
  * @property {{visible:boolean,date:string,user:string}} doneMeta
  * @property {{items:TaskCardSubtaskView[],done:number,total:number,percent:number}} subtasks
  * @property {number} commentCount
+ * @property {string} renderSignature
  */
 
 /** @param {Task | null | undefined} task */
 export function isTaskCardFavorite(task) {
   return Boolean(task && task.is_favorite);
+}
+
+function subtaskSignature(items) {
+  return (items || []).map((item) => `${item.id}:${item.isDone ? 1 : 0}:${item.title}`).join('|');
 }
 
 /**
@@ -78,20 +83,59 @@ export function createTaskCardViewModel(task, deps, options = {}) {
   }));
   const subtaskDone = subtaskItems.filter((item) => item.isDone).length;
   const userId = task.completed_by_id || task.completed_by || task.closed_by_id || task.updated_by || null;
+  const commentCount = deps.taskCommentList(taskId).length;
+  const showStatus = Boolean(options.showStatus);
+  const priorityLabel = deps.PR[task.priority || ''] || task.priority || '—';
+  const statusLabel = deps.ST?.[task.status || ''] || task.status || '—';
+  const projectName = deps.pname(task.project_id);
+  const dateRange = `${deps.fmt(task.start_date)} → ${deps.fmt(task.due_date)}`;
+  const doneMeta = {
+    visible: isDone,
+    date: deps.dt(task.completed_at || task.updated_at),
+    user: userId ? deps.uname(userId) : '—'
+  };
+  const renderSignature = [
+    taskId,
+    task.title || '',
+    task.project_id || '',
+    projectName,
+    task.priority || '',
+    priorityLabel,
+    task.status || '',
+    statusLabel,
+    showStatus ? 1 : 0,
+    isDone ? 1 : 0,
+    isOverdue ? 1 : 0,
+    isTaskCardFavorite(task) ? 1 : 0,
+    task.recurrence_rule_id || '',
+    task.notes ? 1 : 0,
+    task.start_date || '',
+    task.due_date || '',
+    dateRange,
+    assigneesLabel,
+    accentColor,
+    doneMeta.visible ? 1 : 0,
+    doneMeta.date,
+    doneMeta.user,
+    subtaskDone,
+    subtaskItems.length,
+    subtaskSignature(subtaskItems),
+    commentCount
+  ].join('¦');
 
   return {
     id: taskId,
     title: String(task.title || 'Без названия'),
-    projectName: deps.pname(task.project_id),
-    priorityLabel: deps.PR[task.priority || ''] || task.priority || '—',
-    statusLabel: deps.ST?.[task.status || ''] || task.status || '—',
-    showStatus: Boolean(options.showStatus),
+    projectName,
+    priorityLabel,
+    statusLabel,
+    showStatus,
     isDone,
     isOverdue,
     isFavorite: isTaskCardFavorite(task),
     isRecurring: Boolean(task.recurrence_rule_id),
     hasNotes: Boolean(task.notes),
-    dateRange: `${deps.fmt(task.start_date)} → ${deps.fmt(task.due_date)}`,
+    dateRange,
     assigneesLabel,
     accentColor,
     rootClassName: `task-card wk-task ${isDone ? 'wk-complete' : ''} ${isOverdue ? 'overdue' : ''}`.replace(/\s+/g, ' ').trim(),
@@ -100,18 +144,15 @@ export function createTaskCardViewModel(task, deps, options = {}) {
       '--bg': deps.rgba(accentColor, 0.12),
       '--bd': deps.rgba(accentColor, 0.34)
     },
-    doneMeta: {
-      visible: isDone,
-      date: deps.dt(task.completed_at || task.updated_at),
-      user: userId ? deps.uname(userId) : '—'
-    },
+    doneMeta,
     subtasks: {
       items: subtaskItems,
       done: subtaskDone,
       total: subtaskItems.length,
       percent: subtaskItems.length ? Math.round((subtaskDone / subtaskItems.length) * 100) : 0
     },
-    commentCount: deps.taskCommentList(taskId).length
+    commentCount,
+    renderSignature
   };
 }
 
