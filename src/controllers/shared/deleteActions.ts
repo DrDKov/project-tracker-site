@@ -12,8 +12,15 @@ export function createDeleteActionController(deps: DeleteActionControllerDeps) {
     if (deps.confirmDelete && !deps.confirmDelete(message)) return false;
     await deps.repository.softDelete(table, id);
     if (table === 'tasks') {
-      window.__workspaceRemoveDeletedTask?.(id);
-      window.__workspaceBroadcastTaskDeleted?.(id)?.catch?.(() => undefined);
+      const workspaceWindow = window as unknown as {
+        __workspaceRemoveDeletedTask?: (taskId: string) => void;
+        __workspaceBroadcastTaskDeleted?: (taskId: string) => Promise<unknown> | { catch?: (handler: () => void) => unknown } | unknown;
+      };
+      workspaceWindow.__workspaceRemoveDeletedTask?.(id);
+      const broadcastResult = workspaceWindow.__workspaceBroadcastTaskDeleted?.(id);
+      if (broadcastResult && typeof (broadcastResult as Promise<unknown>).catch === 'function') {
+        (broadcastResult as Promise<unknown>).catch(() => undefined);
+      }
     } else {
       await deps.reload();
     }
