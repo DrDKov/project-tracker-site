@@ -11,6 +11,7 @@ import { getWorkspacePermissionSnapshot } from '../core/permissions/index.js';
 import { createWorkspaceReactActions } from '../react/actions/workspaceActions';
 import { EmptyState } from '../shared/ui';
 import { PwaLifecycle } from '../react/pwa';
+import { createRecurringTaskSet } from '../services/tasks.service.js';
 import { AppErrorBoundary, LazyRouteFallback, PERFORMANCE_BUDGETS, markWorkspacePerformance, measureWorkspacePerformance, scheduleIdleTask } from '../shared/production';
 import {
   LazyAuditPage,
@@ -23,6 +24,49 @@ import {
   LazyTeamPage,
   LazyTimelinePage
 } from './lazyPages';
+
+function ymd(value) {
+  const date = value instanceof Date ? value : new Date(`${String(value).slice(0, 10)}T00:00:00`);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+function addDays(date, days) {
+  const value = new Date(`${String(date).slice(0, 10)}T00:00:00`);
+  value.setDate(value.getDate() + days);
+  return ymd(value);
+}
+function diffDays(start, end) {
+  return Math.max(0, Math.round((new Date(`${end}T00:00:00`) - new Date(`${start}T00:00:00`)) / 86400000));
+}
+function weekdayNumber(date) {
+  const day = new Date(`${date}T00:00:00`).getDay();
+  return day === 0 ? 7 : day;
+}
+function addMonthsClamped(date, months) {
+  const source = new Date(`${date}T00:00:00`);
+  const anchor = source.getDate();
+  const target = new Date(source.getFullYear(), source.getMonth() + months, 1);
+  const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(anchor, last));
+  return ymd(target);
+}
+function generateRepeatDates({ start, until, type, weekdays }) {
+  if (!start || !until) return [];
+  if (until < start) throw new Error('Дата окончания повторения не может быть раньше даты старта');
+  const out = [];
+  if (type === 'daily') {
+    for (let date = start; date <= until; date = addDays(date, 1)) out.push(date);
+  } else if (type === 'weekdays') {
+    const set = new Set((weekdays || []).map(Number));
+    if (!set.size) throw new Error('Выберите дни недели для повторения');
+    for (let date = start; date <= until; date = addDays(date, 1)) if (set.has(weekdayNumber(date))) out.push(date);
+  } else if (type === 'weekly') {
+    for (let date = start; date <= until; date = addDays(date, 7)) out.push(date);
+  } else if (type === 'monthly') {
+    for (let index = 0, date = start; date <= until; index += 1, date = addMonthsClamped(start, index)) out.push(date);
+  }
+  if (out.length > 370) throw new Error('Слишком много повторений: максимум 370 задач');
+  return out;
+}
 
 function WorkspaceBoot() {
   React.useEffect(() => {
@@ -54,42 +98,144 @@ function TaskModal({ state, actions, onClose }) {
   const draft = ui.modals.taskDraft || {};
   const task = id ? (state.tasks || []).find((item) => item.id === id) : null;
   const source = task || draft || {};
+  const [repeatEnabled, setRepeatEnabled] = React.useState(false);
+  const [repeatType, setRepeatType] = React.useState('daily');
+  const [repeatUntil, setRepeatUntil] = React.useState('');
+  const [repeatWeekdays, setRepeatWeekdays] = React.useState([]);
+  const [commentText, setCommentText] = React.useState('');
+  const comments = React.useMemo(() => (state.taskComments || [])
+    .filter((item) => item.task_id === id && !item.deleted_at)
+    .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || ''))), [state.taskComments, id]);
   const selectedUsers = new Set((state.assignees || []).filter((item) => item.task_id === id).map((item) => String(item.user_id || '')).filter(Boolean));
   if (task?.assignee_id) selectedUsers.add(String(task.assignee_id));
+  if (!id && state.profile?.id) selectedUsers.add(String(state.profile.id));
   const selectedUserValues = Array.from(selectedUsers);
+  const userById = React.useMemo(() => new Map((state.users || []).map((user) => [user.id, user])), [state.users]);
+
+  function toggleWeekday(value, checked) {
+    setRepeatWeekdays((items) => checked ? Array.from(new Set(items.concat([value]))) : items.filter((item) => item !== value));
+  }
+
+  async function createRecurringTask(row, assigneeIds) {
+    const start = row.start_date || row.due_date;
+    if (!start) throw new Error('Для повторяющейся задачи укажите дату старта');
+    if (!repeatUntil) throw new Error('Для повторяющейся задачи укажите дату окончания повторения');
+    const dates = generateRepeatDates({ start, until: repeatUntil, type: repeatType, weekdays: repeatWeekdays });
+    if (!dates.length) throw new Error('По заданным условиям нет дат повторения');
+    const durationDays = row.start_date && row.due_date ? diffDays(row.start_date, row.due_date) : 0;
+    const ruleDraft = {
+      source_task_id: null,
+      project_id: row.project_id,
+      title: row.title,
+      notes: row.notes || null,
+      status: 'planned',
+      priority: row.priority || 'medium',
+      assignee_id: assigneeIds[0] || null,
+      repeat_type: repeatType,
+      weekdays: repeatType === 'weekdays' ? repeatWeekdays.map(Number) : null,
+      repeat_until: repeatUntil,
+      start_date: start,
+      due_date: row.due_date || start,
+      created_by: state.profile?.id || null
+    };
+    const rows = dates.map((date, index) => ({
+      project_id: row.project_id,
+      title: row.title,
+      notes: row.notes || null,
+      status: 'planned',
+      priority: row.priority || 'medium',
+      start_date: date,
+      due_date: addDays(date, durationDays),
+      assignee_id: assigneeIds[0] || null,
+      sort_order: index,
+      is_favorite: false,
+      start_time: row.start_time || null,
+      end_time: row.end_time || null,
+      duration_minutes: row.duration_minutes || null,
+      is_all_day: Boolean(row.is_all_day),
+      recurrence_date: date
+    }));
+    await createRecurringTaskSet(state.sb, ruleDraft, rows, assigneeIds);
+    await invalidateWorkspaceData();
+  }
 
   async function submit(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
     const assigneeIds = data.getAll('assigneeIds').map(String).filter(Boolean);
-    await actions.saveTaskData?.(id || null, {
+    const duration = String(data.get('duration_minutes') || '').trim();
+    const row = {
       title: String(data.get('title') || '').trim(),
       project_id: String(data.get('project_id') || ''),
       status: String(data.get('status') || 'planned'),
       priority: String(data.get('priority') || 'medium'),
       start_date: String(data.get('start_date') || '') || null,
       due_date: String(data.get('due_date') || '') || null,
+      start_time: String(data.get('start_time') || '') || null,
+      end_time: String(data.get('end_time') || '') || null,
+      duration_minutes: duration ? Number(duration) : null,
+      is_all_day: Boolean(data.get('is_all_day')),
       notes: String(data.get('notes') || ''),
       assignee_id: assigneeIds[0] || null,
       assigneeIds
-    });
+    };
+    if (!id && repeatEnabled) await createRecurringTask(row, assigneeIds);
+    else await actions.saveTaskData?.(id || null, row);
     onClose();
+  }
+
+  async function addComment(event) {
+    event.preventDefault();
+    if (!id || !commentText.trim()) return;
+    await actions.addTaskComment?.(id, commentText);
+    setCommentText('');
   }
 
   return (
     <div className="modal-backdrop active react-modal-backdrop">
-      <form className="modal card task-modal react-task-modal" onSubmit={submit}>
-        <div className="modal-head"><div><h3>{id ? 'Редактировать задачу' : 'Новая задача'}</h3><p>{task?.title || 'Заполните параметры задачи'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
-        <div className="form-grid">
-          <label>Название<input className="input" name="title" defaultValue={source.title || ''} required /></label>
-          <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
-          <label>Статус<select className="input" name="status" defaultValue={source.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
-          <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
-          <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
-          <label>Срок<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
-          <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
-          <label className="wide">Описание<textarea className="input" name="notes" defaultValue={source.notes || source.description || ''} rows={5} /></label>
+      <form className="modal card task-modal react-task-modal task-modal-pro" onSubmit={submit}>
+        <div className="modal-head"><div><h3>{id ? 'Редактировать задачу' : 'Новая задача'}</h3><p>{task?.title || 'Сроки, исполнители, время, повторение и комментарии'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
+        <div className="task-modal-layout">
+          <div className="task-modal-main">
+            <div className="form-grid">
+              <label>Название<input className="input" name="title" defaultValue={source.title || ''} required /></label>
+              <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
+              <label>Статус<select className="input" name="status" defaultValue={source.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
+              <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
+              <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
+              <label>Срок<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
+              <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select><span className="muted">Можно выбрать несколько исполнителей через Ctrl/Shift.</span></label>
+            </div>
+            <div className="task-calendar-box">
+              <label className="task-calendar-head"><input type="checkbox" name="is_all_day" defaultChecked={Boolean(source.is_all_day)} /> Весь день / без конкретного времени</label>
+              <div className="task-calendar-time-grid">
+                <label>Время начала<input className="input" name="start_time" type="time" defaultValue={String(source.start_time || '').slice(0, 5)} /></label>
+                <label>Время окончания<input className="input" name="end_time" type="time" defaultValue={String(source.end_time || '').slice(0, 5)} /></label>
+                <label>Длительность, мин<input className="input" name="duration_minutes" type="number" min="1" step="5" placeholder="60" defaultValue={source.duration_minutes || ''} /></label>
+              </div>
+            </div>
+            <div className="task-recurrence-box">
+              <label className="task-recurrence-head"><input type="checkbox" checked={repeatEnabled} disabled={Boolean(id)} onChange={(event) => setRepeatEnabled(event.currentTarget.checked)} /> Повторяющаяся задача</label>
+              {id ? <div className="task-repeat-existing-note">Повторение настраивается только при создании новой задачи. Этот экземпляр можно редактировать отдельно.</div> : null}
+              {repeatEnabled ? <div className="task-repeat-options">
+                <label>Тип повторения<select className="input" value={repeatType} onChange={(event) => setRepeatType(event.currentTarget.value)}><option value="daily">Ежедневно</option><option value="weekdays">По дням недели</option><option value="weekly">Раз в неделю</option><option value="monthly">Раз в месяц</option></select></label>
+                <label>Повторять до<input className="input" type="date" value={repeatUntil} onChange={(event) => setRepeatUntil(event.currentTarget.value)} /></label>
+                {repeatType === 'weekdays' ? <div className="task-repeat-weekdays full">{['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((label, index) => <label key={label}><input type="checkbox" checked={repeatWeekdays.includes(String(index + 1))} onChange={(event) => toggleWeekday(String(index + 1), event.currentTarget.checked)} />{label}</label>)}</div> : null}
+              </div> : null}
+            </div>
+            <label className="task-notes-label">Описание<textarea className="input" name="notes" defaultValue={source.notes || source.description || ''} rows={5} /></label>
+          </div>
+          <aside className="task-modal-comments">
+            <div className="task-comments-head"><h4>Комментарии</h4><span className="muted">{comments.length}</span></div>
+            <div className="task-comments-list">
+              {id ? comments.length ? comments.map((comment) => {
+                const author = userById.get(comment.user_id || comment.author_id);
+                return <div key={comment.id} className="task-comment-row"><b>{author?.display_name || author?.email || 'Пользователь'}</b><p>{comment.body || comment.content || ''}</p><span>{String(comment.created_at || '').slice(0, 16).replace('T', ' ')}</span><button type="button" onClick={() => actions.deleteTaskComment?.(comment.id)}>Удалить</button></div>;
+              }) : <div className="empty">Комментариев пока нет</div> : <div className="empty">Комментарии появятся после сохранения задачи.</div>}
+            </div>
+            {id ? <div className="task-comment-form"><textarea className="input" value={commentText} onChange={(event) => setCommentText(event.currentTarget.value)} placeholder="Добавить комментарий" /><button type="button" className="btn secondary" onClick={addComment}>Отправить</button></div> : null}
+          </aside>
         </div>
         <div className="modal-actions"><button type="button" className="btn secondary" onClick={onClose}>Отмена</button><button className="btn primary" type="submit">Сохранить</button></div>
       </form>
