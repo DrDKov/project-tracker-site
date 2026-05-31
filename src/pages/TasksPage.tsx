@@ -6,6 +6,7 @@ import { createWorkspaceReactActions } from '../react/actions/workspaceActions';
 import { createTaskBoardViewModel } from '../react/tasks/taskBoardModel';
 import { TaskBoard } from '../react/tasks/TaskBoard';
 import { createTaskCardViewModel } from '../react/tasks/taskCardModel';
+import { PERFORMANCE_BUDGETS, recordWorkspacePerformanceMetric } from '../shared/production';
 import { COLS, PR, ST, D, add, commentsForTask, dt, fmt, projectColor, projectName, rgba, subtasksForTask, taskUserIds, today, userName } from './pageUtils';
 
 function weekStart(value) {
@@ -21,48 +22,72 @@ function closestElement(target, selector) {
   return node && typeof node.closest === 'function' ? node.closest(selector) : null;
 }
 
+function nowMs() {
+  return typeof performance !== 'undefined' && typeof performance.now === 'function' ? performance.now() : Date.now();
+}
+
+function countBoardCards(model) {
+  return (model?.columns || []).reduce((sum, column) => sum + (column.cards?.length || 0), 0);
+}
+
 export function TasksPage() {
   const state = useWorkspaceState();
   const ui = useWorkspaceUiStore();
   const [isSwitching, startSwitch] = React.useTransition();
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
   const filters = ui.filters;
+  const previousModeRef = React.useRef(ui.taskBoardMode);
+  const modeSwitchStartedAtRef = React.useRef(0);
 
-  const model = React.useMemo(() => createTaskBoardViewModel({
-    tasks: state.tasks || [],
-    users: state.users || [],
-    mode: ui.taskBoardMode,
-    showDone: filters.tasksShowDone,
-    filters: {
-      query: filters.taskSearch || '',
-      projectIds: [filters.taskProjectId || 'all'],
-      userIds: [filters.taskUserId || 'all'],
-      dateMode: filters.taskDateMode || 'all',
-      dateFrom: filters.taskDateFrom || '',
-      dateTo: filters.taskDateTo || ''
-    },
-    weekStart: ui.tasksWeekStart || today(),
-    statusColumns: COLS,
-    statusLabels: ST,
-    tasksLoading: Boolean(state.tasksLoading),
-    taskError: state.taskError || '',
-    today,
-    D,
-    add,
-    taskUserIds: (task) => taskUserIds(state, task),
-    taskCard: (task, options) => createTaskCardViewModel(task, {
-      fmt, dt, rgba,
-      pcolor: (id) => projectColor(state, id),
-      pname: (id) => projectName(state, id),
-      uname: (id) => userName(state, id),
-      tids: (item) => taskUserIds(state, item),
-      subs: (id) => subtasksForTask(state, id),
+  const model = React.useMemo(() => {
+    const startedAt = nowMs();
+    const nextModel = createTaskBoardViewModel({
+      tasks: state.tasks || [],
+      users: state.users || [],
+      mode: ui.taskBoardMode,
+      showDone: filters.tasksShowDone,
+      filters: {
+        query: filters.taskSearch || '',
+        projectIds: [filters.taskProjectId || 'all'],
+        userIds: [filters.taskUserId || 'all'],
+        dateMode: filters.taskDateMode || 'all',
+        dateFrom: filters.taskDateFrom || '',
+        dateTo: filters.taskDateTo || ''
+      },
+      weekStart: ui.tasksWeekStart || today(),
+      statusColumns: COLS,
+      statusLabels: ST,
+      tasksLoading: Boolean(state.tasksLoading),
+      taskError: state.taskError || '',
       today,
-      PR,
-      ST,
-      taskCommentList: (id) => commentsForTask(state, id)
-    }, options)
-  }), [
+      D,
+      add,
+      taskUserIds: (task) => taskUserIds(state, task),
+      taskCard: (task, options) => createTaskCardViewModel(task, {
+        fmt, dt, rgba,
+        pcolor: (id) => projectColor(state, id),
+        pname: (id) => projectName(state, id),
+        uname: (id) => userName(state, id),
+        tids: (item) => taskUserIds(state, item),
+        subs: (id) => subtasksForTask(state, id),
+        today,
+        PR,
+        ST,
+        taskCommentList: (id) => commentsForTask(state, id)
+      }, options)
+    });
+    recordWorkspacePerformanceMetric('tasks:model', nowMs() - startedAt, {
+      mode: ui.taskBoardMode,
+      tasks: (state.tasks || []).length,
+      users: (state.users || []).length,
+      assignees: (state.assignees || []).length,
+      subtasks: (state.subtasks || []).length,
+      comments: (state.taskComments || []).length,
+      columns: nextModel.columns?.length || 0,
+      cards: countBoardCards(nextModel)
+    }, PERFORMANCE_BUDGETS.taskModelMs);
+    return nextModel;
+  }, [
     state.tasks,
     state.users,
     state.assignees,
@@ -81,6 +106,19 @@ export function TasksPage() {
     filters.taskDateTo,
     filters.tasksShowDone
   ]);
+
+  React.useEffect(() => {
+    if (previousModeRef.current === ui.taskBoardMode) return;
+    const startedAt = modeSwitchStartedAtRef.current || nowMs();
+    recordWorkspacePerformanceMetric('tasks:mode-switch', nowMs() - startedAt, {
+      from: previousModeRef.current,
+      to: ui.taskBoardMode,
+      tasks: (state.tasks || []).length,
+      cards: countBoardCards(model)
+    }, PERFORMANCE_BUDGETS.taskModeSwitchMs);
+    previousModeRef.current = ui.taskBoardMode;
+    modeSwitchStartedAtRef.current = 0;
+  }, [ui.taskBoardMode, model, state.tasks]);
 
   function dropTarget(event) {
     return closestElement(event.target, '[data-status],[data-date],[data-assignee-id]');
@@ -111,6 +149,7 @@ export function TasksPage() {
   }
 
   function setMode(mode) {
+    modeSwitchStartedAtRef.current = nowMs();
     startSwitch(() => ui.setTaskBoardMode(mode));
   }
 
