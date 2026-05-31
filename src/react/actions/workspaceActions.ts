@@ -17,19 +17,34 @@ function state() { return appStore.getState() || {}; }
 function client() { return state().sb || null; }
 function repositories() { return createWorkspaceRepositorySet(client()); }
 function byId(items, id) { return (items || []).find((item) => item && item.id === id); }
-function subtasksForTask(taskId) { return (state().subtasks || []).filter((item) => item && item.task_id === taskId && !item.deleted_at); }
+function activeRows(items) { return (items || []).filter((item) => item && !item.deleted_at); }
+function subtasksForTask(taskId) { return activeRows(state().subtasks || []).filter((item) => item.task_id === taskId); }
 function currentUserId() { const s = state(); return s.profile?.id || s.user?.id || null; }
 function currentView() { return useWorkspaceUiStore.getState().activeView || 'overview'; }
 function refreshLocalState(source = 'react-action-local') {
   const s = state();
   appStore.setState({
-    tasks: [...(s.tasks || [])],
-    subtasks: [...(s.subtasks || [])],
-    taskComments: [...(s.taskComments || [])],
-    projects: [...(s.projects || [])],
-    messages: [...(s.messages || [])],
+    tasks: activeRows(s.tasks || []),
+    subtasks: activeRows(s.subtasks || []),
+    taskComments: activeRows(s.taskComments || []),
+    projects: activeRows(s.projects || []),
+    messages: activeRows(s.messages || []),
     notifications: [...(s.notifications || [])]
   }, { source, stage: 'react-actions' });
+}
+function refreshTaskState(source = 'react-task-action-local') {
+  const s = state();
+  const tasks = activeRows(s.tasks || []);
+  const subtasks = activeRows(s.subtasks || []);
+  const taskComments = activeRows(s.taskComments || []);
+  const assignees = [...(s.assignees || [])];
+  appStore.setState({ tasks, assignees, subtasks, taskComments }, { source, stage: 'react-task-actions' });
+  workspaceQueryClient.setQueryData(workspaceQueryKeys.tasks(), tasks);
+  workspaceQueryClient.setQueryData(workspaceQueryKeys.bootstrap(), (previous) => previous ? { ...previous, tasks, assignees, subtasks, taskComments } : previous);
+}
+async function noTaskWorkspaceReload() {
+  refreshTaskState('react-task-no-reload-refresh');
+  return null;
 }
 
 function message(value) { return value && typeof value === 'object' && 'message' in value ? String(value.message) : String(value || ''); }
@@ -45,10 +60,10 @@ function taskController() {
   return createTaskActionController({
     state: state(),
     repository: repositories().tasks,
-    reload: invalidateWorkspace,
-    render: () => refreshLocalState('react-task-render'),
-    renderTasks: () => refreshLocalState('react-task-render-tasks'),
-    renderTimeline: () => refreshLocalState('react-task-render-timeline'),
+    reload: noTaskWorkspaceReload,
+    render: () => refreshTaskState('react-task-render'),
+    renderTasks: () => refreshTaskState('react-task-render-tasks'),
+    renderTimeline: () => refreshTaskState('react-task-render-timeline'),
     byId,
     subtasksForTask,
     currentView,
