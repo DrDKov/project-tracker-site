@@ -83,8 +83,12 @@ export function taskPrimaryDate(task) {
 export function compareTasksForBoard(left, right) {
   const doneDelta = Number(isTaskDone(left)) - Number(isTaskDone(right));
   if (doneDelta) return doneDelta;
+  const favoriteDelta = Number(Boolean(right.is_favorite)) - Number(Boolean(left.is_favorite));
+  if (favoriteDelta) return favoriteDelta;
   const orderDelta = Number(left.sort_order ?? 0) - Number(right.sort_order ?? 0);
   if (orderDelta) return orderDelta;
+  const dateDelta = String(taskPrimaryDate(left) || '').localeCompare(String(taskPrimaryDate(right) || ''));
+  if (dateDelta) return dateDelta;
   return String(left.title || '').localeCompare(String(right.title || ''), 'ru');
 }
 
