@@ -59,8 +59,8 @@ export function AppTopbar(props) {
       <div className="top-actions react-top-actions">
         <Button variant="secondary" id="refreshBtn" onClick={onRefresh}>Обновить</Button>
         <Button variant="secondary" id="openSettingsBtn" onClick={onOpenSettings}>Настройки</Button>
-        <Button variant="secondary" id="notificationBellBtn" className={count ? 'has-unread' : ''} onClick={onOpenNotifications} title="Оповещения">
-          Оповещения{count ? <span className="notification-count">{count}</span> : null}
+        <Button variant="secondary" id="notificationBellBtn" className={count ? 'has-unread' : ''} onClick={onOpenNotifications} title="Оповещения" aria-label={`Оповещения: ${count}`}>
+          <span aria-hidden="true" className="notification-bell-icon">🔔</span>{count ? <span className="notification-count">{count}</span> : null}
         </Button>
         <Button variant="blue" id="quickProjectBtn" onClick={onCreateProject}>+ Проект</Button>
         <Button variant="primary" id="quickTaskBtn" onClick={onCreateTask}>+ Задача</Button>
