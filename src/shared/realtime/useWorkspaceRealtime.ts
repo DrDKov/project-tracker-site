@@ -6,6 +6,7 @@ import { invalidateRealtimeChange } from './realtimeInvalidation';
 import { useWorkspaceState } from '../../react/state/useWorkspaceStore';
 import { workspaceQueryKeys } from '../../react/data/queries/workspaceQueryKeys';
 import { invalidateWorkspaceData } from '../../app/workspaceRuntime';
+import { appStore } from '../../core/state/store';
 
 const REALTIME_TABLES = [
   'projects',
@@ -20,6 +21,54 @@ const REALTIME_TABLES = [
   'project_members',
   'app_users'
 ];
+
+const TABLE_TO_STATE_KEY = {
+  projects: 'projects',
+  tasks: 'tasks',
+  task_assignees: 'assignees',
+  task_subtasks: 'subtasks',
+  task_comments: 'taskComments',
+  project_messages: 'messages',
+  material_templates: 'materialTemplates',
+  material_folders: 'materialFolders',
+  material_files: 'materialFiles',
+  project_members: 'members',
+  app_users: 'users'
+};
+
+function rowId(row) { return row && row.id ? String(row.id) : ''; }
+function isSoftDeleted(row) { return Boolean(row && row.deleted_at); }
+function upsertById(items, row) {
+  const id = rowId(row);
+  if (!id) return items || [];
+  let found = false;
+  const next = (items || []).map((item) => {
+    if (rowId(item) === id) { found = true; return { ...item, ...row }; }
+    return item;
+  });
+  if (!found) next.push(row);
+  return next;
+}
+function removeById(items, row) {
+  const id = rowId(row);
+  if (!id) return items || [];
+  return (items || []).filter((item) => rowId(item) !== id);
+}
+function applyRealtimePayload(table, payload) {
+  const key = TABLE_TO_STATE_KEY[table];
+  if (!key) return;
+  const eventType = String(payload.eventType || payload.type || '').toUpperCase();
+  const row = payload.new || payload.row || null;
+  const old = payload.old || null;
+  const target = row || old;
+  if (!target) return;
+  const state = appStore.getState() || {};
+  const current = state[key] || [];
+  let next;
+  if (eventType === 'DELETE' || isSoftDeleted(row)) next = removeById(current, target);
+  else next = upsertById(current, row);
+  appStore.setState({ [key]: next }, { source: `realtime:${table}`, stage: 'react-realtime-local' });
+}
 
 export function useWorkspaceRealtimeInvalidation() {
   const queryClient = useQueryClient();
@@ -38,21 +87,22 @@ export function useWorkspaceRealtimeInvalidation() {
     const channel = client.channel('workspace-react-realtime');
     REALTIME_TABLES.forEach((table) => {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, (payload) => {
-        dispatchWorkspaceRealtimeChange({
+        const change = {
           table,
           eventType: payload.eventType || payload.type || 'UPDATE',
           row: payload.new || null,
           old: payload.old || null,
           source: 'supabase'
-        });
+        };
+        applyRealtimePayload(table, change);
+        dispatchWorkspaceRealtimeChange(change);
         queryClient.invalidateQueries({ queryKey: workspaceQueryKeys.bootstrap() });
-        invalidateWorkspaceData();
+        window.clearTimeout(window.__workspaceRealtimeReloadTimer);
+        window.__workspaceRealtimeReloadTimer = window.setTimeout(() => invalidateWorkspaceData(), 800);
       });
     });
     channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        console.info('[workspace-realtime] subscribed');
-      }
+      if (status === 'SUBSCRIBED') console.info('[workspace-realtime] subscribed');
     });
     return () => {
       if (typeof client.removeChannel === 'function') client.removeChannel(channel);
