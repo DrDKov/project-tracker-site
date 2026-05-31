@@ -10,6 +10,8 @@ import { buildTaskBoardIndexes } from '../react/tasks/taskIndexes';
 import { PERFORMANCE_BUDGETS, recordWorkspacePerformanceMetric } from '../shared/production';
 import { COLS, PR, ST, D, add, dt, fmt, rgba, today } from './pageUtils';
 
+const TASK_BOARD_MODES = ['status', 'assignee', 'week'];
+
 function weekStart(value) {
   const date = D(value || today());
   const day = date.getDay() || 7;
@@ -29,6 +31,44 @@ function nowMs() {
 
 function countBoardCards(model) {
   return (model?.columns || []).reduce((sum, column) => sum + (column.cards?.length || 0), 0);
+}
+
+function buildTaskBoardModelForMode(mode, state, filters, indexes) {
+  return createTaskBoardViewModel({
+    tasks: state.tasks || [],
+    users: state.users || [],
+    mode,
+    showDone: filters.tasksShowDone,
+    filters: {
+      query: filters.taskSearch || '',
+      projectIds: [filters.taskProjectId || 'all'],
+      userIds: [filters.taskUserId || 'all'],
+      dateMode: filters.taskDateMode || 'all',
+      dateFrom: filters.taskDateFrom || '',
+      dateTo: filters.taskDateTo || ''
+    },
+    weekStart: state.tasksWeekStart || today(),
+    statusColumns: COLS,
+    statusLabels: ST,
+    tasksLoading: Boolean(state.tasksLoading),
+    taskError: state.taskError || '',
+    today,
+    D,
+    add,
+    taskUserIds: (task) => indexes.taskUserIds(task),
+    taskCard: (task, options) => createTaskCardViewModel(task, {
+      fmt, dt, rgba,
+      pcolor: (id) => indexes.projectColor(id),
+      pname: (id) => indexes.projectName(id),
+      uname: (id) => indexes.userName(id),
+      tids: (item) => indexes.taskUserIds(item),
+      subs: (id) => indexes.subtasksForTask(id),
+      today,
+      PR,
+      ST,
+      taskCommentList: (id) => indexes.commentsForTask(id)
+    }, options)
+  });
 }
 
 export function TasksPage() {
@@ -54,61 +94,37 @@ export function TasksPage() {
     return nextIndexes;
   }, [state.projects, state.users, state.assignees, state.subtasks, state.taskComments, state.tasks]);
 
-  const model = React.useMemo(() => {
+  const boardModels = React.useMemo(() => {
     const startedAt = nowMs();
-    const nextModel = createTaskBoardViewModel({
-      tasks: state.tasks || [],
-      users: state.users || [],
-      mode: ui.taskBoardMode,
-      showDone: filters.tasksShowDone,
-      filters: {
-        query: filters.taskSearch || '',
-        projectIds: [filters.taskProjectId || 'all'],
-        userIds: [filters.taskUserId || 'all'],
-        dateMode: filters.taskDateMode || 'all',
-        dateFrom: filters.taskDateFrom || '',
-        dateTo: filters.taskDateTo || ''
-      },
-      weekStart: ui.tasksWeekStart || today(),
-      statusColumns: COLS,
-      statusLabels: ST,
-      tasksLoading: Boolean(state.tasksLoading),
-      taskError: state.taskError || '',
-      today,
-      D,
-      add,
-      taskUserIds: (task) => indexes.taskUserIds(task),
-      taskCard: (task, options) => createTaskCardViewModel(task, {
-        fmt, dt, rgba,
-        pcolor: (id) => indexes.projectColor(id),
-        pname: (id) => indexes.projectName(id),
-        uname: (id) => indexes.userName(id),
-        tids: (item) => indexes.taskUserIds(item),
-        subs: (id) => indexes.subtasksForTask(id),
-        today,
-        PR,
-        ST,
-        taskCommentList: (id) => indexes.commentsForTask(id)
-      }, options)
-    });
-    recordWorkspacePerformanceMetric('tasks:model', nowMs() - startedAt, {
-      mode: ui.taskBoardMode,
+    const modelInputState = { ...state, tasksWeekStart: ui.tasksWeekStart || today() };
+    const models = TASK_BOARD_MODES.reduce((acc, mode) => {
+      const modeStartedAt = nowMs();
+      const nextModel = buildTaskBoardModelForMode(mode, modelInputState, filters, indexes);
+      acc[mode] = nextModel;
+      recordWorkspacePerformanceMetric(`tasks:model:${mode}`, nowMs() - modeStartedAt, {
+        tasks: (state.tasks || []).length,
+        cards: countBoardCards(nextModel),
+        columns: nextModel.columns?.length || 0
+      }, PERFORMANCE_BUDGETS.taskModelMs);
+      return acc;
+    }, {});
+    recordWorkspacePerformanceMetric('tasks:selectors', nowMs() - startedAt, {
       tasks: (state.tasks || []).length,
       users: (state.users || []).length,
       assignees: (state.assignees || []).length,
       subtasks: (state.subtasks || []).length,
       comments: (state.taskComments || []).length,
-      columns: nextModel.columns?.length || 0,
-      cards: countBoardCards(nextModel)
+      statusCards: countBoardCards(models.status),
+      assigneeCards: countBoardCards(models.assignee),
+      weekCards: countBoardCards(models.week)
     }, PERFORMANCE_BUDGETS.taskModelMs);
-    return nextModel;
+    return models;
   }, [
     state.tasks,
     state.users,
     state.tasksLoading,
     state.taskError,
     indexes,
-    ui.taskBoardMode,
     ui.tasksWeekStart,
     filters.taskSearch,
     filters.taskProjectId,
@@ -119,6 +135,8 @@ export function TasksPage() {
     filters.tasksShowDone
   ]);
 
+  const model = boardModels[ui.taskBoardMode] || boardModels.status;
+
   React.useEffect(() => {
     if (previousModeRef.current === ui.taskBoardMode) return;
     const startedAt = modeSwitchStartedAtRef.current || nowMs();
@@ -126,7 +144,8 @@ export function TasksPage() {
       from: previousModeRef.current,
       to: ui.taskBoardMode,
       tasks: (state.tasks || []).length,
-      cards: countBoardCards(model)
+      cards: countBoardCards(model),
+      precomputed: true
     }, PERFORMANCE_BUDGETS.taskModeSwitchMs);
     previousModeRef.current = ui.taskBoardMode;
     modeSwitchStartedAtRef.current = 0;
