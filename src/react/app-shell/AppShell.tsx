@@ -2,11 +2,6 @@
 import React from 'react';
 import { Button } from '../../shared/ui';
 
-/** @typedef {import('./appShellModel.ts').createAppShellModel extends (...args: any) => infer R ? R : never} AppShellModel */
-
-/**
- * @param {{ page: { id: string, icon: string, label: string }, active: boolean, onSelect: (view: string) => void }} props
- */
 function NavButton({ page, active, onSelect }) {
   return (
     <Button
@@ -21,9 +16,6 @@ function NavButton({ page, active, onSelect }) {
   );
 }
 
-/**
- * @param {{ model: AppShellModel, onSelectView: (view: string) => void }} props
- */
 export function AppSidebar({ model, onSelectView }) {
   return (
     <>
@@ -57,7 +49,7 @@ export function AppTopbar(props) {
     onCreateTask,
     onOpenNotifications = () => undefined
   } = props;
-  const count = Number(model.metrics?.notifications || 0);
+  const count = Number(model.notificationCount || 0);
   return (
     <>
       <div className="react-topbar-title">
@@ -68,7 +60,7 @@ export function AppTopbar(props) {
         <Button variant="secondary" id="refreshBtn" onClick={onRefresh}>Обновить</Button>
         <Button variant="secondary" id="openSettingsBtn" onClick={onOpenSettings}>Настройки</Button>
         <Button variant="secondary" id="notificationBellBtn" className={count ? 'has-unread' : ''} onClick={onOpenNotifications} title="Оповещения">
-          🔔{count ? <span className="notification-count">{count}</span> : null}
+          Оповещения{count ? <span className="notification-count">{count}</span> : null}
         </Button>
         <Button variant="blue" id="quickProjectBtn" onClick={onCreateProject}>+ Проект</Button>
         <Button variant="primary" id="quickTaskBtn" onClick={onCreateTask}>+ Задача</Button>
