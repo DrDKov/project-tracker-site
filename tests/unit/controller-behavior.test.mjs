@@ -150,6 +150,10 @@ async function expectRejectsMessage(promise, pattern) {
   assert.equal(denied, false);
   assert.deepEqual(calls, []);
 
+  let removedTaskId = null;
+  let broadcastTaskId = null;
+  globalThis.__workspaceRemoveDeletedTask = (taskId) => { removedTaskId = taskId; };
+  globalThis.__workspaceBroadcastTaskDeleted = async (taskId) => { broadcastTaskId = taskId; };
   const allowedController = createDeleteActionController({
     repository: { softDelete: async (table, id) => { calls.push(['softDelete', table, id]); return true; } },
     reload: async () => { calls.push(['reload']); },
@@ -157,7 +161,11 @@ async function expectRejectsMessage(promise, pattern) {
   });
   const allowed = await allowedController.softDelete('tasks', 't1');
   assert.equal(allowed, true);
-  assert.deepEqual(calls, [['softDelete', 'tasks', 't1'], ['reload']]);
+  assert.equal(removedTaskId, 't1');
+  assert.equal(broadcastTaskId, 't1');
+  assert.deepEqual(calls, [['softDelete', 'tasks', 't1']]);
+  delete globalThis.__workspaceRemoveDeletedTask;
+  delete globalThis.__workspaceBroadcastTaskDeleted;
 }
 
 console.log('controller behavior tests passed');
