@@ -57,7 +57,7 @@ async function expectRejectsMessage(promise, pattern) {
   const saved = await controller.saveTask({ title: 'Saved', project_id: 'p1', assigneeIds: ['u1', 'u2'] });
   assert.equal(saved.id, 't-new');
   assert.deepEqual(calls.slice(0, 2), [['save', null, 'Saved'], ['replaceAssignees', 't-new', 'u1,u2']]);
-  assert.equal(reloads, 1);
+  assert.equal(reloads, 0);
 
   await controller.toggleTask('t1', true);
   assert.equal(state.tasks[0].status, 'done');
