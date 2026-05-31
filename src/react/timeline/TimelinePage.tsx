@@ -41,9 +41,27 @@ function TimelineDay({ day, hours, actions = {} }) {
   );
 }
 
+function TimelineToolbar({ model, actions }) {
+  return (
+    <div className="timeline-calendar-toolbar">
+      <button className="btn sm secondary" type="button" onClick={() => actions.prevWeek && actions.prevWeek()}>←</button>
+      <button className="btn sm secondary" type="button" onClick={() => actions.nextWeek && actions.nextWeek()}>→</button>
+      <button className="btn sm secondary" type="button" onClick={() => actions.today && actions.today()}>Сегодня</button>
+      <b>{model.weekLabel}</b>
+      <input className="input" placeholder="Поиск" value={model.filters.query || ''} onChange={(event) => actions.setFilter && actions.setFilter('timelineSearch', event.currentTarget.value)} />
+      <select className="input" value={model.filters.projectId || 'all'} onChange={(event) => actions.setFilter && actions.setFilter('timelineProjectId', event.currentTarget.value)}>{model.projectOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+      <select className="input" value={model.filters.userId || 'all'} onChange={(event) => actions.setFilter && actions.setFilter('timelineUserId', event.currentTarget.value)}>{model.userOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+      <select className="input" value={model.filters.status || 'all'} onChange={(event) => actions.setFilter && actions.setFilter('timelineStatus', event.currentTarget.value)}>{model.statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+      <select className="input" value={model.filters.priority || 'all'} onChange={(event) => actions.setFilter && actions.setFilter('timelinePriority', event.currentTarget.value)}>{model.priorityOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+      <label className="tl-check"><input type="checkbox" checked={Boolean(model.filters.showDone)} onChange={(event) => actions.setFilter && actions.setFilter('timelineShowDone', event.currentTarget.checked)} /> Выполненные</label>
+    </div>
+  );
+}
+
 export function TimelinePage({ model, actions = {} }) {
   return (
     <div className="timeline-calendar react-timeline-calendar">
+      <TimelineToolbar model={model} actions={actions} />
       <div className="timeline-calendar-grid" style={{ '--grid-height': `${model.gridHeight}px` }}>
         <div className="timeline-time-head" />
         {model.days.map((day) => (
