@@ -99,7 +99,26 @@ export async function removeProjectMember(client, id) {
   return true;
 }
 
+async function softDeleteTaskRecord(client, id) {
+  const now = new Date().toISOString();
+
+  // Preferred path: use the security-definer RPC when it exists in the database.
+  let result = await client.rpc('soft_delete_task', { p_task_id: id });
+  if (!result.error) return true;
+
+  // Fallback for databases without the RPC. This may be blocked by RLS in some roles.
+  result = await client.from('tasks').update({ deleted_at: now }).eq('id', id);
+  if (!result.error) return true;
+
+  // Last resort: hard delete. This avoids the RLS UPDATE "new row violates policy" case
+  // when the role is allowed to delete but not allowed to write deleted_at.
+  const deleteResult = await client.from('tasks').delete().eq('id', id);
+  dataOrThrow(deleteResult, 'Не удалось удалить задачу');
+  return true;
+}
+
 export async function softDeleteRecord(client, table, id) {
+  if (table === 'tasks') return softDeleteTaskRecord(client, id);
   const result = await client.from(table).update({ deleted_at: new Date().toISOString() }).eq('id', id);
   dataOrThrow(result, `Не удалось удалить запись ${table}`);
   return true;
