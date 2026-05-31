@@ -152,6 +152,27 @@ function NotificationPanel({ state, actions, onClose }) {
   );
 }
 
+function AccessModal({ state, onClose }) {
+  const ui = useWorkspaceUiStore();
+  const projectId = ui.modals.accessProjectId;
+  const project = (state.projects || []).find((item) => item.id === projectId);
+  const members = (state.members || []).filter((item) => item.project_id === projectId);
+  const userById = new Map((state.users || []).map((user) => [user.id, user]));
+  return (
+    <div className="modal-backdrop active react-modal-backdrop">
+      <div className="modal card notification-modal">
+        <div className="modal-head"><div><h3>Участники проекта</h3><p>{project?.name || 'Проект'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
+        <div className="notification-list">
+          {members.length ? members.map((member) => {
+            const user = userById.get(member.user_id);
+            return <div key={`${member.project_id}:${member.user_id}`} className="notification-row"><b>{user?.display_name || user?.email || 'Пользователь'}</b><span>{member.access_role || 'member'}</span></div>;
+          }) : <div className="empty">Участники не указаны.</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotifications }) {
   const ui = useWorkspaceUiStore();
   const close = () => ui.closeModals();
@@ -159,6 +180,7 @@ function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotificatio
     <>
       {(ui.modals.taskId !== null || ui.modals.taskDraft !== null) ? <TaskModal state={state} actions={actions} onClose={close} /> : null}
       {ui.modals.projectId !== null ? <ProjectModal state={state} actions={actions} onClose={close} /> : null}
+      {ui.modals.accessProjectId !== null ? <AccessModal state={state} onClose={close} /> : null}
       {notificationsOpen ? <NotificationPanel state={state} actions={actions} onClose={onCloseNotifications} /> : null}
     </>
   );
