@@ -1,9 +1,11 @@
 -- Enable realtime payloads for the React workspace.
 -- Run this migration in Supabase SQL editor / migrations if realtime changes are not reaching other open clients.
+-- The migration is intentionally tolerant: older databases may not have every materials table yet.
 
 DO $$
 DECLARE
   table_name text;
+  table_reg regclass;
   tables text[] := ARRAY[
     'projects',
     'tasks',
@@ -19,6 +21,13 @@ DECLARE
   ];
 BEGIN
   FOREACH table_name IN ARRAY tables LOOP
+    table_reg := to_regclass(format('public.%I', table_name));
+
+    IF table_reg IS NULL THEN
+      RAISE NOTICE 'Table public.% does not exist, skipped', table_name;
+      CONTINUE;
+    END IF;
+
     EXECUTE format('ALTER TABLE public.%I REPLICA IDENTITY FULL', table_name);
 
     BEGIN
@@ -28,8 +37,6 @@ BEGIN
         NULL;
       WHEN undefined_object THEN
         RAISE NOTICE 'Publication supabase_realtime does not exist in this database';
-      WHEN undefined_table THEN
-        RAISE NOTICE 'Table public.% does not exist, skipped', table_name;
     END;
   END LOOP;
 END $$;
