@@ -6,8 +6,9 @@ import { createWorkspaceReactActions } from '../react/actions/workspaceActions';
 import { createTaskBoardViewModel } from '../react/tasks/taskBoardModel';
 import { TaskBoard } from '../react/tasks/TaskBoard';
 import { createTaskCardViewModel } from '../react/tasks/taskCardModel';
+import { buildTaskBoardIndexes } from '../react/tasks/taskIndexes';
 import { PERFORMANCE_BUDGETS, recordWorkspacePerformanceMetric } from '../shared/production';
-import { COLS, PR, ST, D, add, commentsForTask, dt, fmt, projectColor, projectName, rgba, subtasksForTask, taskUserIds, today, userName } from './pageUtils';
+import { COLS, PR, ST, D, add, dt, fmt, rgba, today } from './pageUtils';
 
 function weekStart(value) {
   const date = D(value || today());
@@ -39,6 +40,20 @@ export function TasksPage() {
   const previousModeRef = React.useRef(ui.taskBoardMode);
   const modeSwitchStartedAtRef = React.useRef(0);
 
+  const indexes = React.useMemo(() => {
+    const startedAt = nowMs();
+    const nextIndexes = buildTaskBoardIndexes(state);
+    recordWorkspacePerformanceMetric('tasks:indexes', nowMs() - startedAt, {
+      tasks: (state.tasks || []).length,
+      projects: (state.projects || []).length,
+      users: (state.users || []).length,
+      assignees: (state.assignees || []).length,
+      subtasks: (state.subtasks || []).length,
+      comments: (state.taskComments || []).length
+    }, PERFORMANCE_BUDGETS.taskModelMs);
+    return nextIndexes;
+  }, [state.projects, state.users, state.assignees, state.subtasks, state.taskComments, state.tasks]);
+
   const model = React.useMemo(() => {
     const startedAt = nowMs();
     const nextModel = createTaskBoardViewModel({
@@ -62,18 +77,18 @@ export function TasksPage() {
       today,
       D,
       add,
-      taskUserIds: (task) => taskUserIds(state, task),
+      taskUserIds: (task) => indexes.taskUserIds(task),
       taskCard: (task, options) => createTaskCardViewModel(task, {
         fmt, dt, rgba,
-        pcolor: (id) => projectColor(state, id),
-        pname: (id) => projectName(state, id),
-        uname: (id) => userName(state, id),
-        tids: (item) => taskUserIds(state, item),
-        subs: (id) => subtasksForTask(state, id),
+        pcolor: (id) => indexes.projectColor(id),
+        pname: (id) => indexes.projectName(id),
+        uname: (id) => indexes.userName(id),
+        tids: (item) => indexes.taskUserIds(item),
+        subs: (id) => indexes.subtasksForTask(id),
         today,
         PR,
         ST,
-        taskCommentList: (id) => commentsForTask(state, id)
+        taskCommentList: (id) => indexes.commentsForTask(id)
       }, options)
     });
     recordWorkspacePerformanceMetric('tasks:model', nowMs() - startedAt, {
@@ -90,12 +105,9 @@ export function TasksPage() {
   }, [
     state.tasks,
     state.users,
-    state.assignees,
-    state.subtasks,
-    state.taskComments,
-    state.projects,
     state.tasksLoading,
     state.taskError,
+    indexes,
     ui.taskBoardMode,
     ui.tasksWeekStart,
     filters.taskSearch,
@@ -169,7 +181,7 @@ export function TasksPage() {
         <input className="input" placeholder="Поиск задач" value={filters.taskSearch} onChange={(event) => ui.setFilter('taskSearch', event.currentTarget.value)} />
         <select className="input" value={filters.taskProjectId} onChange={(event) => ui.setFilter('taskProjectId', event.currentTarget.value)}>
           <option value="all">Все проекты</option>
-          {(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}
+          {(state.projects || []).filter((project) => !project.deleted_at).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}
         </select>
         <select className="input" value={filters.taskUserId} onChange={(event) => ui.setFilter('taskUserId', event.currentTarget.value)}>
           <option value="all">Все исполнители</option>
