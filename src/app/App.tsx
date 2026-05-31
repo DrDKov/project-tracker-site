@@ -67,6 +67,34 @@ function generateRepeatDates({ start, until, type, weekdays }) {
   if (out.length > 370) throw new Error('Слишком много повторений: максимум 370 задач');
   return out;
 }
+function notificationKey(item) {
+  return String(item?.id || item?.notification_id || `${item?.type || item?.kind || 'notification'}:${item?.task_id || ''}:${item?.created_at || item?.updated_at || ''}:${item?.title || item?.body || ''}`);
+}
+function notificationDateValue(item) {
+  return item?.created_at || item?.updated_at || item?.date || '';
+}
+function notificationTs(item) {
+  const time = Date.parse(notificationDateValue(item));
+  return Number.isFinite(time) ? time : 0;
+}
+function notificationKind(item) {
+  const raw = String(item?.kind || item?.type || item?.event_type || '').toLowerCase();
+  const text = `${item?.title || ''} ${item?.body || ''}`.toLowerCase();
+  if (raw.includes('mention') || text.includes('упом')) return 'Упоминание';
+  if (raw.includes('comment') || text.includes('коммент')) return 'Комментарий';
+  if (raw.includes('assign') || text.includes('назнач')) return 'Назначение';
+  return 'Оповещение';
+}
+function notificationTitle(item) {
+  return item?.title || (notificationKind(item) === 'Назначение' ? 'Вам назначили задачу' : 'Оповещение');
+}
+function notificationBody(item) {
+  return item?.body || item?.message || item?.task_title || item?.title || '';
+}
+function notificationTimeLabel(item) {
+  const raw = notificationDateValue(item);
+  return raw ? String(raw).slice(0, 16).replace('T', ' ') : '';
+}
 
 function WorkspaceBoot() {
   React.useEffect(() => {
@@ -284,18 +312,24 @@ function ProjectModal({ state, actions, onClose }) {
   );
 }
 
-function NotificationPanel({ state, actions, onClose }) {
-  const items = state.notifications || [];
+function NotificationPanel({ notifications, actions, onClose, onReadAll, onReadOne }) {
+  const items = notifications || [];
+  const unreadCount = items.filter((item) => !item.is_read).length;
   return (
     <div className="modal-backdrop active react-modal-backdrop">
       <div className="modal card notification-modal">
-        <div className="modal-head"><div><h3>Оповещения</h3><p>{items.length ? `Всего: ${items.length}` : 'Новых оповещений нет'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
+        <div className="modal-head"><div><h3>Оповещения</h3><p>{unreadCount ? `Новых: ${unreadCount}` : 'Новых оповещений нет'}</p></div><div className="notification-modal-actions"><button type="button" className="notification-read-btn" onClick={onReadAll}>Прочитано</button><button type="button" className="btn ghost" onClick={onClose}>×</button></div></div>
         <div className="notification-list">
-          {items.length ? items.map((item) => <button key={item.id} type="button" className="notification-row" onClick={() => { if (item.task_id) actions.openTask?.(item.task_id); onClose(); }}><b>{item.title || 'Оповещение'}</b><span>{item.body || item.created_at || ''}</span></button>) : <div className="empty">Оповещений пока нет.</div>}
+          {items.length ? items.map((item) => <button key={item.__id} type="button" className={`notification-row ${item.is_read ? 'read' : 'unread'}`} onClick={() => { onReadOne(item.__id); if (item.task_id) actions.openTask?.(item.task_id); onClose(); }}><span className="notification-kind">{notificationKind(item)}</span><b>{notificationTitle(item)}</b><span>{notificationBody(item)}</span><span className="notification-time">{notificationTimeLabel(item)}</span></button>) : <div className="empty">Оповещений пока нет.</div>}
         </div>
       </div>
     </div>
   );
+}
+
+function NotificationToasts({ items, onClose }) {
+  if (!items.length) return null;
+  return <div className="notification-toast-stack">{items.map((item) => <div className="notification-toast" key={item.__id}><b>{notificationTitle(item)}</b><span>{notificationBody(item)}</span><button type="button" onClick={() => onClose(item.__id)}>×</button></div>)}</div>;
 }
 
 function AccessModal({ state, onClose }) {
@@ -319,7 +353,7 @@ function AccessModal({ state, onClose }) {
   );
 }
 
-function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotifications }) {
+function WorkspaceModals({ state, actions, notificationsOpen, notifications, onCloseNotifications, onReadAllNotifications, onReadOneNotification }) {
   const ui = useWorkspaceUiStore();
   const close = () => ui.closeModals();
   return (
@@ -327,7 +361,7 @@ function WorkspaceModals({ state, actions, notificationsOpen, onCloseNotificatio
       {(ui.modals.taskId !== null || ui.modals.taskDraft !== null) ? <TaskModal state={state} actions={actions} onClose={close} /> : null}
       {ui.modals.projectId !== null ? <ProjectModal state={state} actions={actions} onClose={close} /> : null}
       {ui.modals.accessProjectId !== null ? <AccessModal state={state} onClose={close} /> : null}
-      {notificationsOpen ? <NotificationPanel state={state} actions={actions} onClose={onCloseNotifications} /> : null}
+      {notificationsOpen ? <NotificationPanel notifications={notifications} actions={actions} onClose={onCloseNotifications} onReadAll={onReadAllNotifications} onReadOne={onReadOneNotification} /> : null}
     </>
   );
 }
@@ -336,10 +370,25 @@ function MainPage() {
   const state = useWorkspaceState();
   const route = useWorkspaceRoute();
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
+  const [readNotificationIds, setReadNotificationIds] = React.useState(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('workspace.readNotifications') || '[]')); }
+    catch { return new Set(); }
+  });
+  const [toasts, setToasts] = React.useState([]);
+  const seenNotificationsRef = React.useRef(new Set());
+  const seenInitializedRef = React.useRef(false);
   const permissions = getWorkspacePermissionSnapshot(state.profile || null, state.projects || [], state.members || []);
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
+  const notifications = React.useMemo(() => {
+    return (state.notifications || []).map((item) => {
+      const __id = notificationKey(item);
+      const explicitRead = item?.is_read === true || item?.read_at;
+      return { ...item, __id, is_read: Boolean(explicitRead || readNotificationIds.has(__id)) };
+    }).sort((left, right) => notificationTs(right) - notificationTs(left));
+  }, [state.notifications, readNotificationIds]);
+  const shellState = React.useMemo(() => ({ ...state, notifications }), [state, notifications]);
   const shell = createAppShellModel({
-    state,
+    state: shellState,
     view: route.routeId,
     permissions,
     statusTitle: state.statusTitle,
@@ -347,6 +396,32 @@ function MainPage() {
     hasMaterialsSection: true
   });
 
+  React.useEffect(() => {
+    localStorage.setItem('workspace.readNotifications', JSON.stringify(Array.from(readNotificationIds).slice(-1000)));
+  }, [readNotificationIds]);
+
+  React.useEffect(() => {
+    const ids = notifications.map((item) => item.__id);
+    if (!seenInitializedRef.current) {
+      seenNotificationsRef.current = new Set(ids);
+      seenInitializedRef.current = true;
+      return;
+    }
+    const fresh = notifications.filter((item) => !item.is_read && !seenNotificationsRef.current.has(item.__id));
+    seenNotificationsRef.current = new Set(ids.concat(Array.from(seenNotificationsRef.current)).slice(0, 1000));
+    if (fresh.length) {
+      setToasts((prev) => fresh.slice(0, 3).concat(prev).slice(0, 4));
+    }
+  }, [notifications]);
+
+  const markRead = React.useCallback((ids) => {
+    setReadNotificationIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.add(id));
+      return next;
+    });
+  }, []);
+  const markAllRead = React.useCallback(() => markRead(notifications.map((item) => item.__id)), [markRead, notifications]);
   const selectView = React.useCallback((view) => route.navigateToView(view), [route]);
 
   function renderPage() {
@@ -387,7 +462,8 @@ function MainPage() {
           </React.Suspense>
         </section>
       </main>
-      <WorkspaceModals state={state} actions={actions} notificationsOpen={notificationsOpen} onCloseNotifications={() => setNotificationsOpen(false)} />
+      <WorkspaceModals state={state} actions={actions} notificationsOpen={notificationsOpen} notifications={notifications} onCloseNotifications={() => setNotificationsOpen(false)} onReadAllNotifications={markAllRead} onReadOneNotification={(id) => markRead([id])} />
+      <NotificationToasts items={toasts} onClose={(id) => setToasts((items) => items.filter((item) => item.__id !== id))} />
     </div>
   );
 }
