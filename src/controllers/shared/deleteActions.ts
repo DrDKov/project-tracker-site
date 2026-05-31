@@ -11,7 +11,12 @@ export function createDeleteActionController(deps: DeleteActionControllerDeps) {
     if (!table || !id) return false;
     if (deps.confirmDelete && !deps.confirmDelete(message)) return false;
     await deps.repository.softDelete(table, id);
-    await deps.reload();
+    if (table === 'tasks') {
+      window.__workspaceRemoveDeletedTask?.(id);
+      window.__workspaceBroadcastTaskDeleted?.(id)?.catch?.(() => undefined);
+    } else {
+      await deps.reload();
+    }
     return true;
   }
 
