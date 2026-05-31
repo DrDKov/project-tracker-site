@@ -58,8 +58,8 @@ export async function fetchReferenceData(client, warnings) {
   return { users, members, assignees, subtasks, taskComments, messages };
 }
 
-export async function fetchActivityLog(client, warnings) {
-  return runOptional('activity_log', client.from('activity_log').select('*').order('created_at', { ascending: false }).limit(500), 7000, warnings);
+export async function fetchActivityLog(client, warnings, limit = 50) {
+  return runOptional('activity_log', client.from('activity_log').select('*').order('created_at', { ascending: false }).limit(limit), 7000, warnings);
 }
 
 export async function fetchRealtimeSnapshot(client, warnings) {
