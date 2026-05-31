@@ -1,8 +1,7 @@
 // @ts-nocheck
 import * as React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { subscribeWorkspaceRealtimeChanges, dispatchWorkspaceRealtimeChange } from './realtimeEvents';
-import { invalidateRealtimeChange } from './realtimeInvalidation';
+import { dispatchWorkspaceRealtimeChange } from './realtimeEvents';
 import { useWorkspaceState } from '../../react/state/useWorkspaceStore';
 import { workspaceQueryKeys } from '../../react/data/queries/workspaceQueryKeys';
 import { appStore } from '../../core/state/store';
@@ -35,6 +34,20 @@ const TABLE_TO_STATE_KEY = {
   app_users: 'users'
 };
 
+const QUERY_KEY_BY_TABLE = {
+  projects: workspaceQueryKeys.projects(),
+  tasks: workspaceQueryKeys.tasks(),
+  task_assignees: workspaceQueryKeys.tasks(),
+  task_subtasks: workspaceQueryKeys.tasks(),
+  task_comments: workspaceQueryKeys.tasks(),
+  project_messages: workspaceQueryKeys.chat(),
+  workspace_templates: workspaceQueryKeys.materials(),
+  material_folders: workspaceQueryKeys.materials(),
+  material_files: workspaceQueryKeys.materials(),
+  project_members: workspaceQueryKeys.members(),
+  app_users: workspaceQueryKeys.users()
+};
+
 function rowId(row) { return row && row.id ? String(row.id) : ''; }
 function isSoftDeleted(row) { return Boolean(row && row.deleted_at); }
 function upsertById(items, row) {
@@ -53,20 +66,29 @@ function removeById(items, row) {
   if (!id) return items || [];
   return (items || []).filter((item) => rowId(item) !== id);
 }
-function applyRealtimePayload(table, payload) {
+function updateRows(items, eventType, row, old) {
+  const target = row || old;
+  if (!target) return items || [];
+  if (eventType === 'DELETE' || isSoftDeleted(row)) return removeById(items || [], target);
+  return upsertById(items || [], row);
+}
+function applyRealtimePayload(table, change) {
   const key = TABLE_TO_STATE_KEY[table];
   if (!key) return;
-  const eventType = String(payload.eventType || payload.type || '').toUpperCase();
-  const row = payload.new || payload.row || null;
-  const old = payload.old || null;
-  const target = row || old;
-  if (!target) return;
-  const state = appStore.getState() || {};
-  const current = state[key] || [];
-  let next;
-  if (eventType === 'DELETE' || isSoftDeleted(row)) next = removeById(current, target);
-  else next = upsertById(current, row);
+  const eventType = String(change.eventType || '').toUpperCase();
+  const row = change.row || null;
+  const old = change.old || null;
+  const current = (appStore.getState() || {})[key] || [];
+  const next = updateRows(current, eventType, row, old);
   appStore.setState({ [key]: next }, { source: `realtime:${table}`, stage: 'react-realtime-local' });
+}
+function patchBootstrapCache(previous, table, change) {
+  if (!previous) return previous;
+  const key = TABLE_TO_STATE_KEY[table];
+  if (!key || !Array.isArray(previous[key])) return previous;
+  const eventType = String(change.eventType || '').toUpperCase();
+  const nextRows = updateRows(previous[key], eventType, change.row || null, change.old || null);
+  return { ...previous, [key]: nextRows };
 }
 
 export function useWorkspaceRealtimeInvalidation() {
@@ -74,12 +96,6 @@ export function useWorkspaceRealtimeInvalidation() {
   const state = useWorkspaceState();
   const client = state?.sb;
   const profileId = state?.profile?.id;
-
-  React.useEffect(() => {
-    return subscribeWorkspaceRealtimeChanges((change) => {
-      invalidateRealtimeChange(queryClient, change);
-    });
-  }, [queryClient]);
 
   React.useEffect(() => {
     if (!client || !profileId || typeof client.channel !== 'function') return undefined;
@@ -95,19 +111,12 @@ export function useWorkspaceRealtimeInvalidation() {
         };
         window.__workspaceRealtimeLastEvent = { table, eventType: change.eventType, at: new Date().toISOString(), rowId: rowId(change.row || change.old) };
         applyRealtimePayload(table, change);
+        queryClient.setQueryData(workspaceQueryKeys.bootstrap(), (previous) => patchBootstrapCache(previous, table, change));
+        const tableQueryKey = QUERY_KEY_BY_TABLE[table];
+        if (tableQueryKey) {
+          queryClient.setQueryData(tableQueryKey, (previous) => Array.isArray(previous) ? updateRows(previous, String(change.eventType || '').toUpperCase(), change.row || null, change.old || null) : previous);
+        }
         dispatchWorkspaceRealtimeChange(change);
-        queryClient.setQueryData(workspaceQueryKeys.bootstrap(), (previous) => {
-          if (!previous) return previous;
-          const key = TABLE_TO_STATE_KEY[table];
-          if (!key || !Array.isArray(previous[key])) return previous;
-          const eventType = String(change.eventType || '').toUpperCase();
-          const row = change.row;
-          const old = change.old;
-          const target = row || old;
-          if (!target) return previous;
-          const nextRows = (eventType === 'DELETE' || isSoftDeleted(row)) ? removeById(previous[key], target) : upsertById(previous[key], row);
-          return { ...previous, [key]: nextRows };
-        });
       });
     });
     channel.subscribe((status) => {
