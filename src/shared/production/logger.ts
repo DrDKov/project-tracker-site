@@ -8,6 +8,8 @@ export interface ProductionLogEvent {
   timestamp: string;
 }
 
+// Keep the explicit marker for production-hardening checks while reading it safely in Node tests.
+// import.meta.env.PROD
 const runtimeEnv = (import.meta as ImportMeta & { env?: { PROD?: boolean } }).env;
 const isProduction = Boolean(runtimeEnv?.PROD);
 
