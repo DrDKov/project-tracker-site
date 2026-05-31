@@ -2,6 +2,7 @@
 import React from 'react';
 import { useWorkspaceState } from '../react/state/useWorkspaceStore';
 import { useWorkspaceUiStore } from '../shared/store/uiStore';
+import { createWorkspaceReactActions } from '../react/actions/workspaceActions';
 import { TimelinePage as TimelinePageView } from '../react/timeline/TimelinePage';
 import { createTimelineViewModel } from '../react/timeline/timelineModel';
 import { PR, ST, add, projectColor, projectName, rgba, taskUserIds, today, userName } from './pageUtils';
@@ -9,12 +10,14 @@ import { PR, ST, add, projectColor, projectName, rgba, taskUserIds, today, userN
 export function TimelinePage() {
   const state = useWorkspaceState();
   const ui = useWorkspaceUiStore();
+  const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
   const filters = ui.filters;
-  const model = createTimelineViewModel({
+  const currentDate = ui.timelineDate || today();
+  const model = React.useMemo(() => createTimelineViewModel({
     tasks: state.tasks || [],
     projects: state.projects || [],
     users: state.users || [],
-    timelineDate: ui.timelineDate || today(),
+    timelineDate: currentDate,
     filters: {
       query: filters.timelineSearch || '',
       projectId: filters.timelineProjectId || 'all',
@@ -32,15 +35,16 @@ export function TimelinePage() {
     userName: (id) => userName(state, id),
     taskUserIds: (task) => taskUserIds(state, task),
     add
-  });
+  }), [state.tasks, state.projects, state.users, state.assignees, currentDate, filters.timelineSearch, filters.timelineProjectId, filters.timelineUserId, filters.timelineStatus, filters.timelinePriority, filters.timelineShowDone]);
+
   return (
     <section className="panel react-timeline-page">
       <div className="panel-head">
         <h3>Таймлайн</h3>
         <div className="row">
-          <button className="btn secondary" onClick={() => ui.setTimelineDate(add(ui.timelineDate || today(), -7))}>← неделя</button>
-          <button className="btn secondary" onClick={() => ui.setTimelineDate(today())}>Сегодня</button>
-          <button className="btn secondary" onClick={() => ui.setTimelineDate(add(ui.timelineDate || today(), 7))}>неделя →</button>
+          <button className="btn secondary" type="button" onClick={() => ui.setTimelineDate(add(currentDate, -7))}>← неделя</button>
+          <button className="btn secondary" type="button" onClick={() => ui.setTimelineDate(today())}>Сегодня</button>
+          <button className="btn secondary" type="button" onClick={() => ui.setTimelineDate(add(currentDate, 7))}>неделя →</button>
         </div>
       </div>
       <div className="timeline-filterbar react-filterbar">
@@ -63,7 +67,7 @@ export function TimelinePage() {
         </select>
         <label className="check-inline"><input type="checkbox" checked={filters.timelineShowDone} onChange={(event) => ui.setFilter('timelineShowDone', event.currentTarget.checked)} /> выполненные</label>
       </div>
-      <TimelinePageView model={model} />
+      <TimelinePageView model={model} actions={actions} />
     </section>
   );
 }
