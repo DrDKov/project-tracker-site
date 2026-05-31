@@ -24,6 +24,7 @@ function closestElement(target, selector) {
 export function TasksPage() {
   const state = useWorkspaceState();
   const ui = useWorkspaceUiStore();
+  const [isSwitching, startSwitch] = React.useTransition();
   const actions = React.useMemo(() => createWorkspaceReactActions(), [state.sb, state.profile?.id]);
   const filters = ui.filters;
 
@@ -82,7 +83,7 @@ export function TasksPage() {
   ]);
 
   function dropTarget(event) {
-    return closestElement(event.target, '[data-status]');
+    return closestElement(event.target, '[data-status],[data-date],[data-assignee-id]');
   }
 
   function onDrop(event) {
@@ -90,8 +91,14 @@ export function TasksPage() {
     if (!target) return;
     event.preventDefault();
     const taskId = event.dataTransfer.getData('text/plain') || event.dataTransfer.getData('application/x-task-id');
-    const status = target.dataset.status;
-    if (taskId && status) actions.moveTask?.(taskId, status);
+    if (!taskId) return;
+    if (target.dataset.status) actions.moveTask?.(taskId, target.dataset.status);
+    else if (target.dataset.date) {
+      const date = target.dataset.date === '__none__' ? null : target.dataset.date;
+      actions.updateTaskTimeline?.(taskId, date, date);
+    } else if (target.dataset.assigneeId && actions.assignTask) {
+      actions.assignTask(taskId, target.dataset.assigneeId);
+    }
     document.querySelectorAll('.drag-over').forEach((node) => node.classList.remove('drag-over'));
   }
 
@@ -103,14 +110,18 @@ export function TasksPage() {
     event.dataTransfer.effectAllowed = 'move';
   }
 
+  function setMode(mode) {
+    startSwitch(() => ui.setTaskBoardMode(mode));
+  }
+
   return (
-    <section className="panel react-tasks-page">
+    <section className="panel react-tasks-page" aria-busy={isSwitching ? 'true' : 'false'}>
       <div className="panel-head">
         <h3>Задачи</h3>
         <div className="row">
-          <button className={`btn secondary ${ui.taskBoardMode === 'status' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('status')}>По статусам</button>
-          <button className={`btn secondary ${ui.taskBoardMode === 'assignee' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('assignee')}>По исполнителям</button>
-          <button className={`btn secondary ${ui.taskBoardMode === 'week' ? 'active' : ''}`} onClick={() => ui.setTaskBoardMode('week')}>По неделе</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'status' ? 'active' : ''}`} onClick={() => setMode('status')}>По статусам</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'assignee' ? 'active' : ''}`} onClick={() => setMode('assignee')}>По исполнителям</button>
+          <button className={`btn secondary ${ui.taskBoardMode === 'week' ? 'active' : ''}`} onClick={() => setMode('week')}>По неделе</button>
           <button className="btn primary" onClick={() => actions.openTask?.()}>+ Задача</button>
         </div>
       </div>
