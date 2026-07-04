@@ -26,7 +26,7 @@ export function UserCard({ user, actions = {} }) {
           <div className="react-user-meta">
             <span className={`react-user-role ${user.role}`}>{user.roleLabel}</span>
             {user.position ? <span>{user.position}</span> : null}
-            {user.email ? <span>{user.email}</span> : null}
+            {user.email ? <span className="react-user-email" title={user.email}>{user.email}</span> : null}
           </div>
         </div>
       </header>
@@ -46,19 +46,22 @@ export function UserCard({ user, actions = {} }) {
         </div>
       </section>
 
-      <div className="react-user-projects">
-        {user.projects.length ? (
-          user.projects.slice(0, 5).map((project) => (
-            <span className={`react-user-project ${project.owned ? 'owned' : ''}`} key={project.id} title={`${project.name} · ${project.roleLabel}`}>
-              {project.name}
-              <em>{project.roleLabel}</em>
-            </span>
-          ))
-        ) : (
-          <span className="muted">Нет доступов к проектам</span>
-        )}
-        {user.projects.length > 5 ? <span className="react-user-project more">+{user.projects.length - 5}</span> : null}
-      </div>
+      <details className="react-user-project-details">
+        <summary>Проекты и доступы</summary>
+        <div className="react-user-projects">
+          {user.projects.length ? (
+            user.projects.slice(0, 5).map((project) => (
+              <span className={`react-user-project ${project.owned ? 'owned' : ''}`} key={project.id} title={`${project.name} · ${project.roleLabel}`}>
+                {project.name}
+                <em>{project.roleLabel}</em>
+              </span>
+            ))
+          ) : (
+            <span className="muted">Нет доступов к проектам</span>
+          )}
+          {user.projects.length > 5 ? <span className="react-user-project more">+{user.projects.length - 5}</span> : null}
+        </div>
+      </details>
 
       {user.canManage ? (
         <footer className="actions react-user-actions">
