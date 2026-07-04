@@ -1,0 +1,170 @@
+/* Owner workspace UI polish: loaded last as a narrow override layer. */
+
+html,body,#root,#app{max-width:100%;overflow-x:hidden}
+.app,.main,.sidebar,.view,.react-page-panel,.panel,.panel-head,.topbar,.toolbar,.settings-grid,.cards-grid,.layout-2,.project-grid,.kanban,.table-wrap,.chat-panel,.chat-layout{min-width:0;max-width:100%}
+.project-card,.task-card,.user-card,.metric,.timeline-item,.materials-file{min-width:0}
+.project-title,.panel-head,.topbar,.timeline-item,.user-card{min-width:0}
+.project-title h4,.task-card h4,.task-card p,.user-card,.timeline-item,.settings-meta-item span,.settings-actions-note,.badge{overflow-wrap:anywhere}
+.btn{min-width:0;white-space:normal}
+.toolbar{align-items:start}
+.toolbar .input,.toolbar .btn{min-width:180px;max-width:100%}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+.settings-card-inner{display:grid;gap:12px}
+.settings-card-inner h3{margin:0}
+.settings-status-badge{width:max-content;max-width:100%;border-radius:999px;background:#fffbeb;color:#92400e;border:1px solid #fde68a;padding:6px 10px;font-size:12px;font-weight:900}
+.settings-status-badge.connected{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.settings-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px}
+.settings-meta-item{display:grid;gap:4px;border:1px solid var(--line);border-radius:14px;background:#f8fafc;padding:10px;min-width:0}
+.settings-meta-item b{font-size:12px;color:#475569}
+.settings-meta-item span{font-size:13px;color:#0f172a;min-width:0}
+.settings-actions-note{border:1px solid #e0f2fe;background:#f0f9ff;color:#075985;border-radius:14px;padding:10px;font-size:13px;line-height:1.45}
+.settings-account-actions{margin-top:2px}
+.notice.danger{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+
+.react-app-shell-sidebar{gap:12px}
+.react-app-shell-topbar{min-width:0}
+.react-top-actions .btn{min-width:0}
+
+#tasks .kanban,.react-page-panel[data-route="tasks"] .kanban{max-width:100%;overflow-x:auto!important;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin}
+#tasks .col,.react-page-panel[data-route="tasks"] .col{min-height:260px;max-height:calc(100vh - 260px);overflow:auto;scrollbar-width:thin}
+#tasks .task-card,.react-page-panel[data-route="tasks"] .task-card{margin-bottom:9px;overflow-wrap:anywhere}
+#tasks .task-card .row,.react-page-panel[data-route="tasks"] .task-card .row{min-width:0}
+.task-mode-toggle,.task-done-toggle,.task-week-nav,.task-date-filter{min-width:0;max-width:100%}
+.wk-sub{max-height:240px;overflow:auto}
+.wk-sublist{max-height:145px;overflow:auto;padding-right:2px}
+
+.timeline-calendar,.timeline-calendar-grid,.timeline-calendar-toolbar,.react-timeline-root,.react-timeline-calendar{min-width:0;max-width:100%}
+.react-timeline-root,.react-timeline-calendar{overflow:hidden}
+.timeline-calendar-toolbar{grid-template-columns:repeat(auto-fit,minmax(140px,1fr));align-items:stretch}
+.timeline-calendar-toolbar .input,.timeline-calendar-toolbar select,.timeline-calendar-toolbar input,.timeline-calendar-toolbar button,.timeline-calendar-toolbar label{width:100%;min-width:0}
+.timeline-calendar-grid,.react-timeline-calendar .timeline-calendar-grid{width:100%;max-width:100%;overflow:auto;overscroll-behavior-x:contain}
+.react-timeline-calendar .timeline-calendar-toolbar{min-width:0;max-width:100%}
+.react-timeline-calendar .timeline-calendar-toolbar button,.react-timeline-calendar .timeline-calendar-toolbar select,.react-timeline-calendar .timeline-calendar-toolbar input,.react-timeline-calendar .timeline-calendar-toolbar label{min-width:0}
+.timeline-event{overflow-wrap:anywhere}
+
+.chat-react-page,.chat-panel,.chat-layout,.chat-tools,.chat-compose.wk-compact{min-width:0;max-width:100%}
+.chat-react-head #chatProject,.chat-tools .input,.chat-compose.wk-compact #chatText{min-width:0;width:100%}
+.chat-compose.wk-compact .chat-send{min-width:0;white-space:normal}
+
+.react-project-card{min-width:0;overflow:hidden}
+.react-project-card .project-title{min-width:0}
+.react-project-card .actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;width:100%}
+.react-project-card .actions .btn{width:100%;min-width:0}
+.react-project-stats{flex-wrap:wrap}
+.react-projects-summary>*{min-width:0}
+
+.react-team-page,.react-team-grid,.react-user-card,.react-user-main,.react-user-title-row,.react-user-meta,.react-user-projects{min-width:0;max-width:100%}
+.react-user-card{overflow:hidden}
+.react-user-meta,.react-user-title-row h4,.react-user-project,.react-user-project em,.react-team-summary span{overflow-wrap:anywhere}
+.react-user-project em{min-width:0;max-width:100%;white-space:normal;text-overflow:clip}
+.react-user-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;width:100%}
+.react-user-actions .btn{width:100%}
+
+.react-materials-shell,.react-materials-grid,.react-materials-doc-layout,.react-materials-main,.react-materials-list,.materials-actions{min-width:0;max-width:100%}
+.materials-actions .btn{min-width:0}
+.materials-editor-head{display:grid;gap:4px;margin-bottom:2px}
+.materials-editor-head h3{margin:0}
+.materials-editor-head p{margin:0}
+.react-materials-header .panel-head{min-width:0}
+.materials-row b,.materials-row span{min-width:0}
+
+.assignment-toasts{pointer-events:none;max-width:min(360px,calc(100vw - 24px))}
+.assignment-toast{pointer-events:auto}
+.assignment-toast:nth-child(n+2){display:none}
+
+.react-audit-row{display:grid;gap:8px}
+.react-audit-head{display:flex;gap:8px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+.audit-details{border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;overflow:hidden}
+.audit-details summary{cursor:pointer;padding:9px 10px;color:#475569;font-size:12px;font-weight:900}
+.audit-details pre{margin:0;max-height:220px;overflow:auto;border-top:1px solid #e5e7eb;padding:10px;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:#475569}
+.audit-json{max-height:220px;overflow:auto}
+
+@media(max-width:1180px){
+  .cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .layout-2{grid-template-columns:1fr}
+}
+
+@media(max-width:980px){
+  .app{display:block;min-height:100vh}
+  .sidebar{position:relative;padding:12px;gap:12px}
+  .brand p,.side-footer{display:none}
+  .nav,.react-app-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .nav button,.react-app-nav button{justify-content:flex-start;min-width:0;padding:10px}
+  .main{padding:14px}
+  .topbar,.react-app-shell-topbar{display:grid;grid-template-columns:1fr;gap:12px;align-items:start;margin-bottom:14px}
+  .topbar h2,.react-topbar-title h2{font-size:24px;letter-spacing:0}
+  .top-actions,.react-top-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;margin-top:0;justify-content:stretch}
+  .top-actions .btn,.react-top-actions .btn{width:100%}
+  .settings-grid,.form-grid{grid-template-columns:1fr}
+  .panel-head{display:grid}
+  .react-page-panel[data-route="tasks"] .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .task-mode-toggle,.task-done-toggle,.task-week-nav,.task-date-filter{width:100%}
+  .timeline-calendar-toolbar,.react-timeline-calendar .timeline-calendar-toolbar{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .react-timeline-calendar .timeline-calendar-toolbar .input{width:100%}
+  .materials-grid,.materials-doc-layout,.react-materials-grid,.react-materials-doc-layout,.materials-search,.react-materials-search{grid-template-columns:1fr}
+  .materials-file{grid-template-columns:1fr}
+  .materials-file .materials-actions{margin-bottom:0}
+  .materials-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(136px,1fr));width:100%}
+  .materials-actions .btn{width:100%}
+  .react-materials-header .panel-head{grid-template-columns:1fr}
+}
+
+@media(max-width:720px){
+  #tasks .kanban,.react-page-panel[data-route="tasks"] .kanban{display:flex!important;gap:12px;scroll-snap-type:x proximity;padding-bottom:10px}
+  #tasks .col,.react-page-panel[data-route="tasks"] .col{flex:0 0 86vw;max-width:86vw;max-height:68vh;scroll-snap-align:start}
+  .react-page-panel[data-route="tasks"] .toolbar{grid-template-columns:1fr}
+  .wk-sub{max-height:210px}
+  .wk-sublist{max-height:120px}
+  .timeline-calendar-toolbar,.react-timeline-calendar .timeline-calendar-toolbar{grid-template-columns:1fr}
+  .timeline-calendar-grid{grid-template-columns:52px repeat(7,minmax(190px,72vw))}
+  .react-timeline-calendar .timeline-calendar-toolbar b{text-align:center}
+  .chat-panel{height:auto;min-height:calc(100vh - 220px)}
+  .chat-panel .chat-layout{grid-template-rows:minmax(300px,1fr) auto}
+  .chat-messages{min-height:300px;max-height:54vh}
+  .chat-compose.wk-compact{position:sticky;bottom:0;z-index:8;grid-template-columns:38px minmax(0,1fr) 74px;border-radius:16px;background:#fff;box-shadow:0 -12px 28px rgba(15,23,42,.08)}
+  .chat-compose.wk-compact .chat-send{padding:0 10px}
+  .react-team-grid{grid-template-columns:1fr}
+  .react-team-summary{align-items:stretch}
+  .react-team-summary span{flex:1 1 auto}
+  .react-user-permissions{grid-template-columns:1fr 1fr 1fr}
+  .react-projects-summary{align-items:flex-start;flex-direction:column}
+  .assignment-toasts{left:12px;right:12px;bottom:12px;max-width:none}
+  .assignment-toast{width:100%;box-shadow:0 18px 44px rgba(15,23,42,.18)}
+}
+
+@media(max-width:560px){
+  .main{padding:10px}
+  .sidebar{padding:10px}
+  .brand{gap:8px}
+  .logo{width:36px;height:36px}
+  .brand h1{font-size:16px}
+  .nav button,.react-app-nav button{font-size:13px;line-height:1.2;padding:9px 8px}
+  .topbar h2,.react-topbar-title h2{font-size:22px}
+  .topbar p{font-size:12px}
+  .top-actions,.react-top-actions{grid-template-columns:1fr}
+  .cards-grid,.project-grid{grid-template-columns:1fr}
+  .panel,.metric{border-radius:16px;padding:14px}
+  .toolbar{display:grid;grid-template-columns:1fr}
+  .toolbar .input,.toolbar .btn{width:100%;min-width:0}
+  .project-title{display:grid}
+  .actions .btn,.settings-account-actions .btn,.modal-actions .btn{width:100%}
+  .modal-actions{display:grid}
+  .timeline-item{grid-template-columns:1fr}
+  .react-project-card .actions{grid-template-columns:1fr}
+  .react-project-stats{display:grid;grid-template-columns:1fr;gap:4px}
+  .react-user-card{padding:14px;border-radius:16px}
+  .react-user-card-head{display:grid;grid-template-columns:44px minmax(0,1fr)}
+  .react-user-permissions{grid-template-columns:1fr}
+  .materials-tabs{display:grid;grid-template-columns:1fr 1fr}
+  .materials-tab{padding:9px 8px}
+  .materials-actions{grid-template-columns:1fr}
+  .materials-list,.materials-main,.materials-search-results{border-radius:16px;padding:10px}
+  .materials-editor textarea,.react-materials-editor textarea{min-height:280px}
+}
+
+@media(max-width:420px){
+  .chat-compose.wk-compact{grid-template-columns:36px minmax(0,1fr) 68px;gap:6px}
+  .chat-file-btn{width:36px}
+  .chat-compose.wk-compact .chat-send{font-size:13px}
+}
