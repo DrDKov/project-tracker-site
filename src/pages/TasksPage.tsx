@@ -188,11 +188,10 @@ export function TasksPage() {
     <section className="panel react-tasks-page" aria-busy={isSwitching ? 'true' : 'false'}>
       <div className="panel-head">
         <h3>Задачи</h3>
-        <div className="row">
+        <div className="row task-mode-actions">
           <button className={`btn secondary ${ui.taskBoardMode === 'status' ? 'active' : ''}`} onClick={() => setMode('status')}>По статусам</button>
           <button className={`btn secondary ${ui.taskBoardMode === 'assignee' ? 'active' : ''}`} onClick={() => setMode('assignee')}>По исполнителям</button>
           <button className={`btn secondary ${ui.taskBoardMode === 'week' ? 'active' : ''}`} onClick={() => setMode('week')}>По неделе</button>
-          <button className="btn primary" onClick={() => actions.openTask?.()}>+ Задача</button>
         </div>
       </div>
 
