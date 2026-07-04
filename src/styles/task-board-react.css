@@ -10,10 +10,13 @@
 .task-week-nav.hidden{display:none}
 .task-week-nav .week-label{font-weight:900;color:#0f172a}
 .task-date-filter select,.task-date-filter input{height:42px}
-.react-tasks-page{min-width:0;max-width:100%;overflow:hidden}
-.react-tasks-page .task-filterbar.react-filterbar{grid-template-columns:minmax(220px,1.5fr) repeat(3,minmax(150px,.9fr));grid-auto-flow:row;align-items:center}
-.react-tasks-page .task-filterbar.react-filterbar input[type="date"],.react-tasks-page .task-filterbar.react-filterbar .check-inline{min-width:0}
+.react-tasks-page{display:block!important;min-width:0;max-width:100%;overflow:hidden}
+.react-tasks-page .panel-head{width:100%;min-width:0}
+.react-tasks-page .task-filterbar.react-filterbar{display:grid!important;grid-template-columns:minmax(250px,1.4fr) minmax(180px,1fr) minmax(190px,1fr) minmax(160px,.8fr) minmax(145px,.7fr) minmax(145px,.7fr) minmax(150px,.6fr)!important;grid-auto-flow:row;align-items:center;width:100%;min-width:0;max-width:100%;overflow:visible}
+.react-tasks-page .task-filterbar.react-filterbar input[type="date"],.react-tasks-page .task-filterbar.react-filterbar .check-inline{min-width:0;width:100%}
+.react-tasks-page .task-filterbar.react-filterbar .check-inline{justify-content:flex-start;white-space:nowrap}
 .react-tasks-page .kanban{width:100%;max-width:100%;min-width:0;overflow-x:auto!important;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;align-items:start;padding-bottom:10px}
+.react-tasks-page .kanban:not(.assignee-mode):not(.week-mode){display:grid!important;grid-template-columns:repeat(4,minmax(260px,1fr))!important;gap:14px!important}
 .react-tasks-page .col{max-height:calc(100dvh - 230px);min-height:360px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 .kanban.assignee-mode,.kanban.week-mode{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:minmax(285px,360px)!important;grid-template-columns:none!important;overflow-x:auto!important;align-items:start!important;padding-bottom:8px}
 .assignee-col h3,.week-col h3{display:flex;justify-content:space-between;gap:8px;align-items:center}
@@ -25,7 +28,8 @@
 .task-card .row{gap:6px}
 .task-card .wk-sub{margin-top:8px}
 .task-card .wk-subrow:nth-of-type(n+4){display:none}
-@media(max-width:1180px){.react-tasks-page .task-filterbar.react-filterbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1500px){.react-tasks-page .task-filterbar.react-filterbar{grid-template-columns:repeat(4,minmax(0,1fr))!important}.react-tasks-page .task-filterbar.react-filterbar .check-inline{max-width:190px}}
+@media(max-width:1180px){.react-tasks-page .task-filterbar.react-filterbar{grid-template-columns:repeat(2,minmax(0,1fr))!important}.react-tasks-page .task-filterbar.react-filterbar .check-inline{max-width:none}}
 @media(max-width:900px){.task-week-nav,.task-date-filter{width:100%}}
 @media(max-width:720px){
   .task-mode-toggle,.task-done-toggle{width:100%;justify-content:center}
