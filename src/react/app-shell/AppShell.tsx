@@ -40,6 +40,13 @@ export function AppSidebar({ model, onSelectView }) {
   );
 }
 
+function primaryRouteAction(model, onCreateProject, onCreateTask) {
+  const view = model?.view;
+  if (view === 'projects') return <Button variant="blue" id="quickProjectBtn" onClick={onCreateProject}>+ Проект</Button>;
+  if (view === 'tasks' || view === 'timeline') return <Button variant="primary" id="quickTaskBtn" onClick={onCreateTask}>+ Задача</Button>;
+  return null;
+}
+
 export function AppTopbar(props) {
   const {
     model,
@@ -50,6 +57,7 @@ export function AppTopbar(props) {
     onOpenNotifications = () => undefined
   } = props;
   const count = Number(model.notificationCount || 0);
+  const primaryAction = primaryRouteAction(model, onCreateProject, onCreateTask);
   return (
     <>
       <div className="react-topbar-title">
@@ -57,13 +65,19 @@ export function AppTopbar(props) {
         <p id="pageSubtitle">{model.subtitle}</p>
       </div>
       <div className="top-actions react-top-actions">
-        <Button variant="secondary" id="refreshBtn" onClick={onRefresh}>Обновить</Button>
-        <Button variant="secondary" id="openSettingsBtn" onClick={onOpenSettings}>Настройки</Button>
         <Button variant="secondary" id="notificationBellBtn" className={count ? 'has-unread' : ''} onClick={onOpenNotifications} title="Оповещения" aria-label={`Оповещения: ${count}`}>
           <span aria-hidden="true" className="notification-bell-icon">🔔</span>{count ? <span className="notification-count">{count}</span> : null}
         </Button>
-        <Button variant="blue" id="quickProjectBtn" onClick={onCreateProject}>+ Проект</Button>
-        <Button variant="primary" id="quickTaskBtn" onClick={onCreateTask}>+ Задача</Button>
+        {primaryAction}
+        <details className="react-topbar-more">
+          <summary className="btn secondary" aria-label="Дополнительные действия">⋯</summary>
+          <div className="react-topbar-menu">
+            <button type="button" onClick={onRefresh}>Обновить</button>
+            <button type="button" onClick={onOpenSettings}>Настройки</button>
+            {model.view !== 'projects' ? <button type="button" onClick={onCreateProject}>+ Проект</button> : null}
+            {model.view !== 'tasks' && model.view !== 'timeline' ? <button type="button" onClick={onCreateTask}>+ Задача</button> : null}
+          </div>
+        </details>
       </div>
     </>
   );
