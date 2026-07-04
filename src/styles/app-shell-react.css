@@ -1,11 +1,40 @@
-.react-app-shell-sidebar{gap:18px}
+.react-app-shell-sidebar{gap:18px;min-width:0}
 .react-app-brand .logo{box-shadow:0 10px 28px rgba(15,23,42,.22)}
 .react-app-nav button span:first-child{width:18px;display:inline-flex;justify-content:center;opacity:.95}
 .react-side-footer b{color:#fff}
-.react-app-shell-topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px}
-.react-topbar-title{min-width:0}
-.react-topbar-title h2{margin:0;font-size:28px;letter-spacing:-.02em}
-.react-topbar-title p{margin:4px 0 0;color:var(--muted)}
-.react-top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-@media(max-width:980px){.react-app-shell-topbar{display:block}.react-top-actions{margin-top:12px;justify-content:flex-start}.react-app-nav{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:560px){.react-app-nav{grid-template-columns:repeat(2,1fr)}.react-app-nav button{padding:10px}.react-top-actions .btn{flex:1 1 auto}}
+.react-app-shell-topbar{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:18px;min-width:0;max-width:100%}
+.react-topbar-title{min-width:0;max-width:100%}
+.react-topbar-title h2{margin:0;font-size:28px;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.react-topbar-title p{margin:4px 0 0;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.react-top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
+.react-topbar-more{position:relative}
+.react-topbar-more summary{list-style:none;user-select:none}
+.react-topbar-more summary::-webkit-details-marker{display:none}
+.react-topbar-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:1200;display:grid;gap:4px;min-width:190px;padding:8px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;box-shadow:0 22px 60px rgba(15,23,42,.18)}
+.react-topbar-menu button{width:100%;border:0;background:transparent;color:#0f172a;text-align:left;border-radius:10px;padding:9px 10px;font-weight:800;cursor:pointer}
+.react-topbar-menu button:hover{background:#f8fafc}
+@media(max-width:980px){.react-app-shell-topbar{display:flex;align-items:flex-start}.react-top-actions{justify-content:flex-end}.react-app-nav{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){
+  html,body,#root{max-width:100%;overflow-x:hidden}
+  .app.react-pure-app{display:block;min-width:0;max-width:100%;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .react-shell-main{min-width:0;max-width:100%;width:100%;padding:12px 12px 16px!important;overflow-x:hidden}
+  .react-page-panel,.panel,.card{min-width:0;max-width:100%}
+  .react-shell-sidebar{position:fixed;left:0;right:0;bottom:0;z-index:5200;display:block;padding:8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));background:rgba(15,23,42,.96);border-top:1px solid rgba(255,255,255,.14);box-shadow:0 -16px 44px rgba(15,23,42,.22)}
+  .react-app-brand,.react-side-footer{display:none!important}
+  .react-app-nav{display:flex!important;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .react-app-nav::-webkit-scrollbar{display:none}
+  .react-app-nav button{flex:0 0 auto;min-width:64px;max-width:92px;display:grid!important;gap:3px;justify-items:center;padding:7px 8px!important;border-radius:14px;font-size:11px;text-align:center;white-space:nowrap;color:#cbd5e1}
+  .react-app-nav button span:first-child{width:auto;font-size:17px}
+  .react-app-nav button span:last-child{display:block;max-width:78px;overflow:hidden;text-overflow:ellipsis}
+  .react-app-shell-topbar{position:sticky;top:0;z-index:900;align-items:center;margin:-12px -12px 12px;padding:10px 12px;background:rgba(246,247,251,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(226,232,240,.86)}
+  .react-topbar-title h2{font-size:19px;line-height:1.15}
+  .react-topbar-title p{display:none}
+  .react-top-actions{flex-wrap:nowrap;gap:6px}
+  .react-top-actions>.btn{padding:8px 10px;border-radius:11px;white-space:nowrap}
+  .react-top-actions>#quickProjectBtn,.react-top-actions>#quickTaskBtn{max-width:118px;overflow:hidden;text-overflow:ellipsis}
+  .react-topbar-menu{position:fixed;right:10px;top:54px}
+  .cards-grid,.layout-2,.settings-grid{grid-template-columns:1fr!important}
+  .panel-head{align-items:stretch;flex-direction:column}
+  .toolbar,.task-filterbar,.react-filterbar{display:grid!important;grid-template-columns:1fr!important;width:100%;min-width:0}
+  .toolbar .input,.task-filterbar .input,.react-filterbar .input{width:100%;min-width:0}
+}
