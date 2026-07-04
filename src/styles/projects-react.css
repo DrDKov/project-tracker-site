@@ -1,16 +1,19 @@
 /* React Stage 6: Projects page island. */
-.react-projects-page,.react-projects-grid{min-width:0;max-width:100%;overflow:hidden}
-.react-projects-grid{align-items:stretch}
+.react-projects-page{display:block!important;min-width:0;max-width:100%;overflow:hidden}
+.react-projects-page>.panel-head,.react-projects-page>.project-filterbar,.react-projects-page>.react-filterbar{width:100%;max-width:100%;min-width:0;margin-left:0;margin-right:0}
+.react-projects-grid{min-width:0;max-width:100%;overflow:hidden;align-items:stretch}
 .react-project-card{min-width:0;border-top-width:4px!important;border-top-style:solid!important;background:linear-gradient(180deg,var(--project-bg,rgba(255,255,255,.96)),#fff 92%)!important;box-shadow:0 8px 22px rgba(15,23,42,.045);display:flex;flex-direction:column;gap:8px}
 .react-project-card .actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
 .react-project-card .actions .btn{white-space:nowrap}
 .react-project-color-dot{width:14px;height:14px;border-radius:999px;display:inline-block;box-shadow:0 0 0 3px rgba(255,255,255,.82),0 1px 4px rgba(15,23,42,.12);flex:0 0 auto}
 .react-project-stats{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#64748b;font-weight:800;margin-top:2px;min-width:0}
-.react-projects-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:13px;min-width:0}
+.react-projects-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:13px;min-width:0;margin:14px 0}
 .react-projects-empty{grid-column:1/-1}
-.react-projects-page .toolbar,.react-projects-page .react-filterbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));align-items:end;width:100%;min-width:0;max-width:100%}
+.react-projects-page .toolbar,.react-projects-page .react-filterbar{display:grid!important;grid-template-columns:minmax(260px,1.4fr) minmax(180px,.8fr) minmax(220px,1fr)!important;align-items:end;width:100%;min-width:0;max-width:100%;gap:10px;margin-bottom:16px}
 .react-projects-page .toolbar .input,.react-projects-page .react-filterbar .input{width:100%;min-width:0}
+@media(max-width:1180px){.react-projects-page .toolbar,.react-projects-page .react-filterbar{grid-template-columns:1fr 1fr!important}}
 @media(max-width:720px){
+  .react-projects-page .toolbar,.react-projects-page .react-filterbar{grid-template-columns:1fr!important}
   .react-projects-summary{align-items:flex-start;flex-direction:column}
   .react-project-card .actions{display:grid;grid-template-columns:1fr auto;width:100%}
   .react-project-card .actions .btn:not(:first-child){display:none}
