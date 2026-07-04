@@ -26,7 +26,6 @@ export function ProjectsPage() {
     <section className="panel project-grid react-projects-page">
       <div className="panel-head">
         <h3>Проекты</h3>
-        <button className="btn primary" onClick={() => actions.openProject?.()}>+ Проект</button>
       </div>
       <div className="project-filterbar react-filterbar">
         <input className="input" placeholder="Поиск проектов" value={filters.projectSearch} onChange={(event) => ui.setFilter('projectSearch', event.currentTarget.value)} />
