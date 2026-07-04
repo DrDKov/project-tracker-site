@@ -48,7 +48,7 @@ export function MaterialsPage({ model, actions }) {
         <div className="panel-head">
           <div>
             <h3>Материалы</h3>
-            <p className="muted">Закрытый раздел владельца workspace</p>
+            <p className="muted">Шаблоны и документы только для владельца</p>
           </div>
           <button className="btn secondary" type="button" onClick={() => actions.reload()}>Обновить</button>
         </div>
@@ -162,6 +162,10 @@ function TemplateContent({ template, edit, actions }) {
   if (edit) {
     return (
       <div className="materials-editor react-materials-editor">
+        <div className="materials-editor-head">
+          <h3>{template?.id ? 'Редактирование шаблона' : 'Новый шаблон'}</h3>
+          <p className="muted">Форма редактирования шаблона</p>
+        </div>
         <input
           className="input"
           id="templateTitle"
