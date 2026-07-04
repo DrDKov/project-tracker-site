@@ -196,25 +196,25 @@ export function TasksPage() {
       </div>
 
       <div className="task-filterbar react-filterbar">
-        <input className="input" placeholder="Поиск задач" value={filters.taskSearch} onChange={(event) => ui.setFilter('taskSearch', event.currentTarget.value)} />
-        <select className="input" value={filters.taskProjectId} onChange={(event) => ui.setFilter('taskProjectId', event.currentTarget.value)}>
+        <input className="input tf-search" placeholder="Поиск задач" value={filters.taskSearch} onChange={(event) => ui.setFilter('taskSearch', event.currentTarget.value)} />
+        <select className="input tf-project" value={filters.taskProjectId} onChange={(event) => ui.setFilter('taskProjectId', event.currentTarget.value)}>
           <option value="all">Все проекты</option>
           {(state.projects || []).filter((project) => !project.deleted_at).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}
         </select>
-        <select className="input" value={filters.taskUserId} onChange={(event) => ui.setFilter('taskUserId', event.currentTarget.value)}>
+        <select className="input tf-assignee" value={filters.taskUserId} onChange={(event) => ui.setFilter('taskUserId', event.currentTarget.value)}>
           <option value="all">Все исполнители</option>
           {(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}
         </select>
-        <select className="input" value={filters.taskDateMode} onChange={(event) => ui.setFilter('taskDateMode', event.currentTarget.value)}>
+        <select className="input tf-datekind" value={filters.taskDateMode} onChange={(event) => ui.setFilter('taskDateMode', event.currentTarget.value)}>
           <option value="all">Все даты</option>
           <option value="overdue">Просроченные</option>
           <option value="exact">На дату</option>
           <option value="from">Начиная с даты</option>
           <option value="range">Диапазон</option>
         </select>
-        <input className="input" type="date" value={filters.taskDateFrom} onChange={(event) => ui.setFilter('taskDateFrom', event.currentTarget.value)} />
-        <input className="input" type="date" value={filters.taskDateTo} onChange={(event) => ui.setFilter('taskDateTo', event.currentTarget.value)} />
-        <label className="check-inline"><input type="checkbox" checked={filters.tasksShowDone} onChange={(event) => ui.setFilter('tasksShowDone', event.currentTarget.checked)} /> выполненные</label>
+        <input className="input tf-datefrom" type="date" value={filters.taskDateFrom} onChange={(event) => ui.setFilter('taskDateFrom', event.currentTarget.value)} />
+        <input className="input tf-dateto" type="date" value={filters.taskDateTo} onChange={(event) => ui.setFilter('taskDateTo', event.currentTarget.value)} />
+        <label className="check-inline tf-done"><input type="checkbox" checked={filters.tasksShowDone} onChange={(event) => ui.setFilter('tasksShowDone', event.currentTarget.checked)} /> выполненные</label>
       </div>
 
       {ui.taskBoardMode === 'week' ? (
