@@ -10,10 +10,10 @@ export interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ title, description, actionLabel, onAction, icon = '∅', className = '' }: EmptyStateProps) {
+export function EmptyState({ title, description, actionLabel, onAction, icon = null, className = '' }: EmptyStateProps) {
   return (
     <div className={['empty', 'ds-empty-state', className].filter(Boolean).join(' ')}>
-      <div className="ds-empty-icon" aria-hidden="true">{icon}</div>
+      {icon ? <div className="ds-empty-icon" aria-hidden="true">{icon}</div> : null}
       <b>{title}</b>
       {description ? <p>{description}</p> : null}
       {actionLabel && onAction ? <Button variant="secondary" size="sm" onClick={onAction}>{actionLabel}</Button> : null}
