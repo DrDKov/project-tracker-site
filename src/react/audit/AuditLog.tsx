@@ -20,16 +20,19 @@ export function AuditLog({ model }: { model: AuditLogModel }) {
           <span>Сводка</span>
         </div>
         {visibleRows.map((row) => (
-          <details className="audit-row react-audit-row" key={row.id}>
-            <summary>
+          <article className="audit-row react-audit-row" key={row.id}>
+            <div className="audit-row-main" role="row">
               <span className="audit-action"><b>{row.action}</b></span>
-              <span className="audit-object"><b>{row.objectType}</b><em>{row.objectId}</em></span>
-              <span className="audit-user">{row.user}</span>
+              <span className="audit-object"><b>{row.objectType}</b><em title={row.objectId}>{row.objectId}</em></span>
+              <span className="audit-user" title={row.user}>{row.user}</span>
               <span className="audit-date">{row.date || '—'}</span>
               <span className="audit-summary">{row.summary}</span>
-            </summary>
-            {row.json ? <pre className="audit-json">{row.json}</pre> : <div className="audit-json audit-json-empty">Нет дополнительных данных</div>}
-          </details>
+            </div>
+            <details className="audit-details">
+              <summary>Детали</summary>
+              {row.json ? <pre className="audit-json">{row.json}</pre> : <div className="audit-json audit-json-empty">Нет дополнительных данных</div>}
+            </details>
+          </article>
         ))}
       </div>
       {hasMore ? <div className="audit-more-row"><Button variant="secondary" onClick={() => setVisibleCount((count) => count + 20)}>Показать ещё 20</Button></div> : null}
