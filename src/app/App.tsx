@@ -200,55 +200,34 @@ function TaskModal({ state, actions, onClose }) {
     const data = new FormData(form);
     const assigneeIds = data.getAll('assigneeIds').map(String).filter(Boolean);
     const duration = String(data.get('duration_minutes') || '').trim();
-    const row = { title: String(data.get('title') || '').trim(), project_id: String(data.get('project_id') || ''), status: String(data.get('status') || 'planned'), priority: String(data.get('priority') || 'medium'), start_date: String(data.get('start_date') || '') || null, due_date: String(data.get('due_date') || '') || null, start_time: String(data.get('start_time') || '') || null, end_time: String(data.get('end_time') || '') || null, duration_minutes: duration ? Number(duration) : null, is_all_day: Boolean(data.get('is_all_day')), notes: String(data.get('notes') || ''), assignee_id: assigneeIds[0] || null, assigneeIds };
-    if (!id && repeatEnabled) await createRecurringTask(row, assigneeIds);
-    else await actions.saveTaskData?.(id || null, row);
+    const row = { title: String(data.get('title') || '').trim(), project_id: String(data.get('project_id') || ''), status: String(data.get('status') || 'planned'), priority: String(data.get('priority') || 'medium'), start_date: String(data.get('start_date') || '') || null, due_date: String(data.get('due_date') || '') || null, start_time: String(data.get('start_time') || '') || null, end_time: String(data.get('end_time') || '') || null, duration_minutes: duration ? Number(duration) : null, is_all_day: Boolean(data.get('is_all_day')), notes: String(data.get('notes') || '') || null, assignee_id: assigneeIds[0] || null, assigneeIds };
+    await actions.saveTaskData?.(id, row, repeatEnabled ? { createRecurring: createRecurringTask } : undefined);
     onClose();
   }
-
-  async function addComment(event) {
-    event.preventDefault();
-    if (!id || !commentText.trim()) return;
-    await actions.addTaskComment?.(id, commentText);
-    setCommentText('');
-    setMentionState(null);
-  }
-
+  async function addComment() { const body = commentText.trim(); if (!body || !id) return; await actions.addTaskComment?.(id, body); setCommentText(''); setMentionState(null); }
   return (
     <div className="modal-backdrop active react-modal-backdrop">
-      <form className="modal card task-modal react-task-modal task-modal-pro" onSubmit={submit}>
-        <div className="modal-head"><div><h3>{id ? 'Редактировать задачу' : 'Новая задача'}</h3><p>{task?.title || 'Сроки, исполнители, время, повторение и комментарии'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
+      <form className="modal card task-modal react-task-modal" onSubmit={submit}>
+        <div className="modal-head"><div><h3>{id ? 'Редактировать задачу' : 'Новая задача'}</h3><p>{source.title || 'Заполните параметры задачи'}</p></div><button type="button" className="btn ghost" onClick={onClose}>×</button></div>
         <div className="task-modal-layout">
-          <div className="task-modal-main">
-            <div className="form-grid">
-              <label>Название<input className="input" name="title" defaultValue={source.title || ''} required /></label>
-              <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
-              <label>Статус<select className="input" name="status" defaultValue={source.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
-              <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
-              <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
-              <label>Срок<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
-              <label className="wide">Исполнители<select className="input" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select><span className="muted">Можно выбрать несколько исполнителей через Ctrl/Shift.</span></label>
-            </div>
-            <div className="task-calendar-box"><label className="task-calendar-head"><input type="checkbox" name="is_all_day" defaultChecked={Boolean(source.is_all_day)} /> Весь день / без конкретного времени</label><div className="task-calendar-time-grid"><label>Время начала<input className="input" name="start_time" type="time" defaultValue={String(source.start_time || '').slice(0, 5)} /></label><label>Время окончания<input className="input" name="end_time" type="time" defaultValue={String(source.end_time || '').slice(0, 5)} /></label><label>Длительность, мин<input className="input" name="duration_minutes" type="number" min="1" step="5" placeholder="60" defaultValue={source.duration_minutes || ''} /></label></div></div>
-            <div className="task-recurrence-box"><label className="task-recurrence-head"><input type="checkbox" checked={repeatEnabled} disabled={Boolean(id)} onChange={(event) => setRepeatEnabled(event.currentTarget.checked)} /> Повторяющаяся задача</label>{id ? <div className="task-repeat-existing-note">Повторение настраивается только при создании новой задачи. Этот экземпляр можно редактировать отдельно.</div> : null}{repeatEnabled ? <div className="task-repeat-options"><label>Тип повторения<select className="input" value={repeatType} onChange={(event) => setRepeatType(event.currentTarget.value)}><option value="daily">Ежедневно</option><option value="weekdays">По дням недели</option><option value="weekly">Раз в неделю</option><option value="monthly">Раз в месяц</option></select></label><label>Повторять до<input className="input" type="date" value={repeatUntil} onChange={(event) => setRepeatUntil(event.currentTarget.value)} /></label>{repeatType === 'weekdays' ? <div className="task-repeat-weekdays full">{['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((label, index) => <label key={label}><input type="checkbox" checked={repeatWeekdays.includes(String(index + 1))} onChange={(event) => toggleWeekday(String(index + 1), event.currentTarget.checked)} />{label}</label>)}</div> : null}</div> : null}</div>
-            <label className="task-notes-label">Описание<textarea className="input" name="notes" defaultValue={source.notes || source.description || ''} rows={5} /></label>
+          <div className="form-grid task-form-grid">
+            <label className="full">Название<input className="input" name="title" defaultValue={source.title || ''} required /></label>
+            <label>Проект<select className="input" name="project_id" defaultValue={source.project_id || ''} required><option value="">Выберите проект</option>{(state.projects || []).map((project) => <option key={project.id} value={project.id}>{project.name || 'Без названия'}</option>)}</select></label>
+            <label>Статус<select className="input" name="status" defaultValue={source.status || 'planned'}><option value="planned">Запланировано</option><option value="in_progress">В работе</option><option value="waiting">Ожидание</option><option value="done">Завершено</option><option value="blocked">Заблокировано</option></select></label>
+            <label>Приоритет<select className="input" name="priority" defaultValue={source.priority || 'medium'}><option value="high">Высокий</option><option value="medium">Средний</option><option value="low">Низкий</option></select></label>
+            <label>Начало<input className="input" type="date" name="start_date" defaultValue={String(source.start_date || '').slice(0, 10)} /></label>
+            <label>Дедлайн<input className="input" type="date" name="due_date" defaultValue={String(source.due_date || '').slice(0, 10)} /></label>
+            <label>Начало времени<input className="input" type="time" name="start_time" defaultValue={source.start_time || ''} /></label>
+            <label>Окончание времени<input className="input" type="time" name="end_time" defaultValue={source.end_time || ''} /></label>
+            <label>Длительность, мин<input className="input" type="number" min="0" step="5" name="duration_minutes" defaultValue={source.duration_minutes || ''} /></label>
+            <label className="check-inline task-all-day"><input type="checkbox" name="is_all_day" defaultChecked={Boolean(source.is_all_day)} /> весь день</label>
+            <label className="full">Исполнители<select className="input multi" name="assigneeIds" multiple defaultValue={selectedUserValues}>{(state.users || []).filter((user) => user.is_active !== false).map((user) => <option key={user.id} value={user.id}>{user.display_name || user.email || 'Без имени'}</option>)}</select></label>
+            <label className="full">Описание<textarea className="input" name="notes" defaultValue={source.notes || ''} rows={4} /></label>
+            {!id ? <div className="repeat-box full"><label className="check-inline"><input type="checkbox" checked={repeatEnabled} onChange={(event) => setRepeatEnabled(event.currentTarget.checked)} /> Повторять задачу</label>{repeatEnabled ? <div className="repeat-grid"><label>Тип повтора<select className="input" value={repeatType} onChange={(event) => setRepeatType(event.currentTarget.value)}><option value="daily">Каждый день</option><option value="weekdays">По дням недели</option><option value="weekly">Еженедельно</option><option value="monthly">Ежемесячно</option></select></label><label>Повторять до<input className="input" type="date" value={repeatUntil} onChange={(event) => setRepeatUntil(event.currentTarget.value)} /></label>{repeatType === 'weekdays' ? <div className="weekday-grid full">{[['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['7','Вс']].map(([value,label]) => <label key={value}><input type="checkbox" checked={repeatWeekdays.includes(value)} onChange={(event) => toggleWeekday(value, event.currentTarget.checked)} /> {label}</label>)}</div> : null}<p className="muted full">Будет создано не больше 370 задач.</p></div> : null}</div> : null}
           </div>
-          <aside className="task-modal-comments">
-            <div className="task-comments-head"><h4>Комментарии</h4><span className="muted">{comments.length}</span></div>
-            <div className="task-comments-list">
-              {id ? comments.length ? comments.map((comment) => {
-                const author = userById.get(comment.user_id || comment.author_id);
-                return <div key={comment.id} className="task-comment-row"><b>{author?.display_name || author?.email || 'Пользователь'}</b><p>{comment.body || comment.content || ''}</p><span>{String(comment.created_at || '').slice(0, 16).replace('T', ' ')}</span>{canDeleteTaskComment(comment, state.profile) ? <button type="button" onClick={() => actions.deleteTaskComment?.(comment.id)}>Удалить</button> : null}</div>;
-              }) : <div className="empty">Комментариев пока нет</div> : <div className="empty">Комментарии появятся после сохранения задачи.</div>}
-            </div>
-            {id ? <div className="task-comment-form task-comment-form-with-mentions">
-              <div className="task-comment-input-wrap">
-                {mentionState && mentionSuggestions.length ? <div className="mention-suggest"><div className="mention-suggest-title">Упомянуть пользователя</div>{mentionSuggestions.map((user) => <button key={user.id} type="button" onMouseDown={(event) => { event.preventDefault(); insertMention(user); }}><b>{userMentionLabel(user)}</b><span>{user.email || 'участник workspace'}</span></button>)}</div> : null}
-                {mentionState && !mentionSuggestions.length ? <div className="mention-suggest mention-suggest-empty">Пользователь не найден</div> : null}
-                <textarea ref={commentInputRef} className="input" value={commentText} onChange={handleCommentChange} onKeyUp={handleCommentCursor} onClick={handleCommentCursor} onKeyDown={handleCommentKeyDown} placeholder="Добавить комментарий. Для упоминания введите @" />
-              </div>
-              <button type="button" className="btn secondary" onClick={addComment}>Отправить</button>
-            </div> : null}
+          <aside className="task-comments-panel">
+            <h4>Комментарии</h4>
+            {id ? <><div className="task-comment-list">{comments.length ? comments.map((comment) => { const user = userById.get(comment.user_id || comment.author_id || comment.created_by); return <div key={comment.id} className="task-comment-item"><div className="task-comment-meta"><b>{user?.display_name || user?.email || 'Пользователь'}</b><span>{notificationTimeLabel(comment)}</span></div><p>{comment.body || comment.message || ''}</p>{canDeleteTaskComment(comment, state.profile) ? <button type="button" onClick={() => actions.deleteTaskComment?.(comment.id)}>Удалить</button> : null}</div>; }) : <div className="empty">Комментариев пока нет.</div>}</div><div className="task-comment-compose"><textarea ref={commentInputRef} className="input" value={commentText} onChange={handleCommentChange} onClick={handleCommentCursor} onKeyUp={handleCommentCursor} onKeyDown={handleCommentKeyDown} placeholder="Добавить комментарий. Для упоминания введите @" rows={3} />{mentionState ? <div className={`mention-suggest ${mentionSuggestions.length ? 'open' : ''}`}>{mentionSuggestions.length ? mentionSuggestions.map((user) => <button key={user.id} type="button" onMouseDown={(event) => { event.preventDefault(); insertMention(user); }}><b>{userMentionLabel(user)}</b><span>{user.email || ''}</span></button>) : <span>Нет совпадений</span>}</div> : null}<button type="button" className="btn secondary" onClick={addComment}>Отправить</button></div></> : <div className="empty">Сохраните задачу, чтобы добавить комментарии.</div>}
           </aside>
         </div>
         <div className="modal-actions"><button type="button" className="btn secondary" onClick={onClose}>Отмена</button><button className="btn primary" type="submit">Сохранить</button></div>
@@ -293,7 +272,16 @@ function NotificationPanel({ notifications, actions, onClose, onReadAll, onReadO
   const unreadCount = items.filter((item) => !item.is_read).length;
   return <div className="modal-backdrop active react-modal-backdrop"><div className="modal card notification-modal"><div className="modal-head"><div><h3>Оповещения</h3><p>{unreadCount ? `Новых: ${unreadCount}` : 'Новых оповещений нет'}</p></div><div className="notification-modal-actions"><button type="button" className="notification-read-btn" onClick={onReadAll}>Прочитано</button><button type="button" className="btn ghost" onClick={onClose}>×</button></div></div><div className="notification-list">{items.length ? items.map((item) => <button key={item.__id} type="button" className={`notification-row ${item.is_read ? 'read' : 'unread'}`} onClick={() => { onReadOne(item.__id); if (item.task_id) actions.openTask?.(item.task_id); onClose(); }}><span className="notification-kind">{notificationKind(item)}</span><b>{notificationTitle(item)}</b><span>{notificationBody(item)}</span><span className="notification-time">{notificationTimeLabel(item)}</span></button>) : <div className="empty">Оповещений пока нет.</div>}</div></div></div>;
 }
-function NotificationToasts({ items, onClose }) { if (!items.length) return null; return <div className="notification-toast-stack">{items.map((item) => <div className="notification-toast" key={item.__id}><b>{notificationTitle(item)}</b><span>{notificationBody(item)}</span><button type="button" onClick={() => onClose(item.__id)}>×</button></div>)}</div>; }
+function NotificationToasts({ items, onClose }) {
+  const item = (items || [])[0];
+  React.useEffect(() => {
+    if (!item?.__id) return undefined;
+    const timer = window.setTimeout(() => onClose(item.__id), 5200);
+    return () => window.clearTimeout(timer);
+  }, [item?.__id, onClose]);
+  if (!item) return null;
+  return <div className="notification-toast-stack"><div className="notification-toast" key={item.__id}><b>{notificationTitle(item)}</b><span>{notificationBody(item)}</span><button type="button" onClick={() => onClose(item.__id)}>×</button></div></div>;
+}
 function AccessModal({ state, onClose }) {
   const ui = useWorkspaceUiStore();
   const projectId = ui.modals.accessProjectId;
@@ -327,11 +315,12 @@ function MainPage() {
     if (!seenInitializedRef.current) { seenNotificationsRef.current = new Set(ids); seenInitializedRef.current = true; return; }
     const fresh = notifications.filter((item) => !item.is_read && !seenNotificationsRef.current.has(item.__id));
     seenNotificationsRef.current = new Set(ids.concat(Array.from(seenNotificationsRef.current)).slice(0, 1000));
-    if (fresh.length) setToasts((prev) => fresh.slice(0, 3).concat(prev).slice(0, 4));
+    if (fresh.length) setToasts((prev) => fresh.slice(0, 1).concat(prev).slice(0, 1));
   }, [notifications]);
   const markRead = React.useCallback((ids) => { setReadNotificationIds((prev) => { const next = new Set(prev); ids.forEach((id) => next.add(id)); return next; }); }, []);
   const markAllRead = React.useCallback(() => markRead(notifications.map((item) => item.__id)), [markRead, notifications]);
   const selectView = React.useCallback((view) => route.navigateToView(view), [route]);
+  const closeToast = React.useCallback((id) => setToasts((items) => items.filter((item) => item.__id !== id)), []);
   function renderPage() {
     switch (route.routeId) {
       case 'overview': return <LazyDashboardPage />;
@@ -346,7 +335,7 @@ function MainPage() {
       default: return <EmptyState title="Страница не найдена" />;
     }
   }
-  return <div className="app react-pure-app" data-stage="30"><RoutePerformanceMarker routeId={route.routeId} /><aside className="sidebar react-shell-sidebar"><AppSidebar model={shell} onSelectView={selectView} /></aside><main className="main react-shell-main"><header className="topbar react-shell-topbar"><AppTopbar model={shell} onRefresh={() => invalidateWorkspaceData()} onOpenSettings={() => route.navigateToView('settings')} onCreateProject={() => actions.openProject?.()} onCreateTask={() => actions.openTask?.()} onOpenNotifications={() => setNotificationsOpen(true)} /></header><section className="react-page-panel" data-route={route.routeId}><React.Suspense fallback={<LazyRouteFallback title="Загрузка раздела" />}>{renderPage()}</React.Suspense></section></main><WorkspaceModals state={state} actions={actions} notificationsOpen={notificationsOpen} notifications={notifications} onCloseNotifications={() => setNotificationsOpen(false)} onReadAllNotifications={markAllRead} onReadOneNotification={(id) => markRead([id])} /><NotificationToasts items={toasts} onClose={(id) => setToasts((items) => items.filter((item) => item.__id !== id))} /></div>;
+  return <div className="app react-pure-app" data-stage="30" data-route={route.routeId}><RoutePerformanceMarker routeId={route.routeId} /><aside className="sidebar react-shell-sidebar"><AppSidebar model={shell} onSelectView={selectView} /></aside><main className="main react-shell-main"><header className="topbar react-shell-topbar"><AppTopbar model={shell} onRefresh={() => invalidateWorkspaceData()} onOpenSettings={() => route.navigateToView('settings')} onCreateProject={() => actions.openProject?.()} onCreateTask={() => actions.openTask?.()} onOpenNotifications={() => setNotificationsOpen(true)} /></header><section className="react-page-panel" data-route={route.routeId}><React.Suspense fallback={<LazyRouteFallback title="Загрузка раздела" />}>{renderPage()}</React.Suspense></section></main><WorkspaceModals state={state} actions={actions} notificationsOpen={notificationsOpen} notifications={notifications} onCloseNotifications={() => setNotificationsOpen(false)} onReadAllNotifications={markAllRead} onReadOneNotification={(id) => markRead([id])} /><NotificationToasts items={toasts} onClose={closeToast} /></div>;
 }
 
 export function App() {
