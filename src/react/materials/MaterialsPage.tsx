@@ -162,6 +162,10 @@ function TemplateContent({ template, edit, actions }) {
   if (edit) {
     return (
       <div className="materials-editor react-materials-editor">
+        <div className="materials-editor-head">
+          <h3>{template ? 'Редактирование шаблона' : 'Новый шаблон'}</h3>
+          <p className="muted">Название и текст сохраняются в закрытом разделе материалов.</p>
+        </div>
         <input
           className="input"
           id="templateTitle"

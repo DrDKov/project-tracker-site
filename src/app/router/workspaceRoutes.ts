@@ -26,7 +26,7 @@ export const WORKSPACE_ROUTES: readonly WorkspaceRouteDefinition[] = Object.free
   { id: 'timeline', path: '/timeline', icon: '⌁', label: 'Таймлайн', subtitle: 'Календарная шкала задач и проектных сроков', elementId: 'timeline' },
   { id: 'chat', path: '/chat', icon: '✎', label: 'Чаты', subtitle: 'Проектные обсуждения, файлы и изображения', elementId: 'chat' },
   { id: 'team', path: '/team', icon: '◉', label: 'Команда', subtitle: 'Пользователи, роли и доступы', elementId: 'team' },
-  { id: 'materials', path: '/materials', icon: '▤', label: 'Материалы', subtitle: 'Owner-only шаблоны и документы', elementId: 'materials', requires: 'materials' },
+  { id: 'materials', path: '/materials', icon: '▤', label: 'Материалы', subtitle: 'Шаблоны и документы только для владельца', elementId: 'materials', requires: 'materials' },
   { id: 'audit', path: '/audit', icon: '◷', label: 'Журнал', subtitle: 'Журнал изменений workspace', elementId: 'audit', requires: 'audit' },
   { id: 'settings', path: '/settings', icon: '⚙', label: 'Настройки', subtitle: 'Подключение, авторизация и параметры workspace', elementId: 'settings' }
 ]);
