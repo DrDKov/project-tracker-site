@@ -1,0 +1,29 @@
+/* Final adaptive overrides for mobile navigation and task boards. */
+@media (max-width: 720px){
+  html,body,#root{max-width:100%;overflow-x:hidden!important}
+  .app.react-pure-app{overflow-x:hidden!important;padding-bottom:calc(118px + env(safe-area-inset-bottom))!important}
+  .react-shell-main,.react-page-panel{min-width:0!important;max-width:100%!important;overflow-x:hidden!important}
+  .react-shell-sidebar{overflow:visible!important}
+  .react-shell-sidebar:before,.react-shell-sidebar:after{content:none!important}
+  .react-app-nav{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;grid-auto-rows:minmax(46px,auto)!important;gap:6px!important;overflow:visible!important;padding:0!important;width:100%!important;max-width:100%!important;scrollbar-width:none!important;scroll-snap-type:none!important}
+  .react-app-nav::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+  .react-app-nav button{width:100%!important;min-width:0!important;max-width:none!important;overflow:hidden!important;padding:6px 4px!important;scroll-snap-align:none!important}
+  .react-app-nav button span:last-child{max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+}
+
+.react-tasks-page{min-width:0!important;max-width:100%!important;overflow:hidden!important}
+.react-tasks-page .kanban{box-sizing:border-box!important;width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;scrollbar-gutter:stable!important;scrollbar-width:thin!important;padding-bottom:12px!important;margin:0!important}
+.react-tasks-page .kanban::-webkit-scrollbar{height:10px!important}
+.react-tasks-page .kanban::-webkit-scrollbar-thumb{background:#cbd5e1!important;border-radius:999px!important;border:2px solid #fff!important}
+.react-tasks-page .kanban::-webkit-scrollbar-track{background:#f8fafc!important;border-radius:999px!important}
+.react-tasks-page .kanban:not(.assignee-mode):not(.week-mode){display:grid!important;grid-template-columns:repeat(4,minmax(260px,1fr))!important;gap:14px!important}
+.react-tasks-page .kanban.assignee-mode,.react-tasks-page .kanban.week-mode{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:minmax(285px,360px)!important;grid-template-columns:none!important;gap:14px!important}
+.react-tasks-page .col{box-sizing:border-box!important;min-width:260px!important;max-width:360px;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.react-tasks-page .task-card{box-sizing:border-box!important;max-width:100%!important;overflow:hidden!important}
+.react-tasks-page .task-card *{min-width:0;max-width:100%}
+
+@media (max-width: 720px){
+  .react-tasks-page .kanban,.react-tasks-page .kanban.assignee-mode,.react-tasks-page .kanban.week-mode,.react-tasks-page .kanban:not(.assignee-mode):not(.week-mode){display:grid!important;grid-auto-flow:row!important;grid-template-columns:1fr!important;grid-auto-columns:auto!important;gap:12px!important;width:100%!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:visible!important;padding:0!important}
+  .react-tasks-page .col{width:100%!important;min-width:0!important;max-width:100%!important;max-height:none!important;min-height:auto!important;overflow:visible!important}
+  .react-tasks-page .task-card{width:100%!important;max-width:100%!important;overflow:hidden!important}
+}
