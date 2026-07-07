@@ -22,6 +22,22 @@
 .react-tasks-page .task-card{box-sizing:border-box!important;max-width:100%!important;overflow:hidden!important}
 .react-tasks-page .task-card *{min-width:0;max-width:100%}
 
+.react-tasks-page .task-card .wk-sub{display:block!important;overflow:visible!important;max-height:none!important;margin-top:10px!important;padding-top:9px!important}
+.react-tasks-page .task-card .wk-subh{margin-bottom:6px!important;gap:8px!important}
+.react-tasks-page .task-card .wk-subh b{font-size:11px!important;letter-spacing:.035em!important}
+.react-tasks-page .task-card .wk-subh span{font-size:11px!important;font-weight:800!important;color:#64748b!important}
+.react-tasks-page .task-card .wk-subbar{height:5px!important;margin-bottom:7px!important}
+.react-tasks-page .task-card .wk-sublist{display:grid!important;gap:4px!important;margin-top:7px!important;max-height:none!important;overflow:visible!important}
+.react-tasks-page .task-card .wk-subrow,.react-tasks-page .task-card .wk-subrow:nth-of-type(n+4){display:grid!important;grid-template-columns:18px minmax(0,1fr) 22px!important;align-items:center!important;gap:6px!important;min-height:28px!important;padding:4px 6px!important;border-radius:9px!important;font-size:12px!important;line-height:1.18!important;background:#f8fafc!important;border:1px solid rgba(226,232,240,.88)!important;overflow:visible!important}
+.react-tasks-page .task-card .wk-subrow span{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;overflow-wrap:normal!important}
+.react-tasks-page .task-card .wk-subrow.done span{text-decoration:line-through!important;color:#94a3b8!important}
+.react-tasks-page .task-card .wk-subcheck{width:15px!important;height:15px!important;min-width:15px!important;margin:0!important;align-self:center!important;accent-color:#22c55e!important;cursor:pointer!important}
+.react-tasks-page .task-card .wk-subrow button{width:20px!important;height:20px!important;min-width:20px!important;border-radius:7px!important;font-size:14px!important;line-height:18px!important;padding:0!important;justify-self:end!important}
+.react-tasks-page .task-card .wk-subempty{font-size:12px!important;margin:6px 0!important}
+.react-tasks-page .task-card .wk-subadd{display:grid!important;grid-template-columns:minmax(0,1fr) 30px!important;gap:6px!important;align-items:center!important;margin-top:7px!important;max-height:none!important;overflow:visible!important}
+.react-tasks-page .task-card .wk-subadd-input{height:30px!important;min-height:30px!important;padding:6px 8px!important;border-radius:9px!important;font-size:12px!important;line-height:1.1!important}
+.react-tasks-page .task-card .wk-subadd-btn{width:30px!important;height:30px!important;min-width:30px!important;border-radius:9px!important;font-size:18px!important;line-height:1!important;padding:0!important}
+
 @media (max-width: 720px){
   .react-tasks-page .kanban,.react-tasks-page .kanban.assignee-mode,.react-tasks-page .kanban.week-mode,.react-tasks-page .kanban:not(.assignee-mode):not(.week-mode){display:grid!important;grid-auto-flow:row!important;grid-template-columns:1fr!important;grid-auto-columns:auto!important;gap:12px!important;width:100%!important;max-width:100%!important;overflow-x:hidden!important;overflow-y:visible!important;padding:0!important}
   .react-tasks-page .col{width:100%!important;min-width:0!important;max-width:100%!important;max-height:none!important;min-height:auto!important;overflow:visible!important}
