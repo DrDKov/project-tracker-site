@@ -49,24 +49,27 @@ function TaskSubtasks({ model, actions = {} }) {
       </div>
       <div className="wk-subbar"><i /></div>
       {subtasks.items.length ? (
-        subtasks.items.map((item) => (
-          <label key={item.id} className={`wk-subrow ${item.isDone ? 'done' : ''}`}>
-            <input
-              key={`${item.id}:${item.isDone ? 'done' : 'open'}`}
-              type="checkbox"
-              defaultChecked={item.isDone}
-              onChange={(event) => actions.toggleSubtask?.(item.id, event.currentTarget.checked)}
-            />
-            <span>{item.title}</span>
-            <button type="button" onClick={(event) => { stopLegacyEvent(event); actions.deleteSubtask?.(item.id); }}>×</button>
-          </label>
-        ))
+        <div className="wk-sublist">
+          {subtasks.items.map((item) => (
+            <label key={item.id} className={`wk-subrow ${item.isDone ? 'done' : ''}`}>
+              <input
+                className="wk-subcheck"
+                key={`${item.id}:${item.isDone ? 'done' : 'open'}`}
+                type="checkbox"
+                defaultChecked={item.isDone}
+                onChange={(event) => actions.toggleSubtask?.(item.id, event.currentTarget.checked)}
+              />
+              <span>{item.title}</span>
+              <button type="button" onClick={(event) => { stopLegacyEvent(event); actions.deleteSubtask?.(item.id); }}>×</button>
+            </label>
+          ))}
+        </div>
       ) : (
-        <div className="muted">Подзадач пока нет.</div>
+        <div className="muted wk-subempty">Подзадач пока нет.</div>
       )}
       <form className="wk-subadd" onSubmit={submitSubtask}>
-        <input className="input" name="title" placeholder="Добавить подзадачу" />
-        <button type="submit">+</button>
+        <input className="input wk-subadd-input" name="title" placeholder="Добавить подзадачу" />
+        <button className="wk-subadd-btn" type="submit">+</button>
       </form>
     </div>
   );
