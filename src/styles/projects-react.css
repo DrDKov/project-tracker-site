@@ -1,21 +1,60 @@
 /* React Stage 6: Projects page island. */
 .react-projects-page{display:block!important;min-width:0;max-width:100%;overflow:hidden}
 .react-projects-page>.panel-head,.react-projects-page>.project-filterbar,.react-projects-page>.react-filterbar{width:100%;max-width:100%;min-width:0;margin-left:0;margin-right:0}
-.react-projects-grid{min-width:0;max-width:100%;overflow:hidden;align-items:stretch}
-.react-project-card{min-width:0;border-top-width:4px!important;border-top-style:solid!important;background:linear-gradient(180deg,var(--project-bg,rgba(255,255,255,.96)),#fff 92%)!important;box-shadow:0 8px 22px rgba(15,23,42,.045);display:flex;flex-direction:column;gap:8px}
-.react-project-card .actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+.react-projects-grid{display:grid!important;grid-template-columns:1fr!important;gap:14px;min-width:0;max-width:100%;overflow:hidden;align-items:stretch}
+.react-project-card{min-width:0;border-top-width:4px!important;border-top-style:solid!important;background:linear-gradient(180deg,var(--project-bg,rgba(255,255,255,.96)),#fff 92%)!important;box-shadow:0 8px 22px rgba(15,23,42,.045);display:flex;flex-direction:column;gap:10px;padding:14px 14px 12px!important}
+.react-project-card .actions{margin-top:2px;display:flex;gap:8px;flex-wrap:wrap}
 .react-project-card .actions .btn{white-space:nowrap}
 .react-project-color-dot{width:14px;height:14px;border-radius:999px;display:inline-block;box-shadow:0 0 0 3px rgba(255,255,255,.82),0 1px 4px rgba(15,23,42,.12);flex:0 0 auto}
+.project-card-summary{display:grid;gap:5px}.project-card-summary p{margin:0}.project-card-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#64748b;font-size:12px}
 .react-project-stats{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#64748b;font-weight:800;margin-top:2px;min-width:0}
 .react-projects-summary{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #dbeafe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:10px 12px;font-size:13px;min-width:0;margin:14px 0}
 .react-projects-empty{grid-column:1/-1}
 .react-projects-page .toolbar,.react-projects-page .react-filterbar{display:grid!important;grid-template-columns:minmax(260px,1.4fr) minmax(180px,.8fr) minmax(220px,1fr)!important;align-items:end;width:100%;min-width:0;max-width:100%;gap:10px;margin-bottom:16px}
 .react-projects-page .toolbar .input,.react-projects-page .react-filterbar .input{width:100%;min-width:0}
-@media(max-width:1180px){.react-projects-page .toolbar,.react-projects-page .react-filterbar{grid-template-columns:1fr 1fr!important}}
+
+.project-task-block{display:grid;gap:8px;margin-top:2px;padding:10px;border:1px solid rgba(203,213,225,.82);border-radius:14px;background:rgba(255,255,255,.8);min-width:0;overflow:visible}
+.project-task-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.project-task-block-head>div{display:flex;align-items:baseline;gap:8px;min-width:0}
+.project-task-block-head b{font-size:13px;color:#0f172a}
+.project-task-block-head span{font-size:12px;color:#64748b;font-weight:800;white-space:nowrap}
+.project-task-list{display:grid;gap:4px;max-height:none;overflow:visible;min-width:0}
+.project-task-row{display:grid;grid-template-columns:22px minmax(180px,1fr) minmax(250px,.75fr) 28px;align-items:center;gap:8px;min-height:34px;padding:5px 7px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;min-width:0}
+.project-task-row:hover{border-color:#bfdbfe;background:#f8fbff}
+.project-task-row.done{opacity:.68;background:#f8fafc}
+.project-task-toggle{position:relative;width:18px;height:18px;display:grid;place-items:center;cursor:pointer}
+.project-task-toggle input{position:absolute;inset:0;width:18px;height:18px;margin:0;opacity:0;cursor:pointer}
+.project-task-toggle span{width:17px;height:17px;border-radius:5px;border:1.5px solid #94a3b8;background:#fff;display:grid;place-items:center}
+.project-task-toggle input:checked+span{background:#22c55e;border-color:#22c55e}
+.project-task-toggle input:checked+span:after{content:'✓';color:#fff;font-size:12px;font-weight:900;line-height:1}
+.project-task-title{border:0;background:transparent;padding:0;text-align:left;color:#0f172a;font:inherit;font-size:13px;font-weight:800;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-task-title:hover{color:#2563eb;text-decoration:underline}
+.project-task-row.done .project-task-title{text-decoration:line-through;color:#64748b}
+.project-task-meta{display:grid;grid-template-columns:minmax(90px,.8fr) minmax(110px,1fr) minmax(70px,.6fr);align-items:center;gap:7px;min-width:0;color:#64748b;font-size:11px}
+.project-task-meta span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-task-status{font-weight:900;color:#334155}
+.project-task-open{width:26px;height:26px;border:0;border-radius:8px;background:#eef2f7;color:#334155;font-size:20px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.project-task-open:hover{background:#dbeafe;color:#1d4ed8}
+.project-task-empty{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;font-size:12px}
+.project-task-empty button{border:0;background:transparent;color:#2563eb;font-weight:900;cursor:pointer}
+.project-card-actions{padding-top:2px;border-top:1px solid rgba(226,232,240,.75)}
+
+@media(max-width:1180px){
+  .react-projects-page .toolbar,.react-projects-page .react-filterbar{grid-template-columns:1fr 1fr!important}
+  .project-task-row{grid-template-columns:22px minmax(150px,1fr) minmax(210px,.8fr) 28px}
+}
 @media(max-width:720px){
   .react-projects-page .toolbar,.react-projects-page .react-filterbar{grid-template-columns:1fr!important}
   .react-projects-summary{align-items:flex-start;flex-direction:column}
-  .react-project-card .actions{display:grid;grid-template-columns:1fr auto;width:100%}
-  .react-project-card .actions .btn:not(:first-child){display:none}
-  .react-project-card .actions .btn:first-child{width:100%}
+  .react-project-card{padding:12px!important}
+  .project-card-meta{display:grid;grid-template-columns:1fr;gap:4px}
+  .project-task-block{padding:8px}
+  .project-task-block-head{align-items:stretch;display:grid;grid-template-columns:1fr}
+  .project-task-block-head .btn{width:100%}
+  .project-task-row{grid-template-columns:22px minmax(0,1fr) 28px;grid-template-areas:"toggle title open" "toggle meta open";gap:3px 7px;padding:7px}
+  .project-task-toggle{grid-area:toggle}.project-task-title{grid-area:title;white-space:normal;line-height:1.25}.project-task-meta{grid-area:meta;display:flex;flex-wrap:wrap;gap:4px 8px}.project-task-open{grid-area:open}
+  .project-task-meta span{white-space:normal}
+  .project-task-empty{align-items:stretch;flex-direction:column}
+  .project-card-actions{display:grid!important;grid-template-columns:1fr!important;width:100%}
+  .project-card-actions .btn{display:block!important;width:100%!important}
 }
