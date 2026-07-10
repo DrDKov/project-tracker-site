@@ -19,7 +19,9 @@ export function ProjectsPage({ model, actions = {} }) {
         <span>Показано проектов: <b>{model.visible}</b></span>
         <span>Всего: {model.total}</span>
       </div>
-      {model.projects.map((project) => <ProjectCard key={project.id} project={project} actions={actions} />)}
+      <div className="project-grid react-projects-grid">
+        {model.projects.map((project) => <ProjectCard key={project.id} project={project} actions={actions} />)}
+      </div>
     </>
   );
 }
