@@ -23,7 +23,7 @@ export function ProjectsPage() {
     rgba
   });
   return (
-    <section className="panel project-grid react-projects-page">
+    <section className="panel react-projects-page">
       <div className="panel-head">
         <h3>Проекты</h3>
       </div>
