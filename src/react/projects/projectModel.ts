@@ -12,6 +12,19 @@
  */
 
 /**
+ * @typedef {Object} ProjectTaskItemViewModel
+ * @property {string} id
+ * @property {string} title
+ * @property {string} status
+ * @property {string} statusLabel
+ * @property {string} priorityLabel
+ * @property {boolean} isDone
+ * @property {string} startDate
+ * @property {string} dueDate
+ * @property {string} dateLabel
+ */
+
+/**
  * @typedef {Object} ProjectCardViewModel
  * @property {string} id
  * @property {string} name
@@ -28,6 +41,7 @@
  * @property {number} totalTasks
  * @property {number} doneTasks
  * @property {number} progress
+ * @property {ProjectTaskItemViewModel[]} tasks
  * @property {string} rootClassName
  * @property {Record<string, string>} rootStyle
  */
@@ -79,6 +93,42 @@ export function projectTaskStats(tasks, projectId) {
   return { total: list.length, done, progress };
 }
 
+function taskDateLabel(task, fmt) {
+  const start = task.start_date ? fmt(task.start_date) : '';
+  const due = task.due_date ? fmt(task.due_date) : '';
+  if (start && due && start !== due) return `${start} → ${due}`;
+  return due || start || 'Без срока';
+}
+
+function createProjectTaskItem(task, options) {
+  return {
+    id: String(task.id || ''),
+    title: String(task.title || 'Без названия'),
+    status: String(task.status || ''),
+    statusLabel: options.statusLabels[task.status || ''] || task.status || '—',
+    priorityLabel: options.priorityLabels[task.priority || ''] || task.priority || '—',
+    isDone: task.status === 'done',
+    startDate: options.fmt(task.start_date || ''),
+    dueDate: options.fmt(task.due_date || ''),
+    dateLabel: taskDateLabel(task, options.fmt)
+  };
+}
+
+function projectTasks(tasks, projectId, options) {
+  return tasks
+    .filter((task) => task.project_id === projectId && !task.deleted_at)
+    .sort((left, right) => {
+      const doneOrder = Number(left.status === 'done') - Number(right.status === 'done');
+      if (doneOrder) return doneOrder;
+      const leftDate = String(left.due_date || left.start_date || '9999-12-31');
+      const rightDate = String(right.due_date || right.start_date || '9999-12-31');
+      const dateOrder = leftDate.localeCompare(rightDate);
+      if (dateOrder) return dateOrder;
+      return String(left.title || '').localeCompare(String(right.title || ''), 'ru');
+    })
+    .map((task) => createProjectTaskItem(task, options));
+}
+
 /**
  * @param {Project} project
  * @param {CreateProjectsOptions} options
@@ -103,6 +153,7 @@ export function createProjectCardViewModel(project, options) {
     totalTasks: stats.total,
     doneTasks: stats.done,
     progress: stats.progress,
+    tasks: projectTasks(options.tasks, project.id, options),
     rootClassName: 'project-card react-project-card',
     rootStyle: {
       '--project-bg': options.rgba(color, 0.12),
