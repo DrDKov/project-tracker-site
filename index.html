@@ -373,9 +373,15 @@ function mode(){
  return active?.dataset.taskMode||'week'
 }
 function columnTitle(col){
- const first=col.querySelector('h3')?.children?.[0];
- let value=(first?.textContent||col.querySelector('h3')?.textContent||'Колонка').trim().replace(/\s*\+\s*$/,'');
- return value.replace(/\s+/g,' ')
+ const heading=col.querySelector('h3');
+ if(!heading)return 'Колонка';
+ const copy=heading.cloneNode(true);
+ copy.querySelectorAll('button,.muted,.assignee-count,.week-count').forEach(x=>x.remove());
+ return (copy.textContent||'Колонка').trim().replace(/\s+/g,' ')
+}
+function taskWord(n){
+ const a=n%10,b=n%100;
+ return a===1&&b!==11?'задача':a>=2&&a<=4&&(b<12||b>14)?'задачи':'задач'
 }
 function columns(){return [...document.querySelectorAll('#kanban>.col')]}
 function renderPager(){
@@ -390,7 +396,7 @@ function renderPager(){
  list.forEach((c,i)=>c.classList.toggle('mobile-column-active',i===index));
  const current=list[index],tasks=current.querySelectorAll('.task-card').length;
  pager.querySelector('#mobileColumnTitle').textContent=columnTitle(current);
- pager.querySelector('#mobileColumnMeta').textContent=(index+1)+' из '+list.length+' · '+tasks+' '+(tasks===1?'задача':tasks>1&&tasks<5?'задачи':'задач');
+ pager.querySelector('#mobileColumnMeta').textContent=(index+1)+' из '+list.length+' · '+tasks+' '+taskWord(tasks);
  const prev=pager.querySelector('#mobileColumnPrev'),next=pager.querySelector('#mobileColumnNext');
  prev.disabled=index===0;next.disabled=index===list.length-1;
  prev.setAttribute('aria-label','Предыдущая колонка');
