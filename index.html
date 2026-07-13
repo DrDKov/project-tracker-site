@@ -144,4 +144,185 @@ mq.addEventListener?.('change',e=>{if(e.matches){opened=false;openDefaultTasks()
 syncMore();
 })();
 </script>
+
+<style id='mobile-task-toolbar-v2'>
+#mobileTaskActionsBtn,#mobileTaskActionsMenu,#mobileTaskFilters{display:none}
+@media(max-width:980px){
+  html,body{overflow-x:hidden!important}
+  body .app .main{padding:0 14px calc(96px + env(safe-area-inset-bottom))!important}
+  body .topbar{
+    position:sticky!important;top:0!important;z-index:1050!important;
+    display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;
+    margin:0 -14px 12px!important;padding:12px 14px 10px!important;
+    background:rgba(246,247,251,.88)!important;border-bottom:1px solid rgba(148,163,184,.18)!important;
+    -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%)
+  }
+  body .topbar>div:first-child{min-width:0}
+  body .topbar h2{font-size:28px!important;line-height:1.05!important;letter-spacing:-.03em!important}
+  body .topbar p{display:none!important}
+  body .top-actions{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:7px!important;margin:0!important}
+  body #refreshBtn,body #openSettingsBtn,body #quickProjectBtn{display:none!important}
+  body #assignmentBell,body #quickTaskBtn,body #mobileTaskActionsBtn{
+    width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;padding:0!important;
+    border-radius:999px!important;display:grid!important;place-items:center!important;font-weight:800!important;
+    box-shadow:none!important
+  }
+  body #assignmentBell{background:rgba(255,255,255,.82)!important;border:1px solid rgba(148,163,184,.28)!important}
+  body #quickTaskBtn{position:relative!important;font-size:0!important;background:#0a84ff!important;color:transparent!important}
+  body #quickTaskBtn:before{content:'+';font-size:30px;font-weight:400;line-height:1;color:#fff}
+  body #mobileTaskActionsBtn{
+    border:1px solid rgba(148,163,184,.28)!important;background:rgba(255,255,255,.82)!important;
+    color:#0f172a!important;font-size:18px!important;letter-spacing:1px!important;cursor:pointer!important
+  }
+  body #mobileTaskActionsBtn[aria-expanded='true']{background:#e5e7eb!important}
+  body #mobileTaskActionsMenu{
+    position:fixed!important;top:68px!important;right:12px!important;z-index:1190!important;
+    width:min(245px,calc(100vw - 24px))!important;padding:7px!important;display:none!important;gap:2px!important;
+    background:rgba(255,255,255,.94)!important;border:1px solid rgba(148,163,184,.25)!important;border-radius:18px!important;
+    box-shadow:0 20px 55px rgba(15,23,42,.22)!important;
+    -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%)
+  }
+  body #mobileTaskActionsMenu.open{display:grid!important}
+  body #mobileTaskActionsMenu button{
+    width:100%!important;min-height:44px!important;padding:0 12px!important;border:0!important;border-radius:12px!important;
+    display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:10px!important;
+    background:transparent!important;color:#0f172a!important;font-size:15px!important;font-weight:700!important;text-align:left!important
+  }
+  body #mobileTaskActionsMenu button:active{background:#e9eef5!important}
+  body #tasks>.toolbar{
+    width:100%!important;max-width:100%!important;display:grid!important;
+    grid-template-columns:minmax(0,1fr) 104px!important;gap:10px!important;align-items:start!important;
+    margin:0 0 12px!important;overflow:visible!important
+  }
+  body #tasks>.toolbar>#taskSearch{
+    grid-column:1!important;grid-row:1!important;width:100%!important;min-width:0!important;height:44px!important;
+    padding:0 13px 0 38px!important;border:1px solid rgba(148,163,184,.26)!important;border-radius:14px!important;
+    background-color:rgba(255,255,255,.88)!important;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23717b8a' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E")!important;
+    background-repeat:no-repeat!important;background-position:13px center!important;box-shadow:none!important
+  }
+  body #mobileTaskFilters{grid-column:2!important;grid-row:1!important;display:block!important;position:relative!important}
+  body #mobileTaskFilters>summary{
+    list-style:none!important;height:44px!important;padding:0 12px!important;border:1px solid rgba(148,163,184,.26)!important;
+    border-radius:14px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:6px!important;
+    background:rgba(255,255,255,.88)!important;color:#0f172a!important;font-size:13px!important;font-weight:800!important;cursor:pointer!important
+  }
+  body #mobileTaskFilters>summary::-webkit-details-marker{display:none!important}
+  body #mobileTaskFilters[open]>summary{background:#e8f2ff!important;border-color:rgba(10,132,255,.35)!important;color:#0066cc!important}
+  body .mobile-filter-body{
+    position:fixed!important;left:12px!important;right:12px!important;top:70px!important;bottom:calc(84px + env(safe-area-inset-bottom))!important;
+    z-index:1185!important;padding:14px!important;display:grid!important;grid-template-columns:1fr!important;gap:10px!important;
+    align-content:start!important;overflow:auto!important;background:rgba(250,250,252,.97)!important;
+    border:1px solid rgba(148,163,184,.24)!important;border-radius:22px!important;box-shadow:0 24px 70px rgba(15,23,42,.24)!important;
+    -webkit-backdrop-filter:blur(26px) saturate(180%);backdrop-filter:blur(26px) saturate(180%)
+  }
+  body .mobile-filter-head{height:34px!important;display:flex!important;align-items:center!important;justify-content:space-between!important}
+  body .mobile-filter-head b{font-size:18px!important;letter-spacing:-.02em!important}
+  body .mobile-filter-close{
+    width:32px!important;height:32px!important;border:0!important;border-radius:999px!important;background:#e5e7eb!important;
+    color:#475569!important;font-size:20px!important;line-height:1!important;display:grid!important;place-items:center!important
+  }
+  body .mobile-filter-body .ms-filter{width:100%!important;min-width:0!important}
+  body .mobile-filter-body .ms-filter-btn{
+    width:100%!important;height:44px!important;border:1px solid rgba(148,163,184,.28)!important;border-radius:13px!important;
+    background:#fff!important;padding:0 13px!important;font-size:14px!important
+  }
+  body .mobile-filter-body .ms-menu{
+    position:static!important;left:auto!important;right:auto!important;top:auto!important;min-width:0!important;max-width:none!important;
+    width:100%!important;max-height:250px!important;margin-top:6px!important;border-radius:14px!important;box-shadow:none!important
+  }
+  body #taskShowDoneWrap{
+    min-height:44px!important;padding:0 12px!important;border:1px solid rgba(148,163,184,.25)!important;border-radius:13px!important;
+    display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;
+    background:#fff!important;color:#0f172a!important;font-size:14px!important;font-weight:750!important
+  }
+  body #taskShowDoneWrap input{
+    appearance:none!important;-webkit-appearance:none!important;width:46px!important;height:28px!important;margin:0!important;
+    border:0!important;border-radius:999px!important;background:#d1d5db!important;position:relative!important;cursor:pointer!important;
+    transition:background .18s ease!important
+  }
+  body #taskShowDoneWrap input:before{
+    content:'';position:absolute;width:24px;height:24px;left:2px;top:2px;border-radius:50%;background:#fff;
+    box-shadow:0 2px 5px rgba(15,23,42,.25);transition:transform .18s ease
+  }
+  body #taskShowDoneWrap input:checked{background:#34c759!important}
+  body #taskShowDoneWrap input:checked:before{transform:translateX(18px)}
+  body #taskDateFilter{
+    width:100%!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;
+    padding:10px!important;border:1px solid rgba(148,163,184,.25)!important;border-radius:14px!important;background:#fff!important
+  }
+  body #taskDateMode{grid-column:1/-1!important;width:100%!important;height:44px!important}
+  body #taskDateFrom,body #taskDateTo{width:100%!important;min-width:0!important;height:44px!important}
+  body #taskDateReset{grid-column:1/-1!important;width:100%!important;min-height:42px!important}
+  body #taskBoardModeToggle{
+    grid-column:1/-1!important;width:100%!important;max-width:100%!important;height:42px!important;padding:3px!important;
+    display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:2px!important;overflow:hidden!important;
+    border:0!important;border-radius:13px!important;background:#e6e9ef!important
+  }
+  body #taskBoardModeToggle button{
+    min-width:0!important;width:100%!important;height:36px!important;padding:0 5px!important;border:0!important;border-radius:10px!important;
+    background:transparent!important;color:#475569!important;font-size:12px!important;font-weight:750!important;white-space:nowrap!important
+  }
+  body #taskBoardModeToggle button.active{
+    background:#fff!important;color:#0f172a!important;box-shadow:0 1px 4px rgba(15,23,42,.14)!important
+  }
+  body #taskWeekNav{
+    grid-column:1/-1!important;width:100%!important;grid-template-columns:42px minmax(0,1fr) 42px 76px!important;
+    gap:6px!important;align-items:center!important
+  }
+  body #taskWeekNav .btn{width:100%!important;min-width:0!important;height:42px!important;padding:0 7px!important;border-radius:12px!important}
+  body #taskWeekNav .week-label{min-width:0!important;text-align:center!important;font-size:13px!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  body #newTaskBtn{display:none!important}
+  body #kanban{max-width:100%!important;overscroll-behavior-inline:contain!important;scroll-snap-type:x proximity!important}
+  body #kanban.week-mode>.week-col{scroll-snap-align:start!important}
+}
+</style>
+<script>
+(()=>{if(window.__MOBILE_TASK_TOOLBAR_V2__)return;window.__MOBILE_TASK_TOOLBAR_V2__=1;
+const mq=window.matchMedia('(max-width:980px)');
+let attempts=0;
+function setup(){
+  const toolbar=document.querySelector('#tasks>.toolbar'),topActions=document.querySelector('.top-actions');
+  const mode=document.getElementById('taskBoardModeToggle'),week=document.getElementById('taskWeekNav');
+  const date=document.getElementById('taskDateFilter'),done=document.getElementById('taskShowDoneWrap');
+  const project=document.getElementById('taskProjectFilter'),assignee=document.getElementById('taskAssigneeFilter');
+  const projectUi=project?.__msWrap||project?.nextElementSibling?.classList?.contains('ms-filter')&&project.nextElementSibling;
+  const assigneeUi=assignee?.__msWrap||assignee?.nextElementSibling?.classList?.contains('ms-filter')&&assignee.nextElementSibling;
+  if(!toolbar||!topActions||!mode||!week||!date||!done||!projectUi||!assigneeUi){
+    if(attempts++<60)setTimeout(setup,100);
+    return;
+  }
+  if(document.getElementById('mobileTaskFilters'))return;
+  [project,assignee].forEach(x=>{x.setAttribute('aria-hidden','true');x.tabIndex=-1});
+  const filters=document.createElement('details');
+  filters.id='mobileTaskFilters';
+  filters.innerHTML="<summary aria-label='Открыть фильтры'>Фильтры <span aria-hidden='true'>⌄</span></summary><div class='mobile-filter-body'><div class='mobile-filter-head'><b>Фильтры задач</b><button class='mobile-filter-close' type='button' aria-label='Закрыть фильтры'>×</button></div></div>";
+  const filterBody=filters.querySelector('.mobile-filter-body');
+  filterBody.append(projectUi,assigneeUi,done,date);
+  toolbar.insertBefore(filters,mode);
+  filters.querySelector('.mobile-filter-close').addEventListener('click',()=>filters.removeAttribute('open'));
+  const actionsBtn=document.createElement('button');
+  actionsBtn.id='mobileTaskActionsBtn';actionsBtn.type='button';actionsBtn.setAttribute('aria-label','Прочее');
+  actionsBtn.setAttribute('aria-haspopup','menu');actionsBtn.setAttribute('aria-expanded','false');actionsBtn.textContent='•••';
+  topActions.append(actionsBtn);
+  const menu=document.createElement('div');
+  menu.id='mobileTaskActionsMenu';menu.setAttribute('role','menu');
+  menu.innerHTML="<button type='button' data-proxy='refreshBtn'>↻ <span>Обновить</span></button><button type='button' data-proxy='openSettingsBtn'>⚙ <span>Настройки</span></button><button type='button' data-proxy='quickProjectBtn'>▦ <span>Новый проект</span></button>";
+  document.body.append(menu);
+  const closeActions=()=>{menu.classList.remove('open');actionsBtn.setAttribute('aria-expanded','false')};
+  actionsBtn.addEventListener('click',e=>{e.stopPropagation();filters.removeAttribute('open');let open=menu.classList.toggle('open');actionsBtn.setAttribute('aria-expanded',String(open))});
+  menu.addEventListener('click',e=>{let b=e.target.closest('[data-proxy]');if(!b)return;document.getElementById(b.dataset.proxy)?.click();closeActions()});
+  filters.addEventListener('toggle',()=>{if(filters.open)closeActions()});
+  document.addEventListener('click',e=>{if(!e.target.closest('#mobileTaskActionsMenu,#mobileTaskActionsBtn'))closeActions();if(filters.open&&!e.target.closest('#mobileTaskFilters'))filters.removeAttribute('open')});
+  const today=week.querySelector("[data-week-nav='today']");
+  if(today){today.dataset.fullLabel=today.textContent;today.textContent='Сегодня';today.setAttribute('aria-label','Текущая неделя')}
+  document.getElementById('quickTaskBtn')?.setAttribute('aria-label','Создать задачу');
+  document.getElementById('quickTaskBtn')?.setAttribute('title','Создать задачу');
+  document.getElementById('taskSearch')?.setAttribute('aria-label','Поиск по задачам');
+  if(!mq.matches){filters.open=false;closeActions()}
+}
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',setup):setup();
+mq.addEventListener?.('change',e=>{if(e.matches)setup();else{document.getElementById('mobileTaskFilters')?.removeAttribute('open');document.getElementById('mobileTaskActionsMenu')?.classList.remove('open')}});
+})();
+</script>
 </body></html>
