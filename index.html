@@ -266,10 +266,12 @@ syncMore();
   body #taskBoardModeToggle button.active{
     background:#fff!important;color:#0f172a!important;box-shadow:0 1px 4px rgba(15,23,42,.14)!important
   }
-  body #taskWeekNav{
-    grid-column:1/-1!important;width:100%!important;grid-template-columns:42px minmax(0,1fr) 42px 76px!important;
-    gap:6px!important;align-items:center!important
+  body #taskProjectFilter,body #taskAssigneeFilter{display:none!important}
+  body #taskWeekNav.mobile-week-visible{
+    grid-column:1/-1!important;width:100%!important;display:grid!important;
+    grid-template-columns:42px minmax(0,1fr) 42px 76px!important;gap:6px!important;align-items:center!important
   }
+  body #taskWeekNav:not(.mobile-week-visible){display:none!important}
   body #taskWeekNav .btn{width:100%!important;min-width:0!important;height:42px!important;padding:0 7px!important;border-radius:12px!important}
   body #taskWeekNav .week-label{min-width:0!important;text-align:center!important;font-size:13px!important;font-weight:800!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
   body #newTaskBtn{display:none!important}
@@ -314,6 +316,10 @@ function setup(){
   menu.addEventListener('click',e=>{let b=e.target.closest('[data-proxy]');if(!b)return;document.getElementById(b.dataset.proxy)?.click();closeActions()});
   filters.addEventListener('toggle',()=>{if(filters.open)closeActions()});
   document.addEventListener('click',e=>{if(!e.target.closest('#mobileTaskActionsMenu,#mobileTaskActionsBtn'))closeActions();if(filters.open&&!e.target.closest('#mobileTaskFilters'))filters.removeAttribute('open')});
+  const syncWeek=()=>week.classList.toggle('mobile-week-visible',!!mode.querySelector("[data-task-mode='week'].active"));
+  syncWeek();
+  new MutationObserver(syncWeek).observe(mode,{subtree:true,attributes:true,attributeFilter:['class']});
+  mode.addEventListener('click',()=>setTimeout(syncWeek));
   const today=week.querySelector("[data-week-nav='today']");
   if(today){today.dataset.fullLabel=today.textContent;today.textContent='Сегодня';today.setAttribute('aria-label','Текущая неделя')}
   document.getElementById('quickTaskBtn')?.setAttribute('aria-label','Создать задачу');
