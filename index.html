@@ -331,4 +331,90 @@ document.readyState==='loading'?document.addEventListener('DOMContentLoaded',set
 mq.addEventListener?.('change',e=>{if(e.matches)setup();else{document.getElementById('mobileTaskFilters')?.removeAttribute('open');document.getElementById('mobileTaskActionsMenu')?.classList.remove('open')}});
 })();
 </script>
+
+<style id='mobile-single-column-v3'>
+#mobileColumnPager{display:none}
+@media(max-width:980px){
+  body #mobileColumnPager{
+    grid-column:1/-1!important;width:100%!important;min-height:54px!important;padding:5px!important;
+    display:grid!important;grid-template-columns:44px minmax(0,1fr) 44px!important;gap:6px!important;align-items:center!important;
+    border:1px solid rgba(148,163,184,.23)!important;border-radius:15px!important;background:rgba(255,255,255,.9)!important
+  }
+  body #mobileColumnPager button{
+    width:44px!important;height:44px!important;padding:0!important;border:0!important;border-radius:12px!important;
+    display:grid!important;place-items:center!important;background:#eef2f7!important;color:#0f172a!important;
+    font-size:28px!important;font-weight:500!important;line-height:1!important;cursor:pointer!important
+  }
+  body #mobileColumnPager button:disabled{opacity:.28!important;cursor:default!important}
+  body .mobile-column-label{min-width:0!important;text-align:center!important;display:grid!important;gap:1px!important}
+  body .mobile-column-label strong{
+    min-width:0!important;display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+    color:#0f172a!important;font-size:15px!important;line-height:1.2!important;letter-spacing:-.01em!important
+  }
+  body .mobile-column-label small{color:#64748b!important;font-size:11px!important;font-weight:700!important}
+  body #kanban.mobile-single-column{
+    width:100%!important;max-width:100%!important;display:block!important;overflow-x:hidden!important;overflow-y:visible!important;
+    padding:0!important;margin:0!important;scroll-snap-type:none!important
+  }
+  body #kanban.mobile-single-column>.col{
+    display:none!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;
+    transform:none!important;scroll-snap-align:none!important
+  }
+  body #kanban.mobile-single-column>.col.mobile-column-active{display:block!important}
+  body #kanban.mobile-single-column>.col>h3{position:relative!important}
+}
+</style>
+<script>
+(()=>{if(window.__MOBILE_SINGLE_COLUMN_V3__)return;window.__MOBILE_SINGLE_COLUMN_V3__=1;
+const mq=window.matchMedia('(max-width:980px)'),state={week:0,status:0,assignee:0};
+let attempts=0,raf=0,observer=null;
+function mode(){
+ const active=document.querySelector("#taskBoardModeToggle [data-task-mode].active");
+ return active?.dataset.taskMode||'week'
+}
+function columnTitle(col){
+ const first=col.querySelector('h3')?.children?.[0];
+ let value=(first?.textContent||col.querySelector('h3')?.textContent||'Колонка').trim().replace(/\s*\+\s*$/,'');
+ return value.replace(/\s+/g,' ')
+}
+function columns(){return [...document.querySelectorAll('#kanban>.col')]}
+function renderPager(){
+ raf=0;
+ const board=document.getElementById('kanban'),pager=document.getElementById('mobileColumnPager');
+ if(!board||!pager)return;
+ if(!mq.matches){board.classList.remove('mobile-single-column');columns().forEach(c=>c.classList.remove('mobile-column-active'));pager.hidden=true;return}
+ const list=columns(),m=mode();
+ board.classList.add('mobile-single-column');pager.hidden=!list.length;
+ if(!list.length)return;
+ let index=Math.max(0,Math.min(state[m]||0,list.length-1));state[m]=index;
+ list.forEach((c,i)=>c.classList.toggle('mobile-column-active',i===index));
+ const current=list[index],tasks=current.querySelectorAll('.task-card').length;
+ pager.querySelector('#mobileColumnTitle').textContent=columnTitle(current);
+ pager.querySelector('#mobileColumnMeta').textContent=(index+1)+' из '+list.length+' · '+tasks+' '+(tasks===1?'задача':tasks>1&&tasks<5?'задачи':'задач');
+ const prev=pager.querySelector('#mobileColumnPrev'),next=pager.querySelector('#mobileColumnNext');
+ prev.disabled=index===0;next.disabled=index===list.length-1;
+ prev.setAttribute('aria-label','Предыдущая колонка');
+ next.setAttribute('aria-label','Следующая колонка')
+}
+function schedule(){if(!raf)raf=requestAnimationFrame(renderPager)}
+function setup(){
+ const toolbar=document.querySelector('#tasks>.toolbar'),modeToggle=document.getElementById('taskBoardModeToggle');
+ const board=document.getElementById('kanban'),weekNav=document.getElementById('taskWeekNav');
+ if(!toolbar||!modeToggle||!board||!weekNav){if(attempts++<70)setTimeout(setup,100);return}
+ if(!document.getElementById('mobileColumnPager')){
+   const pager=document.createElement('div');pager.id='mobileColumnPager';pager.setAttribute('aria-label','Переключение колонки');
+   pager.innerHTML="<button id='mobileColumnPrev' type='button' aria-label='Предыдущая колонка'>‹</button><div class='mobile-column-label' aria-live='polite'><strong id='mobileColumnTitle'>Колонка</strong><small id='mobileColumnMeta'></small></div><button id='mobileColumnNext' type='button' aria-label='Следующая колонка'>›</button>";
+   weekNav.insertAdjacentElement('afterend',pager);
+   pager.querySelector('#mobileColumnPrev').addEventListener('click',()=>{let m=mode();state[m]=Math.max(0,(state[m]||0)-1);renderPager()});
+   pager.querySelector('#mobileColumnNext').addEventListener('click',()=>{let m=mode(),n=columns().length;state[m]=Math.min(n-1,(state[m]||0)+1);renderPager()})
+ }
+ if(!observer){observer=new MutationObserver(schedule);observer.observe(board,{childList:true,subtree:true})}
+ modeToggle.addEventListener('click',()=>setTimeout(schedule));
+ document.addEventListener('click',e=>{if(e.target.closest('[data-week-nav]')){state.week=0;setTimeout(schedule)}},true);
+ mq.addEventListener?.('change',schedule);
+ schedule()
+}
+document.readyState==='loading'?document.addEventListener('DOMContentLoaded',setup):setup();
+})();
+</script>
 </body></html>
