@@ -16,6 +16,10 @@ function normalize(items){
     if(seen[key])return false;
     seen[key]=1;
     return true;
+  }).sort(function(a,b){
+    var byCreatedAt=time(b.created_at)-time(a.created_at);
+    if(byCreatedAt)return byCreatedAt;
+    return String(b.id||'').localeCompare(String(a.id||''));
   }).slice(0,40);
 }
 function getState(){try{var x=JSON.parse(localStorage.getItem(store())||'{}');return{items:normalize(x.items),read_before:x.read_before||EPOCH}}catch(e){return{items:[],read_before:EPOCH}}}
