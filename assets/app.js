@@ -1,14 +1,14 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20260715-push-v3')
+  import('./app-runtime.js?v=20260715-unread-v1')
     .then(function(){
       var modules = [
-        './materials-v2.js?v=20260715-push-v3',
-        './assignment-notifications.js?v=20260715-push-v3',
-        './task-comments.js?v=20260715-push-v3',
-        './mention-dropdown-v6.js?v=20260715-push-v3',
-        './notification-polling-rescue-lite.js?v=20260715-push-v3'
+        './materials-v2.js?v=20260715-unread-v1',
+        './assignment-notifications.js?v=20260715-unread-v1',
+        './task-comments.js?v=20260715-unread-v1',
+        './mention-dropdown-v6.js?v=20260715-unread-v1',
+        './notification-polling-rescue-lite.js?v=20260715-unread-v1'
       ];
       return Promise.allSettled(modules.map(function(path){ return import(path); }));
     })
