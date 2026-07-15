@@ -1,7 +1,10 @@
 const VAPID_PUBLIC_KEY = 'BGt-lAr2FfVJl3VeJ6StfS5j18oheuHA6bZIouhxDgSi2Owg0APEz0hwiw4UiFFQ_op1-avRrc4AjTzgynUdb_8';
-const VERSION = '20260715-push-v2';
+const VERSION = '20260715-push-v3';
 let registration = null;
 let busy = false;
+let connected = false;
+let resolvedProfile = null;
+let identityPromise = null;
 
 function supported() {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -19,6 +22,49 @@ function profile() {
 
 function client() {
   try { return window.sb || null; } catch (_) { return null; }
+}
+
+async function resolveProfile(force = false) {
+  const direct = profile();
+  if (direct?.id) {
+    resolvedProfile = direct;
+    return direct;
+  }
+  if (resolvedProfile?.id && !force) return resolvedProfile;
+  const sb = client();
+  if (!sb) return null;
+  if (identityPromise && !force) return identityPromise;
+  identityPromise = (async () => {
+    const { data: profileId, error } = await sb.rpc('current_app_user_id');
+    if (error) throw error;
+    if (!profileId) return null;
+    resolvedProfile = { id: profileId };
+    return resolvedProfile;
+  })();
+  try { return await identityPromise; }
+  finally { identityPromise = null; }
+}
+
+async function waitForProfile(timeout = 12000) {
+  const started = Date.now();
+  let lastError = null;
+  while (Date.now() - started < timeout) {
+    try {
+      const me = await resolveProfile();
+      if (me?.id) return me;
+    } catch (error) { lastError = error; }
+    await new Promise(resolve => setTimeout(resolve, 250));
+  }
+  if (lastError) throw lastError;
+  return null;
+}
+
+function hasCurrentApplicationKey(subscription) {
+  const actual = subscription?.options?.applicationServerKey;
+  if (!actual) return true;
+  const current = new Uint8Array(actual);
+  const expected = base64UrlToBytes(VAPID_PUBLIC_KEY);
+  return current.length === expected.length && current.every((value, index) => value === expected[index]);
 }
 
 function standalone() {
@@ -47,10 +93,14 @@ function ensureUi() {
   refreshUi();
 }
 
-async function saveSubscription(subscription, retry = true) {
-  const sb = client(), me = profile();
-  if (!sb || !me?.id) throw new Error('Профиль ещё не загружен');
+async function saveSubscription(subscription, me, retry = true) {
+  const sb = client();
+  if (!sb) throw new Error('Подключение к базе ещё не готово');
+  if (!me?.id) throw new Error('Профиль приложения не найден. Войдите заново.');
   const value = subscription.toJSON();
+  if (!value.endpoint || !value.keys?.p256dh || !value.keys?.auth) {
+    throw new Error('Браузер вернул неполную push-подписку');
+  }
   const row = {
     user_id: me.id,
     endpoint: value.endpoint,
@@ -63,25 +113,33 @@ async function saveSubscription(subscription, retry = true) {
     disabled_at: null,
   };
   const existing = await sb.from('push_subscriptions').select('id').eq('endpoint', row.endpoint).maybeSingle();
+  if (existing.error) throw existing.error;
   const result = existing.data
     ? await sb.from('push_subscriptions').update(row).eq('id', existing.data.id)
     : await sb.from('push_subscriptions').insert(row);
-  if (!result.error) return;
+  if (!result.error) {
+    connected = true;
+    return;
+  }
   if (retry && result.error.code === '23505') {
     await subscription.unsubscribe();
     const replacement = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: base64UrlToBytes(VAPID_PUBLIC_KEY),
     });
-    return saveSubscription(replacement, false);
+    return saveSubscription(replacement, me, false);
   }
   throw result.error;
 }
 
-async function ensureSubscription(create) {
+async function ensureSubscription(create, me) {
   if (!supported()) return false;
   registration ||= await navigator.serviceWorker.register('./sw.js?v=' + VERSION, { scope: './' });
   let subscription = await registration.pushManager.getSubscription();
+  if (subscription && !hasCurrentApplicationKey(subscription)) {
+    await subscription.unsubscribe();
+    subscription = null;
+  }
   if (!subscription && create) {
     subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
@@ -89,27 +147,31 @@ async function ensureSubscription(create) {
     });
   }
   if (!subscription) return false;
-  await saveSubscription(subscription);
+  await saveSubscription(subscription, me);
   return true;
 }
 
 async function enablePush() {
   if (busy) return;
   busy = true;
+  let outcome = '';
   refreshUi('Подключаю…');
   try {
     if (!supported()) throw new Error('Этот браузер не поддерживает push-уведомления');
+    const me = await waitForProfile();
+    if (!me?.id) throw new Error('Профиль приложения не найден. Войдите заново.');
     const permission = Notification.permission === 'granted'
       ? 'granted'
       : await Notification.requestPermission();
     if (permission !== 'granted') throw new Error('Разрешение на уведомления не предоставлено');
-    await ensureSubscription(true);
-    refreshUi('Подключено');
+    await ensureSubscription(true, me);
+    outcome = 'Подключено';
   } catch (error) {
     console.warn('Push setup failed', error);
-    refreshUi(error?.message || 'Не удалось подключить');
+    outcome = error?.message || 'Не удалось подключить';
   } finally {
     busy = false;
+    refreshUi(outcome);
   }
 }
 
@@ -135,10 +197,16 @@ function refreshUi(override = '') {
     button.disabled = true;
     return;
   }
-  if (Notification.permission === 'granted') {
+  if (Notification.permission === 'granted' && connected) {
     text.textContent = override || 'Системные уведомления включены.';
     button.textContent = 'Включено';
     button.disabled = true;
+    return;
+  }
+  if (Notification.permission === 'granted') {
+    text.textContent = override || 'Разрешение получено. Подключите телефон к профилю.';
+    button.textContent = 'Подключить';
+    button.disabled = busy;
     return;
   }
   text.textContent = override || 'Получайте назначения, даже когда приложение закрыто.';
@@ -153,10 +221,16 @@ async function boot() {
   }
   const timer = setInterval(async () => {
     ensureUi();
-    if (!profile()?.id || !client()) return;
+    if (!client()) return;
+    let me = null;
+    try { me = await resolveProfile(); }
+    catch (error) { console.warn('Push profile lookup failed', error); }
+    if (!me?.id) return;
     if (Notification.permission === 'granted') {
-      clearInterval(timer);
-      try { await ensureSubscription(true); } catch (error) { console.warn('Push restore failed', error); }
+      try {
+        await ensureSubscription(true, me);
+        clearInterval(timer);
+      } catch (error) { console.warn('Push restore failed', error); }
       refreshUi();
     }
   }, 1000);
