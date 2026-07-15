@@ -491,6 +491,12 @@
     subscribe();
   }
 
+  window.addEventListener('pt-notification-store-changed',function(){
+    if(!state.profileId) return;
+    loadStore();
+    ensureUi();
+  });
+
   document.addEventListener('click',function(event){
     var mention = event.target.closest('[data-mention-user]');
     if(mention){
