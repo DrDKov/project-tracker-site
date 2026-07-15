@@ -1,6 +1,6 @@
 /* polling rescue v2: reconciles missed notifications without resetting unread state. */
 (function(){
-if(window.__POLLING_RESCUE_V2__)return;window.__POLLING_RESCUE_V2__=1;
+if(window.__POLLING_RESCUE_V2__)return;window.__POLLING_RESCUE_V2__=1;window.__POLLING_RESCUE_LITE__=1;
 var me=null,busy=false;
 var EPOCH='1970-01-01T00:00:00.000Z';
 function q(id){return document.getElementById(id)}
