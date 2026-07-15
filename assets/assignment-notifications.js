@@ -52,6 +52,10 @@
       if(seen[key]) return false;
       seen[key] = true;
       return true;
+    }).sort(function(a,b){
+      var byCreatedAt = readTime(b.created_at) - readTime(a.created_at);
+      if(byCreatedAt) return byCreatedAt;
+      return String(b.id || '').localeCompare(String(a.id || ''));
     }).slice(0,MAX_ITEMS);
   }
   function applyReadBefore(){
@@ -135,6 +139,7 @@
   }
 
   function renderUi(){
+    state.items = normalizeItems(state.items);
     applyReadBefore();
     var badge = $('assignmentBadge');
     if(badge){
