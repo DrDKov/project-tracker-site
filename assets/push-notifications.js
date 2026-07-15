@@ -1,5 +1,5 @@
-const VAPID_PUBLIC_KEY = 'XHgwNGt-lAr2FfVJl3VeJ6StfS5j18oheuHA6bZIouhxDgSi2Owg0APEz0hwiw4UiFFQ_op1-avRrc4AjTzgynUdb_8';
-const VERSION = '20260715-push-v1';
+const VAPID_PUBLIC_KEY = 'BGt-lAr2FfVJl3VeJ6StfS5j18oheuHA6bZIouhxDgSi2Owg0APEz0hwiw4UiFFQ_op1-avRrc4AjTzgynUdb_8';
+const VERSION = '20260715-push-v2';
 let registration = null;
 let busy = false;
 
@@ -40,7 +40,7 @@ function ensureUi() {
   const bar = document.createElement('div');
   bar.id = 'pushPermission';
   bar.className = 'push-permission';
-  bar.innerHTML = '<div class="push-permission-text"><b id="pushPermissionTitle">РЈРІРµРґРѕРјР»РµРЅРёСЏ С‚РµР»РµС„РѕРЅР°</b><span id="pushPermissionText">РџСЂРѕРІРµСЂСЏСЋ РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊвЂ¦</span></div><button type="button" id="pushPermissionBtn">Р’РєР»СЋС‡РёС‚СЊ</button>';
+  bar.innerHTML = '<div class="push-permission-text"><b id="pushPermissionTitle">Уведомления телефона</b><span id="pushPermissionText">Проверяю доступность…</span></div><button type="button" id="pushPermissionBtn">Включить</button>';
   const list = panel.querySelector('.assignment-list');
   panel.insertBefore(bar, list || null);
   bar.querySelector('button').addEventListener('click', enablePush);
@@ -49,7 +49,7 @@ function ensureUi() {
 
 async function saveSubscription(subscription, retry = true) {
   const sb = client(), me = profile();
-  if (!sb || !me?.id) throw new Error('РџСЂРѕС„РёР»СЊ РµС‰С‘ РЅРµ Р·Р°РіСЂСѓР¶РµРЅ');
+  if (!sb || !me?.id) throw new Error('Профиль ещё не загружен');
   const value = subscription.toJSON();
   const row = {
     user_id: me.id,
@@ -96,18 +96,18 @@ async function ensureSubscription(create) {
 async function enablePush() {
   if (busy) return;
   busy = true;
-  refreshUi('РџРѕРґРєР»СЋС‡Р°СЋвЂ¦');
+  refreshUi('Подключаю…');
   try {
-    if (!supported()) throw new Error('Р­С‚РѕС‚ Р±СЂР°СѓР·РµСЂ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚ push-СѓРІРµРґРѕРјР»РµРЅРёСЏ');
+    if (!supported()) throw new Error('Этот браузер не поддерживает push-уведомления');
     const permission = Notification.permission === 'granted'
       ? 'granted'
       : await Notification.requestPermission();
-    if (permission !== 'granted') throw new Error('Р Р°Р·СЂРµС€РµРЅРёРµ РЅР° СѓРІРµРґРѕРјР»РµРЅРёСЏ РЅРµ РїСЂРµРґРѕСЃС‚Р°РІР»РµРЅРѕ');
+    if (permission !== 'granted') throw new Error('Разрешение на уведомления не предоставлено');
     await ensureSubscription(true);
-    refreshUi('РџРѕРґРєР»СЋС‡РµРЅРѕ');
+    refreshUi('Подключено');
   } catch (error) {
     console.warn('Push setup failed', error);
-    refreshUi(error?.message || 'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊ');
+    refreshUi(error?.message || 'Не удалось подключить');
   } finally {
     busy = false;
   }
@@ -120,29 +120,29 @@ function refreshUi(override = '') {
   if (!title || !text || !button) return;
   if (override) text.textContent = override;
   if (!supported()) {
-    text.textContent = 'Push-СѓРІРµРґРѕРјР»РµРЅРёСЏ РЅРµРґРѕСЃС‚СѓРїРЅС‹ РІ СЌС‚РѕРј Р±СЂР°СѓР·РµСЂРµ.';
+    text.textContent = 'Push-уведомления недоступны в этом браузере.';
     button.hidden = true;
     return;
   }
   if (/iPhone|iPad|iPod/.test(navigator.userAgent) && !standalone()) {
-    text.textContent = 'РЎРЅР°С‡Р°Р»Р° РґРѕР±Р°РІСЊС‚Рµ РїСЂРёР»РѕР¶РµРЅРёРµ РЅР° СЌРєСЂР°РЅ В«Р”РѕРјРѕР№В».';
+    text.textContent = 'Сначала добавьте приложение на экран «Домой».';
     button.hidden = true;
     return;
   }
   if (Notification.permission === 'denied') {
-    text.textContent = 'Р Р°Р·СЂРµС€РёС‚Рµ СѓРІРµРґРѕРјР»РµРЅРёСЏ РІ РЅР°СЃС‚СЂРѕР№РєР°С… Р±СЂР°СѓР·РµСЂР°.';
-    button.textContent = 'Р—Р°Р±Р»РѕРєРёСЂРѕРІР°РЅРѕ';
+    text.textContent = 'Разрешите уведомления в настройках браузера.';
+    button.textContent = 'Заблокировано';
     button.disabled = true;
     return;
   }
   if (Notification.permission === 'granted') {
-    text.textContent = override || 'РЎРёСЃС‚РµРјРЅС‹Рµ СѓРІРµРґРѕРјР»РµРЅРёСЏ РІРєР»СЋС‡РµРЅС‹.';
-    button.textContent = 'Р’РєР»СЋС‡РµРЅРѕ';
+    text.textContent = override || 'Системные уведомления включены.';
+    button.textContent = 'Включено';
     button.disabled = true;
     return;
   }
-  text.textContent = override || 'РџРѕР»СѓС‡Р°Р№С‚Рµ РЅР°Р·РЅР°С‡РµРЅРёСЏ, РґР°Р¶Рµ РєРѕРіРґР° РїСЂРёР»РѕР¶РµРЅРёРµ Р·Р°РєСЂС‹С‚Рѕ.';
-  button.textContent = 'Р’РєР»СЋС‡РёС‚СЊ';
+  text.textContent = override || 'Получайте назначения, даже когда приложение закрыто.';
+  button.textContent = 'Включить';
   button.disabled = busy;
 }
 
@@ -165,3 +165,4 @@ async function boot() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
 else boot();
+
