@@ -1,10 +1,11 @@
 const VAPID_PUBLIC_KEY = 'BGt-lAr2FfVJl3VeJ6StfS5j18oheuHA6bZIouhxDgSi2Owg0APEz0hwiw4UiFFQ_op1-avRrc4AjTzgynUdb_8';
-const VERSION = '20260715-push-v3';
+const VERSION = '20260715-push-v5';
 let registration = null;
 let busy = false;
 let connected = false;
 let resolvedProfile = null;
 let identityPromise = null;
+let fallbackClient = null;
 
 function supported() {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -21,7 +22,22 @@ function profile() {
 }
 
 function client() {
-  try { return window.sb || null; } catch (_) { return null; }
+  try {
+    if (window.sb) return window.sb;
+    if (fallbackClient) return fallbackClient;
+    const createClient = window.supabase?.createClient;
+    const url = window.__WORKSPACE_SUPABASE_URL__;
+    const key = window.__WORKSPACE_SUPABASE_KEY__;
+    if (createClient && url && key) {
+      fallbackClient = createClient(url, key, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+      });
+      return fallbackClient;
+    }
+  } catch (error) {
+    console.warn('Push fallback client failed', error);
+  }
+  return null;
 }
 
 async function resolveProfile(force = false) {
