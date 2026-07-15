@@ -1,12 +1,12 @@
 /* Workspace notifications v2: realtime visual alerts for task assignments and task comment mentions. */
 (function(){
-  if(window.__ASSIGNMENT_NOTIFICATIONS_V2__) return;
-  window.__ASSIGNMENT_NOTIFICATIONS_V2__ = 1;
+  if(window.__ASSIGNMENT_NOTIFICATIONS_V3__) return;
+  window.__ASSIGNMENT_NOTIFICATIONS_V3__ = 1;
 
   var STORE_PREFIX = 'pt_assignment_notifications_v1:';
   var MAX_ITEMS = 40;
   var MEMBERS_TTL = 45000;
-  var state = { sb:null, profile:null, profileId:'', channel:null, items:[], unread:0, recent:{}, members:[], membersLoadedAt:0, mentionMenu:null, bypassCommentSubmit:false };
+  var state = { sb:null, profile:null, profileId:'', channel:null, items:[], unread:0, readBefore:'1970-01-01T00:00:00.000Z', readSyncBusy:false, recent:{}, members:[], membersLoadedAt:0, mentionMenu:null, bypassCommentSubmit:false };
 
   function $(id){ return document.getElementById(id); }
   function esc(value){
@@ -38,19 +38,53 @@
     if($('assignment-notifications-css')) return;
     var style = document.createElement('style');
     style.id = 'assignment-notifications-css';
-    style.textContent = '.assignment-bell{position:relative;min-width:42px;padding-left:11px!important;padding-right:11px!important}.assignment-bell.pulse{animation:assignmentPulse .9s ease-out 2}.assignment-badge{position:absolute;right:-5px;top:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;line-height:18px;font-weight:900;text-align:center;box-shadow:0 0 0 2px #fff}.assignment-badge.hidden{display:none}.assignment-panel{position:fixed;right:20px;top:72px;width:min(410px,calc(100vw - 28px));max-height:70vh;overflow:hidden;z-index:6000;border:1px solid #dbe4ef;border-radius:18px;background:#fff;box-shadow:0 22px 70px rgba(15,23,42,.22);display:none}.assignment-panel.open{display:block}.assignment-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid #eef2f7}.assignment-panel-head b{font-size:15px}.assignment-panel-head button{border:0;border-radius:10px;background:#f1f5f9;color:#334155;font-weight:900;padding:8px 10px;cursor:pointer}.assignment-list{max-height:calc(70vh - 54px);overflow:auto;padding:8px}.assignment-item{display:block;width:100%;border:1px solid #eef2f7;border-radius:14px;background:#fff;text-align:left;padding:10px 11px;margin:6px 0;color:#0f172a;cursor:pointer}.assignment-item:hover{background:#f8fafc}.assignment-item.unread{border-color:#bfdbfe;background:#eff6ff}.assignment-item-title{font-weight:900;margin-bottom:4px}.assignment-item-meta{font-size:12px;color:#64748b}.assignment-type{display:inline-flex;align-items:center;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:900;padding:2px 7px;margin-right:6px}.assignment-empty{padding:18px;color:#64748b;text-align:center}.assignment-toasts{position:fixed;right:18px;bottom:18px;z-index:7000;display:grid;gap:10px;width:min(390px,calc(100vw - 28px))}.assignment-toast{border:1px solid #bfdbfe;border-left:5px solid #2563eb;border-radius:16px;background:#fff;box-shadow:0 18px 54px rgba(15,23,42,.22);padding:12px 13px;text-align:left;cursor:pointer;color:#0f172a;transition:opacity .25s ease,transform .25s ease}.assignment-toast b{display:block;margin-bottom:4px}.assignment-toast div{font-size:13px}.assignment-toast small{display:block;margin-top:5px;color:#64748b}.mention-menu{position:fixed;z-index:8000;width:min(340px,calc(100vw - 24px));max-height:260px;overflow:auto;border:1px solid #dbe4ef;border-radius:14px;background:#fff;box-shadow:0 20px 54px rgba(15,23,42,.22);padding:6px;display:none}.mention-menu.open{display:block}.mention-option{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:#0f172a;text-align:left;border-radius:10px;padding:8px 9px;cursor:pointer}.mention-option:hover,.mention-option.active{background:#eff6ff}.mention-avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e2e8f0;color:#334155;font-size:11px;font-weight:900;flex:0 0 auto}.mention-main{min-width:0}.mention-main b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-main span{display:block;font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-hint{font-size:12px;color:#64748b;margin-top:6px}.task-comment-body .mention-token{display:inline-flex;border-radius:8px;background:#eef2ff;color:#3730a3;font-weight:800;padding:0 4px}@keyframes assignmentPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}100%{box-shadow:0 0 0 12px rgba(37,99,235,0)}}@media(max-width:720px){.assignment-panel{right:10px;top:64px}.assignment-toasts{right:10px;bottom:76px}}';
+    style.textContent = '.assignment-bell{position:relative;min-width:42px;padding-left:11px!important;padding-right:11px!important}.assignment-bell.pulse{animation:assignmentPulse .9s ease-out 2}.assignment-badge{position:absolute;right:-5px;top:-6px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;line-height:18px;font-weight:900;text-align:center;box-shadow:0 0 0 2px #fff}.assignment-badge.hidden{display:none}.assignment-panel{position:fixed;right:20px;top:72px;width:min(410px,calc(100vw - 28px));max-height:70vh;overflow:hidden;z-index:6000;border:1px solid #dbe4ef;border-radius:18px;background:#fff;box-shadow:0 22px 70px rgba(15,23,42,.22);display:none}.assignment-panel.open{display:block}.assignment-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid #eef2f7}.assignment-panel-head b{font-size:15px}.assignment-panel-head button{border:0;border-radius:10px;background:#f1f5f9;color:#334155;font-weight:900;padding:8px 10px;cursor:pointer}.assignment-panel-head button[disabled]{opacity:.5;cursor:default}.assignment-list{max-height:calc(70vh - 54px);overflow:auto;padding:8px}.assignment-item{display:block;width:100%;border:1px solid #eef2f7;border-radius:14px;background:#fff;text-align:left;padding:10px 11px;margin:6px 0;color:#0f172a;cursor:pointer}.assignment-item:hover{background:#f8fafc}.assignment-item.unread{border-color:#bfdbfe;background:#eff6ff}.assignment-item-title{font-weight:900;margin-bottom:4px}.assignment-item-meta{font-size:12px;color:#64748b}.assignment-type{display:inline-flex;align-items:center;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:11px;font-weight:900;padding:2px 7px;margin-right:6px}.assignment-empty{padding:18px;color:#64748b;text-align:center}.assignment-toasts{position:fixed;right:18px;bottom:18px;z-index:7000;display:grid;gap:10px;width:min(390px,calc(100vw - 28px))}.assignment-toast{border:1px solid #bfdbfe;border-left:5px solid #2563eb;border-radius:16px;background:#fff;box-shadow:0 18px 54px rgba(15,23,42,.22);padding:12px 13px;text-align:left;cursor:pointer;color:#0f172a;transition:opacity .25s ease,transform .25s ease}.assignment-toast b{display:block;margin-bottom:4px}.assignment-toast div{font-size:13px}.assignment-toast small{display:block;margin-top:5px;color:#64748b}.mention-menu{position:fixed;z-index:8000;width:min(340px,calc(100vw - 24px));max-height:260px;overflow:auto;border:1px solid #dbe4ef;border-radius:14px;background:#fff;box-shadow:0 20px 54px rgba(15,23,42,.22);padding:6px;display:none}.mention-menu.open{display:block}.mention-option{display:flex;align-items:center;gap:8px;width:100%;border:0;background:transparent;color:#0f172a;text-align:left;border-radius:10px;padding:8px 9px;cursor:pointer}.mention-option:hover,.mention-option.active{background:#eff6ff}.mention-avatar{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:#e2e8f0;color:#334155;font-size:11px;font-weight:900;flex:0 0 auto}.mention-main{min-width:0}.mention-main b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-main span{display:block;font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mention-hint{font-size:12px;color:#64748b;margin-top:6px}.task-comment-body .mention-token{display:inline-flex;border-radius:8px;background:#eef2ff;color:#3730a3;font-weight:800;padding:0 4px}@keyframes assignmentPulse{0%{box-shadow:0 0 0 0 rgba(37,99,235,.35)}100%{box-shadow:0 0 0 12px rgba(37,99,235,0)}}@media(max-width:720px){.assignment-panel{right:10px;top:64px}.assignment-toasts{right:10px;bottom:76px}}';
     document.head.appendChild(style);
   }
 
+  function readTime(value){ var t=Date.parse(value || ''); return Number.isFinite(t) ? t : 0; }
+  function applyReadBefore(){
+    var cutoff = readTime(state.readBefore);
+    state.items.forEach(function(item){
+      if(item && readTime(item.created_at) <= cutoff) item.unread = false;
+    });
+    state.unread = state.items.filter(function(item){ return item && item.unread; }).length;
+  }
   function loadStore(){
     try{
       var raw = JSON.parse(localStorage.getItem(storeKey()) || '{}');
       state.items = Array.isArray(raw.items) ? raw.items.slice(0,MAX_ITEMS) : [];
-      state.unread = state.items.filter(function(x){ return x && x.unread; }).length;
-    }catch(e){ state.items = []; state.unread = 0; }
+      state.readBefore = raw.read_before || '1970-01-01T00:00:00.000Z';
+      applyReadBefore();
+    }catch(e){ state.items = []; state.unread = 0; state.readBefore = '1970-01-01T00:00:00.000Z'; }
   }
   function saveStore(){
-    try{ localStorage.setItem(storeKey(),JSON.stringify({items:state.items.slice(0,MAX_ITEMS)})); }catch(e){}
+    try{ localStorage.setItem(storeKey(),JSON.stringify({items:state.items.slice(0,MAX_ITEMS),read_before:state.readBefore})); }catch(e){}
+  }
+  async function loadRemoteReadState(){
+    if(!state.sb || !state.profileId || state.readSyncBusy) return;
+    state.readSyncBusy = true;
+    try{
+      var result = await state.sb.from('notification_read_state').select('read_before').eq('user_id',state.profileId).maybeSingle();
+      if(!result.error && result.data && readTime(result.data.read_before) > readTime(state.readBefore)){
+        state.readBefore = result.data.read_before;
+        applyReadBefore();
+        saveStore();
+        renderUi();
+      }
+    }catch(e){ console.warn('Notification read state load failed',e); }
+    finally{ state.readSyncBusy = false; }
+  }
+  async function saveRemoteReadState(){
+    if(!state.sb || !state.profileId) return;
+    try{
+      var result = await state.sb.from('notification_read_state').upsert({
+        user_id:state.profileId,
+        read_before:state.readBefore,
+        updated_at:new Date().toISOString()
+      },{onConflict:'user_id'});
+      if(result.error) throw result.error;
+    }catch(e){ console.warn('Notification read state save failed',e); }
   }
 
   function ensureUi(){
@@ -70,7 +104,7 @@
       var panel = document.createElement('div');
       panel.id = 'assignmentPanel';
       panel.className = 'assignment-panel';
-      panel.innerHTML = '<div class="assignment-panel-head"><b>Оповещения</b><button type="button" data-assignment-clear>Прочитано</button></div><div class="assignment-list" id="assignmentList"></div>';
+      panel.innerHTML = '<div class="assignment-panel-head"><b>Оповещения</b><button type="button" data-assignment-clear>Отметить все прочитанными</button></div><div class="assignment-list" id="assignmentList"></div>';
       document.body.appendChild(panel);
     }
     if(!$('assignmentToasts')){
@@ -90,10 +124,17 @@
   }
 
   function renderUi(){
+    applyReadBefore();
     var badge = $('assignmentBadge');
     if(badge){
       badge.textContent = state.unread > 99 ? '99+' : String(state.unread || 0);
       badge.classList.toggle('hidden',!state.unread);
+    }
+    var clear = document.querySelector('[data-assignment-clear]');
+    if(clear){
+      clear.textContent = 'Отметить все прочитанными';
+      clear.disabled = !state.unread;
+      clear.title = state.unread ? 'Убрать все текущие уведомления из счётчика новых' : 'Непрочитанных уведомлений нет';
     }
     var list = $('assignmentList');
     if(list){
@@ -113,14 +154,15 @@
     var panel = $('assignmentPanel');
     if(!panel) return;
     panel.classList.toggle('open');
-    if(panel.classList.contains('open')) markAllRead(false);
   }
   function closePanel(){ var p=$('assignmentPanel'); if(p) p.classList.remove('open'); }
   function markAllRead(){
+    state.readBefore = new Date().toISOString();
     state.items.forEach(function(x){ if(x) x.unread = false; });
     state.unread = 0;
     saveStore();
     renderUi();
+    saveRemoteReadState();
   }
   function markTaskRead(taskId){
     state.items.forEach(function(x){ if(x && x.task_id === taskId) x.unread = false; });
@@ -156,8 +198,9 @@
 
   function pushItem(type,task,extra){
     extra = extra || {};
-    var key = type === 'mention' ? ('mention:'+(extra.comment_id || Date.now())+':'+task.id) : ('assignment:'+task.id);
-    var item = { id:key, type:type || 'assignment', task_id:task.id, title:task.title || 'Задача', project:projectName(task.project_id), author:extra.author || '', comment_id:extra.comment_id || '', created_at:new Date().toISOString(), unread:true };
+    var key = type === 'mention' ? ('mention:'+(extra.comment_id || Date.now())+':'+task.id) : ('assignment:'+(extra.notification_id || task.id));
+    var item = { id:key, type:type || 'assignment', task_id:task.id, title:task.title || 'Задача', project:projectName(task.project_id), author:extra.author || '', comment_id:extra.comment_id || '', created_at:extra.created_at || new Date().toISOString(), unread:true };
+    if(readTime(item.created_at) <= readTime(state.readBefore)) item.unread = false;
     state.items = state.items.filter(function(x){ return x && x.id !== item.id && !(item.type === 'assignment' && x.type !== 'mention' && x.task_id === item.task_id); });
     state.items.unshift(item);
     state.items = state.items.slice(0,MAX_ITEMS);
@@ -188,13 +231,14 @@
     setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); },7600);
   }
 
-  async function handleAssignment(taskId){
+  async function handleAssignment(taskId,assignment){
     if(!taskId || !state.profileId) return;
-    var key = 'assignment:' + taskId;
+    var notificationId = assignment && assignment.id ? assignment.id : taskId;
+    var key = 'assignment:' + notificationId;
     if(isRecent(key,8000)) return;
     var task = await getTask(taskId);
     if(!task || task.deleted_at) return;
-    pushItem('assignment',task,{});
+    pushItem('assignment',task,{notification_id:notificationId,created_at:assignment && assignment.created_at});
   }
 
   function mentionLabels(user){
@@ -401,11 +445,11 @@
     var ch = state.sb.channel(channelName);
     ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'task_assignees'},function(payload){
       var row = payload.new || {};
-      if(row.user_id === state.profileId) handleAssignment(row.task_id);
+      if(row.user_id === state.profileId) handleAssignment(row.task_id,row);
     });
     ch.on('postgres_changes',{event:'UPDATE',schema:'public',table:'tasks'},function(payload){
       var row = payload.new || {}, old = payload.old || {};
-      if(row.assignee_id === state.profileId && Object.prototype.hasOwnProperty.call(old,'assignee_id') && old.assignee_id !== row.assignee_id) handleAssignment(row.id);
+      if(row.assignee_id === state.profileId && Object.prototype.hasOwnProperty.call(old,'assignee_id') && old.assignee_id !== row.assignee_id) handleAssignment(row.id,{id:'direct:'+row.id,created_at:row.updated_at || new Date().toISOString()});
     });
     ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'task_comments'},function(payload){
       handleCommentMention(payload.new || {});
@@ -431,6 +475,7 @@
     state.membersLoadedAt = 0;
     loadStore();
     ensureUi();
+    loadRemoteReadState();
     refreshMembers(true).then(function(){ updateMentionMenu(); decorateRenderedComments(); });
     subscribe();
   }
@@ -478,6 +523,7 @@
     ensureUi();
     rebindProfile();
     setInterval(rebindProfile,1200);
+    setInterval(loadRemoteReadState,15000);
     setInterval(function(){ ensureMentionHint(); decorateRenderedComments(); },700);
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
