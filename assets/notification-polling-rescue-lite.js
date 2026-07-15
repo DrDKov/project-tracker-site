@@ -27,6 +27,7 @@ function applyReadBefore(value){
 }
 function css(){if(q('poll-rescue-css'))return;var s=document.createElement('style');s.id='poll-rescue-css';s.textContent='.assignment-badge.hidden{display:none}.assignment-panel.open{display:block}.assignment-empty{padding:18px;color:#64748b;text-align:center}.assignment-panel-head button[disabled]{opacity:.5;cursor:default}';document.head.appendChild(s)}
 function ui(){
+  if(window.__ASSIGNMENT_NOTIFICATIONS_V3__)return;
   css();
   var top=document.querySelector('.top-actions');
   if(top&&!q('assignmentBell')){
@@ -50,6 +51,7 @@ function ui(){
   render();
 }
 function render(){
+  if(window.__ASSIGNMENT_NOTIFICATIONS_V3__){window.dispatchEvent(new CustomEvent('pt-notification-store-changed'));return}
   var value=applyReadBefore(getState()),items=value.items,n=items.filter(function(x){return x&&x.unread}).length;
   setState(value);
   var b=q('assignmentBadge'),l=q('assignmentList'),clear=document.querySelector('[data-assignment-clear]');
@@ -107,7 +109,7 @@ async function sync(){
   }finally{busy=false}
 }
 document.addEventListener('click',function(e){
-  if(e.target.closest('[data-assignment-clear]')){e.preventDefault();markRead();return}
+  if(e.target.closest('[data-assignment-clear]')){if(window.__ASSIGNMENT_NOTIFICATIONS_V3__)return;e.preventDefault();markRead();return}
   var b=e.target.closest('[data-open-task]');if(!b)return;
   var id=b.getAttribute('data-open-task');markTaskRead(id);
   var nav=document.querySelector('.nav button[data-view="tasks"]');if(nav)nav.click();
