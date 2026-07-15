@@ -43,6 +43,16 @@
   }
 
   function readTime(value){ var t=Date.parse(value || ''); return Number.isFinite(t) ? t : 0; }
+  function normalizeItems(items){
+    var seen = {};
+    return (Array.isArray(items) ? items : []).filter(function(item){
+      if(!item || !item.task_id) return false;
+      var key = item.type === 'mention' ? (item.id || 'mention:'+item.task_id) : 'assignment-task:'+item.task_id;
+      if(seen[key]) return false;
+      seen[key] = true;
+      return true;
+    }).slice(0,MAX_ITEMS);
+  }
   function applyReadBefore(){
     var cutoff = readTime(state.readBefore);
     state.items.forEach(function(item){
@@ -53,13 +63,13 @@
   function loadStore(){
     try{
       var raw = JSON.parse(localStorage.getItem(storeKey()) || '{}');
-      state.items = Array.isArray(raw.items) ? raw.items.slice(0,MAX_ITEMS) : [];
+      state.items = normalizeItems(raw.items);
       state.readBefore = raw.read_before || '1970-01-01T00:00:00.000Z';
       applyReadBefore();
     }catch(e){ state.items = []; state.unread = 0; state.readBefore = '1970-01-01T00:00:00.000Z'; }
   }
   function saveStore(){
-    try{ localStorage.setItem(storeKey(),JSON.stringify({items:state.items.slice(0,MAX_ITEMS),read_before:state.readBefore})); }catch(e){}
+    try{ localStorage.setItem(storeKey(),JSON.stringify({items:normalizeItems(state.items),read_before:state.readBefore})); }catch(e){}
   }
   async function loadRemoteReadState(){
     if(!state.sb || !state.profileId || state.readSyncBusy) return;
