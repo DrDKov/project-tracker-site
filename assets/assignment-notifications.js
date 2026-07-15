@@ -2,6 +2,7 @@
 (function(){
   if(window.__ASSIGNMENT_NOTIFICATIONS_V3__) return;
   window.__ASSIGNMENT_NOTIFICATIONS_V3__ = 1;
+  window.__ASSIGNMENT_NOTIFICATIONS_V2__ = 1;
 
   var STORE_PREFIX = 'pt_assignment_notifications_v1:';
   var MAX_ITEMS = 40;
