@@ -332,7 +332,7 @@ function setup(){
   new MutationObserver(syncWeek).observe(mode,{subtree:true,attributes:true,attributeFilter:['class']});
   mode.addEventListener('click',()=>setTimeout(syncWeek));
   const today=week.querySelector("[data-week-nav='today']");
-  if(today){today.dataset.fullLabel=today.textContent;today.textContent='Сегодня';today.setAttribute('aria-label','Текущая неделя')}
+  if(today){today.dataset.fullLabel=today.textContent;today.textContent='Сегодня';today.setAttribute('aria-label','Сегодняшний день')}
   document.getElementById('quickTaskBtn')?.setAttribute('aria-label','Создать задачу');
   document.getElementById('quickTaskBtn')?.setAttribute('title','Создать задачу');
   document.getElementById('taskSearch')?.setAttribute('aria-label','Поиск по задачам');
@@ -377,7 +377,7 @@ mq.addEventListener?.('change',e=>{if(e.matches)setup();else{document.getElement
 </style>
 <script>
 (()=>{if(window.__MOBILE_SINGLE_COLUMN_V3__)return;window.__MOBILE_SINGLE_COLUMN_V3__=1;
-const mq=window.matchMedia('(max-width:980px)'),state={week:0,status:0,assignee:0};
+const mq=window.matchMedia('(max-width:980px)'),state={week:null,status:0,assignee:0};
 let attempts=0,raf=0,observer=null;
 function mode(){
  const active=document.querySelector("#taskBoardModeToggle [data-task-mode].active");
@@ -403,7 +403,12 @@ function renderPager(){
  const list=columns(),m=mode();
  board.classList.add('mobile-single-column');pager.hidden=!list.length;
  if(!list.length)return;
- let index=Math.max(0,Math.min(state[m]||0,list.length-1));state[m]=index;
+ let requested=state[m];
+ if(m==='week'&&requested==null){
+   const todayIndex=list.findIndex(c=>c.classList.contains('today'));
+   requested=todayIndex>=0?todayIndex:0
+ }
+ let index=Math.max(0,Math.min(requested||0,list.length-1));state[m]=index;
  list.forEach((c,i)=>c.classList.toggle('mobile-column-active',i===index));
  const current=list[index],tasks=current.querySelectorAll('.task-card').length;
  pager.querySelector('#mobileColumnTitle').textContent=columnTitle(current);
@@ -426,10 +431,21 @@ function setup(){
    pager.querySelector('#mobileColumnNext').addEventListener('click',()=>{let m=mode(),n=columns().length;state[m]=Math.min(n-1,(state[m]||0)+1);renderPager()})
  }
  if(!observer){observer=new MutationObserver(schedule);observer.observe(board,{childList:true,subtree:true})}
- modeToggle.addEventListener('click',()=>setTimeout(schedule));
- document.addEventListener('click',e=>{if(e.target.closest('[data-week-nav]')){state.week=0;setTimeout(schedule)}},true);
+ modeToggle.addEventListener('click',e=>{
+   if(e.target.closest("[data-task-mode='week']")&&mq.matches)state.week=null;
+   setTimeout(schedule)
+ });
+ document.addEventListener('click',e=>{
+   const nav=e.target.closest('[data-week-nav]');
+   if(!nav)return;
+   state.week=nav.dataset.weekNav==='today'?null:0;
+   setTimeout(schedule)
+ },true);
  mq.addEventListener?.('change',schedule);
- schedule()
+ if(mq.matches&&mode()==='week'){
+   state.week=null;
+   setTimeout(()=>weekNav.querySelector("[data-week-nav='today']")?.click())
+ }else schedule()
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',setup):setup();
 })();
