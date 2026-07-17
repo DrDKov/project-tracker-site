@@ -1,19 +1,51 @@
-/* task comments v1 */
+/* Keeps the task comment panel scoped to the task currently opened in the modal. */
 (function(){
-if(window.__TASK_COMMENTS_V1__)return;window.__TASK_COMMENTS_V1__=1;
-var S={taskId:null,me:null,users:[],comments:[],busy:false};
-function $(id){return document.getElementById(id)}
-function api(){try{return window.sb||null}catch(e){return null}}
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function name(id){var u=S.users.find(function(x){return x&&x.id===id});return u?(u.display_name||u.email||'Пользователь'):'Пользователь'}
-async function current(c){try{var p=window.currentProfile;if(p&&p.id)return p;var r=await c.rpc('current_app_user_id');if(!r.error&&r.data){var u=await c.from('app_users').select('id,display_name,email,role,is_active').eq('id',r.data).maybeSingle();if(!u.error&&u.data)return u.data}}catch(e){}return null}
-function ensureCss(){if($('task-comments-css'))return;var s=document.createElement('style');s.id='task-comments-css';s.textContent='.task-comments-wrap{margin-top:18px;border-top:1px solid #e5e7eb;padding-top:14px}.task-comments-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.task-comments-head b{font-size:15px}.task-comment-list{display:grid;gap:8px;margin-bottom:10px}.task-comment{border:1px solid #e5e7eb;border-radius:12px;background:#fff;padding:9px 10px}.task-comment-meta{font-size:12px;color:#64748b;margin-bottom:4px}.task-comment-body{white-space:pre-wrap;line-height:1.4}.task-comment-form{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}.task-comment-form textarea{min-height:74px;resize:vertical}.task-comment-empty{font-size:13px;color:#64748b;padding:8px 0}.task-comment-send{height:42px;min-width:42px;border-radius:12px}.mention-token{display:inline-flex;border-radius:8px;background:#eef2ff;color:#3730a3;font-weight:800;padding:0 4px}@media(max-width:720px){.task-comment-form{grid-template-columns:1fr}.task-comment-send{width:100%}}';document.head.appendChild(s)}
-function decorate(body){var out=esc(body||'');S.users.forEach(function(u){[u.display_name,u.email].filter(Boolean).forEach(function(label){var safe=String(label).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');try{out=out.replace(new RegExp('(^|[\\s\\(\\[\\{,;:])@'+safe+'(?=$|[\\s\\)\\]\\},.!?;:])','giu'),function(m,p){return p+'<span class="mention-token">@'+esc(label)+'</span>'})}catch(e){}})});return out}
-function render(){ensureCss();var box=$('taskCommentsBox');if(!box)return;box.innerHTML='<div class="task-comments-wrap"><div class="task-comments-head"><b>Комментарии</b><button type="button" class="btn secondary sm" data-action="reload-task-comments">Обновить</button></div><div class="task-comment-list" id="taskCommentList"></div><div class="task-comment-form"><textarea class="input textarea" id="taskCommentText" placeholder="Напишите комментарий"></textarea><button type="button" class="btn primary task-comment-send" data-action="add-task-comment" title="Добавить комментарий">➤</button></div></div>';renderList()}
-function renderList(){var list=$('taskCommentList');if(!list)return;list.innerHTML=S.comments.length?S.comments.map(function(c){return'<div class="task-comment"><div class="task-comment-meta">'+esc(name(c.user_id))+' · '+esc(c.created_at?new Date(c.created_at).toLocaleString('ru-RU'):'')+'</div><div class="task-comment-body">'+decorate(c.body||'')+'</div></div>'}).join(''):'<div class="task-comment-empty">Комментариев пока нет</div>'}
-async function loadComments(taskId){var c=api();if(!c||!taskId)return;S.busy=true;try{S.me=await current(c);var u=await c.from('app_users').select('id,display_name,email,role,is_active');if(!u.error&&Array.isArray(u.data))S.users=u.data;var r=await c.from('task_comments').select('id,task_id,user_id,body,created_at,deleted_at').eq('task_id',taskId).is('deleted_at',null).order('created_at',{ascending:true});if(!r.error&&Array.isArray(r.data))S.comments=r.data;renderList()}finally{S.busy=false}}
-async function addComment(){var c=api(),ta=$('taskCommentText'),taskId=$('taskId')&&$('taskId').value;if(!c||!ta||!taskId)return;var body=(ta.value||'').trim();if(!body)return;var me=S.me||await current(c);if(!me||!me.id){alert('Не удалось определить текущего пользователя');return}var btn=document.querySelector('[data-action="add-task-comment"]');if(btn)btn.disabled=true;try{var r=await c.from('task_comments').insert({task_id:taskId,user_id:me.id,body:body}).select().single();if(r.error)throw Error(r.error.message);ta.value='';await loadComments(taskId)}catch(e){alert('Не удалось добавить комментарий: '+(e.message||e))}finally{if(btn)btn.disabled=false}}
-function checkTask(){var modal=$('taskModal'),id=$('taskId')&&$('taskId').value;if(!modal||!id)return;if(S.taskId!==id){S.taskId=id;render();loadComments(id)}}
-document.addEventListener('click',function(e){var a=e.target.closest('[data-action]');if(!a)return;if(a.dataset.action==='add-task-comment'){e.preventDefault();addComment()}if(a.dataset.action==='reload-task-comments'){e.preventDefault();var id=$('taskId')&&$('taskId').value;if(id)loadComments(id)}},false);
-setInterval(checkTask,500);
+  if(window.__TASK_COMMENTS_STATE_FIX_V1__) return;
+  window.__TASK_COMMENTS_STATE_FIX_V1__ = 1;
+
+  function $(id){ return document.getElementById(id); }
+
+  function syncCommentState(){
+    var taskId = String($('taskId') && $('taskId').value || '').trim();
+    var list = $('taskCommentsList');
+    var count = $('taskCommentsCount');
+    var text = $('taskCommentText');
+    var send = document.querySelector('#taskCommentsBlock [data-action="add-task-comment"]');
+
+    if(taskId){
+      if(text) text.disabled = false;
+      if(send) send.disabled = false;
+      return;
+    }
+
+    if(text){
+      text.value = '';
+      text.disabled = true;
+    }
+    if(send) send.disabled = true;
+    if(count) count.textContent = '0';
+    if(list) list.innerHTML = '<div class="empty">Сохраните задачу, чтобы добавить комментарии.</div>';
+  }
+
+  function bind(){
+    var modal = $('taskModal');
+    if(!modal){
+      setTimeout(bind,100);
+      return;
+    }
+
+    new MutationObserver(function(records){
+      if(records.some(function(record){ return record.attributeName === 'open'; })) syncCommentState();
+    }).observe(modal,{attributes:true,attributeFilter:['open']});
+
+    document.addEventListener('click',function(event){
+      var target = event.target.closest('#quickTaskBtn,#newTaskBtn,[data-action="new-task"],.week-add-task-btn,[data-action="new-task-on-date"],[data-action="tl-add-day"]');
+      if(target) setTimeout(syncCommentState);
+    },true);
+
+    syncCommentState();
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',bind,{once:true});
+  else bind();
 })();
