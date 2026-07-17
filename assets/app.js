@@ -6,7 +6,7 @@
       var modules = [
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
-        './task-comments.js?v=20260715-unread-v1',
+        './task-comments.js?v=20260717-comments-v3',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
         './notification-polling-rescue-lite.js?v=20260715-unread-v1'
       ];
