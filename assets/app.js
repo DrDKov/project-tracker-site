@@ -7,6 +7,7 @@
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
         './task-comments.js?v=20260717-comments-v3',
+        './mobile-completed-tasks-toggle.js?v=20260722-completed-v1',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
         './notification-polling-rescue-lite.js?v=20260715-unread-v1'
       ];
@@ -19,3 +20,4 @@
     })
     .catch(function(err){ console.error('Workspace runtime failed', err); });
 })();
+
