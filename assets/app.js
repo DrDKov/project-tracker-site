@@ -1,14 +1,14 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20260727-subtask-ui-v2')
+  import('./app-runtime.js?v=20260727-mobile-ui-v3')
     .then(function(){
       var modules = [
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
         './task-comments.js?v=20260717-comments-v3',
         './mobile-completed-tasks-toggle.js?v=20260722-completed-v1',
-        './subtask-reorder.js?v=20260727-subtask-ui-v2',
+        './subtask-reorder.js?v=20260727-mobile-ui-v3',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
         './notification-polling-rescue-lite.js?v=20260715-unread-v1'
       ];

@@ -18,7 +18,7 @@ assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
   deployTransform,
-  /ver='20260727-subtask-ui-v2'/,
+  /ver='20260727-mobile-ui-v3'/,
   'the Pages build must not restore an obsolete app.js cache token',
 );
 
