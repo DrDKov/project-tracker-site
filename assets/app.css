@@ -110,7 +110,12 @@
 /* Mobile containment and chat polish v1 start */
 #taskModal .form-grid>*,#taskModal .task-calendar-time-grid>*,#taskModal .task-repeat-options>*{min-width:0!important;max-width:100%!important}
 #taskModal .task-calendar-box,#taskModal .task-recurrence-box{min-width:0!important;max-width:100%!important}
+#taskModal .task-calendar-time-grid,#taskModal .task-repeat-options{width:100%!important;min-width:0!important;max-width:100%!important}
 #taskModal input.input[type='date'],#taskModal input.input[type='time'],#taskModal input.input[type='number']{display:block!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;inline-size:100%!important;min-inline-size:0!important;max-inline-size:100%!important}
+@supports (-webkit-touch-callout:none){
+  dialog.modal input.input[type='date'],dialog.modal input.input[type='time'],body #taskDateFilter input.input[type='date']{-webkit-min-logical-width:0!important;box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;inline-size:100%!important;min-inline-size:0!important;max-inline-size:100%!important;height:44px!important;min-height:44px!important;block-size:44px!important;min-block-size:44px!important;padding:0!important;overflow:hidden!important}
+  dialog.modal input.input[type='date']::-webkit-date-and-time-value,dialog.modal input.input[type='time']::-webkit-date-and-time-value,body #taskDateFilter input.input[type='date']::-webkit-date-and-time-value{box-sizing:border-box!important;width:100%!important;min-width:0!important;inline-size:100%!important;min-inline-size:0!important;height:42px!important;block-size:42px!important;margin:0!important;padding:0 12px!important;line-height:42px!important;text-align:left!important}
+}
 @media(max-width:700px){
   dialog#taskModal>form#taskForm.modal-body{max-height:calc(100dvh - 20px)!important;overflow-x:hidden!important;padding:16px!important}
   #taskModal .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:14px!important}

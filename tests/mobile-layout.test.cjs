@@ -16,6 +16,10 @@ assert.match(html, /#taskDateFilter>\*\{min-width:0!important;max-width:100%!imp
 
 assert.match(css, /\.form-grid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 assert.match(css, /#taskModal input\.input\[type='date'\][\s\S]*?min-inline-size:0!important/);
+assert.match(css, /#taskModal \.task-calendar-time-grid,#taskModal \.task-repeat-options\{width:100%!important;min-width:0!important;max-width:100%!important\}/);
+assert.match(css, /@supports \(-webkit-touch-callout:none\)/);
+assert.match(css, /dialog\.modal input\.input\[type='date'\],[\s\S]*?padding:0!important;overflow:hidden!important/);
+assert.match(css, /::-webkit-date-and-time-value[\s\S]*?padding:0 12px!important/);
 assert.match(css, /#taskModal \.form-grid>label:has\(#taskStart\)/);
 assert.match(css, /dialog#taskModal>form#taskForm>\.modal-actions\{margin-top:14px!important/);
 assert.match(css, /#settings \.settings-grid>\.panel:first-child>label\+\.row\{margin-top:14px!important;gap:10px!important\}/);
