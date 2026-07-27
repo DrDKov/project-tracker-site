@@ -442,7 +442,736 @@ create or replace function public.bootstrap_workspace_owner()
 returns public.app_users
 language plpgsql
 security definer
-set search_pat…6629 tokens truncated…'task_status_change';
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_email text := lower(coalesce(auth.jwt() ->> 'email',''));
+  v_name text := coalesce(auth.jwt() #>> '{user_metadata,full_name}', split_part(v_email,'@',1), 'Owner');
+  v_user public.app_users;
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if exists (
+    select 1 from public.app_users
+    where auth_user_id is not null
+      and role in ('owner','admin')
+      and is_active = true
+  ) then
+    raise exception 'Workspace already has a linked owner/admin';
+  end if;
+
+  select * into v_user
+  from public.app_users
+  where auth_user_id = v_uid
+     or lower(email) = v_email
+  limit 1;
+
+  if v_user.id is null then
+    insert into public.app_users (auth_user_id, display_name, email, role, position, is_active)
+    values (v_uid, v_name, v_email, 'owner', 'Workspace owner', true)
+    returning * into v_user;
+  else
+    update public.app_users
+    set auth_user_id = v_uid,
+        email = coalesce(email, v_email),
+        role = 'owner',
+        is_active = true,
+        updated_at = now()
+    where id = v_user.id
+    returning * into v_user;
+  end if;
+
+  update public.projects
+  set owner_id = v_user.id
+  where owner_id is null;
+
+  insert into public.project_members (project_id, user_id, access_role)
+  select p.id, v_user.id, 'owner'
+  from public.projects p
+  where p.deleted_at is null
+  on conflict (project_id, user_id) do update set access_role = 'owner';
+
+  return v_user;
+end;
+$$;
+
+grant execute on function public.current_app_user_id() to authenticated;
+grant execute on function public.is_app_admin() to authenticated;
+grant execute on function public.can_view_project(uuid) to authenticated;
+grant execute on function public.can_edit_project(uuid) to authenticated;
+grant execute on function public.claim_app_user_profile() to authenticated;
+grant execute on function public.bootstrap_workspace_owner() to authenticated;
+
+-- Replace MVP anon policies with authenticated policies.
+alter table public.projects enable row level security;
+alter table public.tasks enable row level security;
+alter table public.activity_log enable row level security;
+alter table public.settings enable row level security;
+alter table public.app_users enable row level security;
+alter table public.project_milestones enable row level security;
+alter table public.project_members enable row level security;
+
+-- Drop old permissive policies from v1/v2.
+drop policy if exists "project_tracker_projects_select" on public.projects;
+drop policy if exists "project_tracker_projects_insert" on public.projects;
+drop policy if exists "project_tracker_projects_update" on public.projects;
+drop policy if exists "project_tracker_projects_delete" on public.projects;
+drop policy if exists "project_tracker_tasks_select" on public.tasks;
+drop policy if exists "project_tracker_tasks_insert" on public.tasks;
+drop policy if exists "project_tracker_tasks_update" on public.tasks;
+drop policy if exists "project_tracker_tasks_delete" on public.tasks;
+drop policy if exists "project_tracker_log_select" on public.activity_log;
+drop policy if exists "project_tracker_log_insert" on public.activity_log;
+drop policy if exists "project_tracker_settings_select" on public.settings;
+drop policy if exists "project_tracker_settings_upsert" on public.settings;
+drop policy if exists "project_tracker_users_select" on public.app_users;
+drop policy if exists "project_tracker_users_insert" on public.app_users;
+drop policy if exists "project_tracker_users_update" on public.app_users;
+drop policy if exists "project_tracker_users_delete" on public.app_users;
+drop policy if exists "project_tracker_milestones_select" on public.project_milestones;
+drop policy if exists "project_tracker_milestones_insert" on public.project_milestones;
+drop policy if exists "project_tracker_milestones_update" on public.project_milestones;
+drop policy if exists "project_tracker_milestones_delete" on public.project_milestones;
+
+-- app_users
+create policy "app_users_select_authenticated" on public.app_users
+for select to authenticated using (true);
+
+create policy "app_users_insert_admin" on public.app_users
+for insert to authenticated with check (public.is_app_admin());
+
+create policy "app_users_update_admin" on public.app_users
+for update to authenticated using (public.is_app_admin()) with check (public.is_app_admin());
+
+create policy "app_users_update_self_safe" on public.app_users
+for update to authenticated
+using (auth_user_id = auth.uid())
+with check (auth_user_id = auth.uid() and role in ('member','viewer'));
+
+create policy "app_users_delete_admin" on public.app_users
+for delete to authenticated using (public.is_app_admin());
+
+-- project_members
+create policy "project_members_select_visible" on public.project_members
+for select to authenticated
+using (public.is_app_admin() or user_id = public.current_app_user_id() or public.can_view_project(project_id));
+
+create policy "project_members_insert_admin_or_owner" on public.project_members
+for insert to authenticated
+with check (
+  public.is_app_admin()
+  or exists (
+    select 1 from public.project_members pm
+    where pm.project_id = project_members.project_id
+      and pm.user_id = public.current_app_user_id()
+      and pm.access_role = 'owner'
+  )
+);
+
+create policy "project_members_update_admin_or_owner" on public.project_members
+for update to authenticated
+using (
+  public.is_app_admin()
+  or exists (
+    select 1 from public.project_members pm
+    where pm.project_id = project_members.project_id
+      and pm.user_id = public.current_app_user_id()
+      and pm.access_role = 'owner'
+  )
+)
+with check (
+  public.is_app_admin()
+  or exists (
+    select 1 from public.project_members pm
+    where pm.project_id = project_members.project_id
+      and pm.user_id = public.current_app_user_id()
+      and pm.access_role = 'owner'
+  )
+);
+
+create policy "project_members_delete_admin_or_owner" on public.project_members
+for delete to authenticated
+using (
+  public.is_app_admin()
+  or exists (
+    select 1 from public.project_members pm
+    where pm.project_id = project_members.project_id
+      and pm.user_id = public.current_app_user_id()
+      and pm.access_role = 'owner'
+  )
+);
+
+-- projects
+create policy "projects_select_visible" on public.projects
+for select to authenticated using (deleted_at is null and public.can_view_project(id));
+
+create policy "projects_insert_authenticated_owner" on public.projects
+for insert to authenticated
+with check (owner_id = public.current_app_user_id() or public.is_app_admin());
+
+create policy "projects_update_editors" on public.projects
+for update to authenticated
+using (public.can_edit_project(id))
+with check (public.can_edit_project(id));
+
+create policy "projects_delete_admin" on public.projects
+for delete to authenticated using (public.is_app_admin());
+
+-- tasks
+create policy "tasks_select_visible_project" on public.tasks
+for select to authenticated using (deleted_at is null and public.can_view_project(project_id));
+
+create policy "tasks_insert_project_editors" on public.tasks
+for insert to authenticated with check (public.can_edit_project(project_id));
+
+create policy "tasks_update_project_editors" on public.tasks
+for update to authenticated using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "tasks_delete_project_editors" on public.tasks
+for delete to authenticated using (public.can_edit_project(project_id));
+
+-- milestones
+create policy "milestones_select_visible_project" on public.project_milestones
+for select to authenticated using (deleted_at is null and public.can_view_project(project_id));
+
+create policy "milestones_insert_project_editors" on public.project_milestones
+for insert to authenticated with check (public.can_edit_project(project_id));
+
+create policy "milestones_update_project_editors" on public.project_milestones
+for update to authenticated using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "milestones_delete_project_editors" on public.project_milestones
+for delete to authenticated using (public.can_edit_project(project_id));
+
+-- activity log
+create policy "activity_log_select_admin" on public.activity_log
+for select to authenticated using (public.is_app_admin());
+
+create policy "activity_log_insert_authenticated" on public.activity_log
+for insert to authenticated with check (auth.uid() is not null);
+
+-- settings
+create policy "settings_select_admin" on public.settings
+for select to authenticated using (public.is_app_admin());
+
+create policy "settings_write_admin" on public.settings
+for all to authenticated using (public.is_app_admin()) with check (public.is_app_admin());
+
+-- Auto-membership when a project is created by an owner_id.
+create or replace function public.add_owner_project_member()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.owner_id is not null then
+    insert into public.project_members (project_id, user_id, access_role)
+    values (new.id, new.owner_id, 'owner')
+    on conflict (project_id, user_id) do update set access_role = 'owner';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_add_owner_project_member on public.projects;
+create trigger trg_add_owner_project_member
+after insert or update of owner_id on public.projects
+for each row execute function public.add_owner_project_member();
+
+
+
+-- =====================================================================
+-- Source: migration_v3b_fix_member_policies.sql
+-- =====================================================================
+
+-- Project Tracker Workspace v3b: safe project_members RLS patch
+-- Run after supabase/migration_v3_auth_permissions.sql.
+-- This avoids self-referential project_members policies.
+
+create or replace function public.can_manage_project_members(p_project_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select public.is_app_admin()
+    or exists (
+      select 1
+      from public.project_members pm
+      where pm.project_id = p_project_id
+        and pm.user_id = public.current_app_user_id()
+        and pm.access_role = 'owner'
+    );
+$$;
+
+grant execute on function public.can_manage_project_members(uuid) to authenticated;
+
+drop policy if exists "project_members_select_visible" on public.project_members;
+drop policy if exists "project_members_insert_admin_or_owner" on public.project_members;
+drop policy if exists "project_members_update_admin_or_owner" on public.project_members;
+drop policy if exists "project_members_delete_admin_or_owner" on public.project_members;
+
+create policy "project_members_select_visible" on public.project_members
+for select to authenticated
+using (
+  public.is_app_admin()
+  or user_id = public.current_app_user_id()
+  or public.can_view_project(project_id)
+);
+
+create policy "project_members_insert_admin_or_owner" on public.project_members
+for insert to authenticated
+with check (public.can_manage_project_members(project_id));
+
+create policy "project_members_update_admin_or_owner" on public.project_members
+for update to authenticated
+using (public.can_manage_project_members(project_id))
+with check (public.can_manage_project_members(project_id));
+
+create policy "project_members_delete_admin_or_owner" on public.project_members
+for delete to authenticated
+using (public.can_manage_project_members(project_id));
+
+
+
+-- =====================================================================
+-- Source: migration_v4_collaboration.sql
+-- =====================================================================
+
+-- Project Tracker Workspace v4: multiple assignees, project participants, chats, files
+-- Run after v3/v3b migrations.
+
+create extension if not exists pgcrypto;
+
+-- Multiple task assignees.
+create table if not exists public.task_assignees (
+  id uuid primary key default gen_random_uuid(),
+  task_id uuid not null references public.tasks(id) on delete cascade,
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(task_id, user_id)
+);
+
+create index if not exists idx_task_assignees_task_id on public.task_assignees(task_id);
+create index if not exists idx_task_assignees_user_id on public.task_assignees(user_id);
+
+-- Project chat messages. Access is inherited from project visibility.
+create table if not exists public.project_messages (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  author_id uuid references public.app_users(id) on delete set null,
+  body text,
+  attachments jsonb not null default '[]'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  deleted_at timestamptz
+);
+
+create index if not exists idx_project_messages_project_id on public.project_messages(project_id);
+create index if not exists idx_project_messages_author_id on public.project_messages(author_id);
+create index if not exists idx_project_messages_created_at on public.project_messages(created_at);
+
+-- Optional chat read state for future unread counters.
+create table if not exists public.project_message_reads (
+  id uuid primary key default gen_random_uuid(),
+  message_id uuid not null references public.project_messages(id) on delete cascade,
+  user_id uuid not null references public.app_users(id) on delete cascade,
+  read_at timestamptz not null default now(),
+  unique(message_id, user_id)
+);
+
+create index if not exists idx_project_message_reads_message_id on public.project_message_reads(message_id);
+create index if not exists idx_project_message_reads_user_id on public.project_message_reads(user_id);
+
+-- Updated-at trigger for messages.
+drop trigger if exists trg_project_messages_updated_at on public.project_messages;
+create trigger trg_project_messages_updated_at
+before update on public.project_messages
+for each row execute function public.set_updated_at();
+
+alter table public.task_assignees enable row level security;
+alter table public.project_messages enable row level security;
+alter table public.project_message_reads enable row level security;
+
+-- Make migration rerunnable.
+drop policy if exists "task_assignees_select_visible_project" on public.task_assignees;
+drop policy if exists "task_assignees_insert_project_editors" on public.task_assignees;
+drop policy if exists "task_assignees_update_project_editors" on public.task_assignees;
+drop policy if exists "task_assignees_delete_project_editors" on public.task_assignees;
+
+drop policy if exists "project_messages_select_visible_project" on public.project_messages;
+drop policy if exists "project_messages_insert_visible_project" on public.project_messages;
+drop policy if exists "project_messages_update_author_or_editor" on public.project_messages;
+drop policy if exists "project_messages_delete_author_or_editor" on public.project_messages;
+
+drop policy if exists "project_message_reads_select_self" on public.project_message_reads;
+drop policy if exists "project_message_reads_insert_self" on public.project_message_reads;
+drop policy if exists "project_message_reads_update_self" on public.project_message_reads;
+drop policy if exists "project_message_reads_delete_self" on public.project_message_reads;
+
+create policy "task_assignees_select_visible_project" on public.task_assignees
+for select to authenticated
+using (
+  exists (
+    select 1 from public.tasks t
+    where t.id = task_assignees.task_id
+      and public.can_view_project(t.project_id)
+  )
+);
+
+create policy "task_assignees_insert_project_editors" on public.task_assignees
+for insert to authenticated
+with check (
+  exists (
+    select 1 from public.tasks t
+    where t.id = task_assignees.task_id
+      and public.can_edit_project(t.project_id)
+  )
+);
+
+create policy "task_assignees_update_project_editors" on public.task_assignees
+for update to authenticated
+using (
+  exists (
+    select 1 from public.tasks t
+    where t.id = task_assignees.task_id
+      and public.can_edit_project(t.project_id)
+  )
+)
+with check (
+  exists (
+    select 1 from public.tasks t
+    where t.id = task_assignees.task_id
+      and public.can_edit_project(t.project_id)
+  )
+);
+
+create policy "task_assignees_delete_project_editors" on public.task_assignees
+for delete to authenticated
+using (
+  exists (
+    select 1 from public.tasks t
+    where t.id = task_assignees.task_id
+      and public.can_edit_project(t.project_id)
+  )
+);
+
+create policy "project_messages_select_visible_project" on public.project_messages
+for select to authenticated
+using (deleted_at is null and public.can_view_project(project_id));
+
+create policy "project_messages_insert_visible_project" on public.project_messages
+for insert to authenticated
+with check (public.can_view_project(project_id) and author_id = public.current_app_user_id());
+
+create policy "project_messages_update_author_or_editor" on public.project_messages
+for update to authenticated
+using (author_id = public.current_app_user_id() or public.can_edit_project(project_id))
+with check (author_id = public.current_app_user_id() or public.can_edit_project(project_id));
+
+create policy "project_messages_delete_author_or_editor" on public.project_messages
+for delete to authenticated
+using (author_id = public.current_app_user_id() or public.can_edit_project(project_id));
+
+create policy "project_message_reads_select_self" on public.project_message_reads
+for select to authenticated using (user_id = public.current_app_user_id());
+
+create policy "project_message_reads_insert_self" on public.project_message_reads
+for insert to authenticated with check (user_id = public.current_app_user_id());
+
+create policy "project_message_reads_update_self" on public.project_message_reads
+for update to authenticated using (user_id = public.current_app_user_id()) with check (user_id = public.current_app_user_id());
+
+create policy "project_message_reads_delete_self" on public.project_message_reads
+for delete to authenticated using (user_id = public.current_app_user_id());
+
+-- Backfill task_assignees from legacy tasks.assignee_id.
+insert into public.task_assignees (task_id, user_id)
+select id, assignee_id
+from public.tasks
+where assignee_id is not null
+on conflict (task_id, user_id) do nothing;
+
+-- Storage bucket for chat attachments.
+insert into storage.buckets (id, name, public)
+values ('project-chat-files', 'project-chat-files', false)
+on conflict (id) do nothing;
+
+-- Storage policies. Files are stored as <project_id>/<message_id-or-random>/<filename>.
+drop policy if exists "project_chat_files_select" on storage.objects;
+drop policy if exists "project_chat_files_insert" on storage.objects;
+drop policy if exists "project_chat_files_update" on storage.objects;
+drop policy if exists "project_chat_files_delete" on storage.objects;
+
+create policy "project_chat_files_select" on storage.objects
+for select to authenticated
+using (
+  bucket_id = 'project-chat-files'
+  and public.can_view_project(((storage.foldername(name))[1])::uuid)
+);
+
+create policy "project_chat_files_insert" on storage.objects
+for insert to authenticated
+with check (
+  bucket_id = 'project-chat-files'
+  and public.can_view_project(((storage.foldername(name))[1])::uuid)
+);
+
+create policy "project_chat_files_update" on storage.objects
+for update to authenticated
+using (
+  bucket_id = 'project-chat-files'
+  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
+)
+with check (
+  bucket_id = 'project-chat-files'
+  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
+);
+
+create policy "project_chat_files_delete" on storage.objects
+for delete to authenticated
+using (
+  bucket_id = 'project-chat-files'
+  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
+);
+
+
+
+-- =====================================================================
+-- Source: migration_v5_soft_delete_tasks.sql
+-- =====================================================================
+
+-- Project Tracker Workspace v5: secure task soft-delete RPC
+-- Run after v3/v4 migrations.
+
+create or replace function public.soft_delete_task(p_task_id uuid)
+returns public.tasks
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_task public.tasks;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select * into v_task
+  from public.tasks
+  where id = p_task_id
+    and deleted_at is null;
+
+  if v_task.id is null then
+    raise exception 'Task not found';
+  end if;
+
+  if not public.can_edit_project(v_task.project_id) then
+    raise exception 'No permission to delete this task';
+  end if;
+
+  update public.tasks
+  set deleted_at = now(),
+      updated_at = now()
+  where id = p_task_id
+  returning * into v_task;
+
+  return v_task;
+end;
+$$;
+
+grant execute on function public.soft_delete_task(uuid) to authenticated;
+
+
+
+-- =====================================================================
+-- Source: v16_fix_projects_rls_update_delete.sql
+-- =====================================================================
+
+-- v16_fix_projects_rls_update_delete.sql
+-- Run in Supabase SQL Editor.
+-- Fixes project update/delete permissions, audit logging, and task subtasks.
+
+alter table public.projects enable row level security;
+
+drop policy if exists projects_select_visible on public.projects;
+drop policy if exists projects_insert_authenticated on public.projects;
+drop policy if exists projects_update_owner_editor_admin on public.projects;
+drop policy if exists projects_delete_owner_admin on public.projects;
+drop policy if exists projects_update_authenticated on public.projects;
+
+create policy projects_select_visible
+on public.projects
+for select
+to authenticated
+using (
+  exists (
+    select 1 from public.app_users au
+    where au.auth_user_id = auth.uid()
+      and au.is_active = true
+      and (
+        au.role in ('owner','admin')
+        or au.id = projects.owner_id
+        or exists (
+          select 1 from public.project_members pm
+          where pm.project_id = projects.id and pm.user_id = au.id
+        )
+      )
+  )
+);
+
+create policy projects_insert_authenticated
+on public.projects
+for insert
+to authenticated
+with check (
+  exists (
+    select 1 from public.app_users au
+    where au.auth_user_id = auth.uid()
+      and au.is_active = true
+      and (au.role in ('owner','admin') or au.id = owner_id)
+  )
+);
+
+create policy projects_update_owner_editor_admin
+on public.projects
+for update
+to authenticated
+using (
+  exists (
+    select 1 from public.app_users au
+    where au.auth_user_id = auth.uid()
+      and au.is_active = true
+      and (
+        au.role in ('owner','admin')
+        or au.id = projects.owner_id
+        or exists (
+          select 1 from public.project_members pm
+          where pm.project_id = projects.id
+            and pm.user_id = au.id
+            and pm.access_role in ('owner','editor')
+        )
+      )
+  )
+)
+with check (
+  exists (
+    select 1 from public.app_users au
+    where au.auth_user_id = auth.uid()
+      and au.is_active = true
+      and (
+        au.role in ('owner','admin')
+        or au.id = owner_id
+        or exists (
+          select 1 from public.project_members pm
+          where pm.project_id = projects.id
+            and pm.user_id = au.id
+            and pm.access_role in ('owner','editor')
+        )
+      )
+  )
+);
+
+create policy projects_delete_owner_admin
+on public.projects
+for delete
+to authenticated
+using (
+  exists (
+    select 1 from public.app_users au
+    where au.auth_user_id = auth.uid()
+      and au.is_active = true
+      and (
+        au.role in ('owner','admin')
+        or au.id = projects.owner_id
+        or exists (
+          select 1 from public.project_members pm
+          where pm.project_id = projects.id
+            and pm.user_id = au.id
+            and pm.access_role = 'owner'
+        )
+      )
+  )
+);
+
+create table if not exists public.activity_log (
+  id uuid primary key default gen_random_uuid(),
+  entity_type text not null,
+  entity_id uuid,
+  action text not null,
+  payload jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+alter table public.activity_log enable row level security;
+
+drop policy if exists activity_log_select_authenticated on public.activity_log;
+create policy activity_log_select_authenticated
+on public.activity_log
+for select
+to authenticated
+using (true);
+
+drop policy if exists activity_log_insert_authenticated on public.activity_log;
+create policy activity_log_insert_authenticated
+on public.activity_log
+for insert
+to authenticated
+with check (true);
+
+create or replace function public.audit_actor_json()
+returns jsonb
+language sql
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (
+      select jsonb_build_object(
+        'app_user_id', au.id,
+        'display_name', au.display_name,
+        'email', au.email,
+        'role', au.role,
+        'auth_user_id', au.auth_user_id
+      )
+      from public.app_users au
+      where au.auth_user_id = auth.uid()
+      limit 1
+    ),
+    jsonb_build_object('auth_user_id', auth.uid(), 'display_name', 'unknown')
+  )
+$$;
+
+create or replace function public.audit_task_changes()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_action text;
+  v_changes jsonb := '{}'::jsonb;
+begin
+  if TG_OP = 'INSERT' then
+    insert into public.activity_log(entity_type, entity_id, action, payload)
+    values ('task', NEW.id, 'create', jsonb_build_object(
+      'actor', public.audit_actor_json(),
+      'task_title', NEW.title,
+      'project_id', NEW.project_id,
+      'new_status', NEW.status,
+      'new', to_jsonb(NEW)
+    ));
+    return NEW;
+  end if;
+
+  if TG_OP = 'UPDATE' then
+    if OLD.status is distinct from NEW.status then
+      v_action := 'task_status_change';
       v_changes := v_changes || jsonb_build_object('status', jsonb_build_object('from', OLD.status, 'to', NEW.status));
     else
       v_action := 'update';
@@ -1068,4 +1797,3 @@ for update
 to authenticated
 using (auth_user_id = auth.uid())
 with check (auth_user_id = auth.uid());
-
