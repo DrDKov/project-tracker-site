@@ -11,14 +11,17 @@ const css = fs.readFileSync(path.join(root, 'assets', 'app.css'), 'utf8');
 const deployTransform = fs.readFileSync(path.join(root, '.github', 'scripts', 'apply_recurrence_scope.py'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260727_task_subtask_reorder_rpc.sql'), 'utf8');
 
-assert.match(loader, /subtask-reorder\.js\?v=20260727-subtask-order-v1/);
-assert.match(loader, /app-runtime\.js\?v=20260727-subtask-order-v1/);
-assert.match(deployTransform, /ver='20260727-subtask-order-v1'/);
+assert.match(loader, /subtask-reorder\.js\?v=20260727-subtask-ui-v2/);
+assert.match(loader, /app-runtime\.js\?v=20260727-subtask-ui-v2/);
+assert.match(deployTransform, /ver='20260727-subtask-ui-v2'/);
 assert.match(runtime, /class="wk-sublist" data-task-id=/);
 assert.match(runtime, /class="wk-subdrag-handle"/);
 assert.match(runtime, /Math\.max\(0,\.\.\.subs\(task_id\)\.map/);
-assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20260727-subtask-order-v1/);
+assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20260727-subtask-ui-v2/);
 assert.match(css, /touch-action:none/);
+assert.match(css, /appearance:none!important/);
+assert.match(css, /position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:15px!important/);
+assert.match(css, /position:static!important;width:44px!important;height:44px!important/);
 assert.match(source, /addEventListener\('pointermove'/);
 assert.match(source, /addEventListener\('pointercancel'/);
 assert.match(source, /event\.key !== 'ArrowUp'/);
@@ -123,4 +126,3 @@ api.writeRankUpdates('task-1', [{ id: 'a', sort_order: 2500 }]).then(() => {
   console.error(error);
   process.exitCode = 1;
 });
-
