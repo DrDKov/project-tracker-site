@@ -18,7 +18,7 @@ assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
   deployTransform,
-  /ver='20260727-subtask-order-v1'/,
+  /ver='20260727-subtask-ui-v2'/,
   'the Pages build must not restore an obsolete app.js cache token',
 );
 
@@ -118,4 +118,3 @@ assert.equal(label.textContent, 'Выполненные');
 assert.equal(doneToggle.classList.contains('mobile-completed-visible'), false);
 
 console.log('Mobile completed-task toggle regression checks passed');
-
