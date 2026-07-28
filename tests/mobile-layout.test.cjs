@@ -28,6 +28,12 @@ assert.match(runtime, /document\.body\.classList\.toggle\('mobile-chat-view',v==
 assert.match(css, /body\.mobile-chat-view \.app \.main\{height:calc\(100dvh - 72px - env\(safe-area-inset-bottom\)\)/);
 assert.match(css, /body #chat \.chat-compose\.wk-compact\{[\s\S]*?grid-template-columns:44px minmax\(0,1fr\) 44px!important/);
 assert.match(css, /body #chat #chatMessages\.chat-messages\{min-height:0!important;max-height:none!important/);
+assert.match(html, /id='taskCommentText' rows='1' placeholder='Напишите комментарий\.\.\.'/);
+assert.match(css, /#taskModal #taskCommentsBlock \.task-comment-form\{[\s\S]*?grid-template-columns:minmax\(0,1fr\) 44px!important;gap:7px!important/);
+assert.match(css, /#taskModal #taskCommentText\{[\s\S]*?height:44px!important;min-height:44px!important;max-height:96px!important/);
+assert.match(css, /#taskModal #taskCommentText\{[\s\S]*?border-radius:22px!important;resize:none!important;overflow-y:auto!important/);
+assert.match(css, /#taskModal #taskCommentsBlock button\.task-comment-send[\s\S]*?width:44px!important;height:44px!important;[\s\S]*?border-radius:999px!important;[\s\S]*?background-color:#0a84ff!important/);
+assert.doesNotMatch(css, /#taskModal #taskCommentText\{[^}]*min-height:1(?:18|40)px!important/);
 assert.match(runtime, /setAttribute\('aria-label','Отправить сообщение'\)/);
 assert.match(runtime, /setAttribute\('aria-label','Очистить чат'\)/);
 
