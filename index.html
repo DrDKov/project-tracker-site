@@ -1,7 +1,17 @@
 <!doctype html>
 <html lang='ru'>
 <head>
-<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,viewport-fit=cover'>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'>
+<style id='mobile-zoom-lock-v1'>
+@media(max-width:980px){html,body{touch-action:manipulation!important}}
+</style>
+<script>
+(()=>{if(window.__MOBILE_ZOOM_LOCK_V1__)return;window.__MOBILE_ZOOM_LOCK_V1__=1;
+const mobileZoomMq=window.matchMedia('(max-width:980px)');
+const blockMobileZoom=e=>{if(mobileZoomMq.matches)e.preventDefault()};
+document.addEventListener('gesturestart',blockMobileZoom,{passive:false});
+})();
+</script>
 <title>Workspace · Project Tracker</title>
 <link rel='icon' href='favicon.ico?v=20260713-transparent' sizes='any'>
 <link rel='icon' type='image/png' sizes='32x32' href='favicon-32.png?v=20260713-transparent'>

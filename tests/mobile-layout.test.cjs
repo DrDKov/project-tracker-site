@@ -8,6 +8,11 @@ const css = fs.readFileSync(path.join(root, 'assets', 'app.css'), 'utf8');
 const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'utf8');
 
 assert.match(html, /viewport-fit=cover/);
+assert.match(html, /minimum-scale=1,maximum-scale=1,user-scalable=no/);
+assert.match(html, /@media\(max-width:980px\)\{html,body\{touch-action:manipulation!important\}\}/);
+assert.match(html, /const mobileZoomMq=window\.matchMedia\('\(max-width:980px\)'\)/);
+assert.match(html, /const blockMobileZoom=e=>\{if\(mobileZoomMq\.matches\)e\.preventDefault\(\)\}/);
+assert.match(html, /document\.addEventListener\('gesturestart',blockMobileZoom,\{passive:false\}\)/);
 assert.match(html, /#quickTaskBtn:before,body #quickTaskBtn:after/);
 assert.match(html, /#quickTaskBtn:before\{width:20px!important;height:2px!important\}/);
 assert.match(html, /#quickTaskBtn:after\{width:2px!important;height:20px!important\}/);
