@@ -208,9 +208,9 @@ body.reference-theme #taskShowDoneToggle{
   border:1px solid rgba(82,72,55,.2)!important;border-radius:999px!important;background:#d5cbbb!important;
   box-shadow:inset 2px 2px 5px rgba(116,97,70,.2),inset -2px -2px 5px rgba(255,252,243,.56)!important;cursor:pointer!important;
 }
-body.reference-theme #taskShowDoneToggle:after{content:''!important;position:absolute!important;left:2px!important;top:2px!important;width:18px!important;height:18px!important;border-radius:50%!important;background:#f8f1e4!important;box-shadow:2px 2px 5px rgba(92,75,53,.26)!important;transition:transform .16s ease!important}
+body.reference-theme #taskShowDoneToggle:before{content:''!important;position:absolute!important;left:2px!important;top:2px!important;width:18px!important;height:18px!important;border-radius:50%!important;background:#f8f1e4!important;box-shadow:2px 2px 5px rgba(92,75,53,.26)!important;transition:transform .16s ease!important}
 body.reference-theme #taskShowDoneToggle:checked{background:linear-gradient(145deg,#087174,#005457)!important;border-color:rgba(0,69,72,.36)!important}
-body.reference-theme #taskShowDoneToggle:checked:after{transform:translateX(16px)!important;background:#fff!important}
+body.reference-theme #taskShowDoneToggle:checked:before{transform:translateX(16px)!important;background:#fff!important}
 body.reference-theme .col{
   color:var(--ref-ink)!important;background:rgba(238,230,216,.44)!important;
   border:1px solid rgba(82,72,55,.13)!important;border-radius:18px!important;

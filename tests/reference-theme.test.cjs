@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets', 'reference-theme.css'), 'utf8');
 
-assert.match(html, /reference-theme\.css\?v=20260812-soft-teal-v2/);
+assert.match(html, /reference-theme\.css\?v=20260812-soft-teal-v3/);
 assert.match(html, /<body class='reference-theme'>/);
 assert.match(css, /--ref-base:#eee6d8/);
 assert.match(css, /--ref-teal:#006164/);
@@ -17,6 +17,9 @@ assert.match(css, /body\.reference-theme \.app \.sidebar \.nav>button\.active/);
 assert.match(css, /body\.reference-theme #chat #chatMessages\.chat-messages/);
 assert.match(css, /body\.reference-theme #taskBoardModeToggle button\.active/);
 assert.match(css, /body\.reference-theme #taskShowDoneToggle:checked/);
+assert.match(css, /body\.reference-theme #taskShowDoneToggle:before/);
+assert.match(css, /body\.reference-theme #taskShowDoneToggle:checked:before/);
+assert.doesNotMatch(css, /body\.reference-theme #taskShowDoneToggle(?::checked)?:after/);
 assert.match(css, /body\.reference-theme \.timeline-calendar-grid/);
 assert.match(css, /body\.reference-theme #materials \.materials-tab\.active/);
 assert.match(css, /body\.reference-theme \.week-add-task-btn/);

@@ -82,9 +82,9 @@ body.sketch-theme #taskBoardModeToggle button,body.sketch-theme #materials .mate
 body.sketch-theme #taskBoardModeToggle button.active,body.sketch-theme #materials .materials-tab.active{color:var(--sk-paper)!important;background:var(--sk-ink)!important;box-shadow:3px 3px 0 rgba(36,35,31,.2)!important}
 body.sketch-theme #taskShowDoneWrap{color:var(--sk-ink)!important;background:#f8f5ec!important;border:1.5px solid var(--sk-line)!important;border-radius:7px!important;box-shadow:3px 3px 0 var(--sk-shadow)!important}
 body.sketch-theme #taskShowDoneToggle{appearance:none!important;width:42px!important;height:24px!important;min-width:42px!important;position:relative!important;background:#ded9ce!important;border:1.8px solid var(--sk-ink)!important;border-radius:999px!important;box-shadow:inset 2px 2px 0 rgba(36,35,31,.15)!important}
-body.sketch-theme #taskShowDoneToggle:after{content:''!important;position:absolute!important;left:2px!important;top:2px!important;width:16px!important;height:16px!important;border:1.5px solid var(--sk-ink)!important;border-radius:50%!important;background:#f8f5ec!important;transition:transform .16s ease!important}
+body.sketch-theme #taskShowDoneToggle:before{content:''!important;position:absolute!important;left:2px!important;top:2px!important;width:16px!important;height:16px!important;border:1.5px solid var(--sk-ink)!important;border-radius:50%!important;background:#f8f5ec!important;transition:transform .16s ease!important}
 body.sketch-theme #taskShowDoneToggle:checked{background:var(--sk-ink)!important}
-body.sketch-theme #taskShowDoneToggle:checked:after{transform:translateX(17px)!important}
+body.sketch-theme #taskShowDoneToggle:checked:before{transform:translateX(17px)!important}
 body.sketch-theme .col{background:rgba(244,240,230,.52)!important;border:1.5px solid rgba(36,35,31,.34)!important;border-radius:8px!important;box-shadow:inset 3px 3px 0 rgba(36,35,31,.08)!important}
 body.sketch-theme .task-card,body.sketch-theme .task-card.wk-task{
   color:var(--sk-ink)!important;background:color-mix(in srgb,var(--accent,#706b61) 9%,#f8f5ec)!important;
