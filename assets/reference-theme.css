@@ -1,0 +1,339 @@
+/* Warm soft-interface theme, based on the supplied visual reference. */
+body.reference-theme{
+  --bg:#eee6d8;
+  --panel:#f4eddf;
+  --text:#182321;
+  --muted:#716d64;
+  --line:#d7cbb8;
+  --dark:#064f52;
+  --dark2:#073f42;
+  --blue:#006568;
+  --green:#23715f;
+  --orange:#a66d2a;
+  --red:#a3473f;
+  --violet:#596c67;
+  --soft-blue:#d9e8e1;
+  --soft-green:#dce9df;
+  --soft-orange:#eee0c9;
+  --soft-red:#eed8d1;
+  --soft-violet:#e3dfd2;
+  --ref-base:#eee6d8;
+  --ref-raised:#f4eddf;
+  --ref-inset:#e9dfcf;
+  --ref-teal:#006164;
+  --ref-teal-dark:#044f52;
+  --ref-teal-soft:#d8e7df;
+  --ref-ink:#182321;
+  --ref-muted:#716d64;
+  --ref-border:rgba(82,72,55,.16);
+  --ref-shadow-dark:rgba(116,97,70,.24);
+  --ref-shadow-light:rgba(255,252,243,.92);
+  margin:0!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(255,250,238,.7),transparent 34rem),
+    linear-gradient(145deg,#f2eadc,#e9dfcf)!important;
+  color:var(--ref-ink)!important;
+}
+body.reference-theme,body.reference-theme button,body.reference-theme input,body.reference-theme select,body.reference-theme textarea{
+  font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif!important;
+}
+body.reference-theme ::selection{background:rgba(0,97,100,.2);color:var(--ref-ink)}
+body.reference-theme *{scrollbar-color:rgba(0,97,100,.42) transparent}
+body.reference-theme .app{background:transparent!important}
+body.reference-theme .main{background:transparent!important}
+
+/* Raised navigation layer */
+body.reference-theme .sidebar{
+  color:var(--ref-ink)!important;
+  background:linear-gradient(145deg,#f4eddf,#e8decd)!important;
+  border-right:1px solid rgba(82,72,55,.13)!important;
+  box-shadow:9px 0 24px rgba(116,97,70,.14),-6px 0 18px rgba(255,252,243,.76)!important;
+}
+body.reference-theme .logo{
+  color:#fff!important;background:linear-gradient(145deg,#0a7072,#004f52)!important;
+  border:1px solid rgba(0,69,72,.36)!important;border-radius:12px!important;
+  box-shadow:5px 5px 11px rgba(89,73,52,.25),-5px -5px 11px rgba(255,252,243,.82)!important;
+}
+body.reference-theme .brand h1{color:var(--ref-ink)!important;letter-spacing:-.02em}
+body.reference-theme .brand p{color:var(--ref-muted)!important}
+body.reference-theme .nav button{
+  color:#46514e!important;background:transparent!important;border:1px solid transparent!important;
+  border-radius:12px!important;transition:color .16s ease,box-shadow .16s ease,transform .16s ease!important;
+}
+body.reference-theme .nav button:hover{
+  color:var(--ref-teal-dark)!important;background:linear-gradient(145deg,#f7f0e3,#ebe1d0)!important;
+  border-color:rgba(82,72,55,.1)!important;
+  box-shadow:4px 4px 9px rgba(116,97,70,.18),-4px -4px 9px rgba(255,252,243,.82)!important;
+}
+body.reference-theme .nav button.active{
+  color:#fff!important;background:linear-gradient(145deg,#087073,#005457)!important;
+  border-color:rgba(0,69,72,.28)!important;
+  box-shadow:inset 2px 2px 5px rgba(0,55,57,.3),inset -2px -2px 5px rgba(36,139,140,.38),4px 5px 10px rgba(100,82,57,.2)!important;
+}
+body.reference-theme .side-footer{
+  color:var(--ref-muted)!important;background:rgba(239,231,216,.68)!important;
+  border:1px solid rgba(82,72,55,.13)!important;border-radius:16px!important;
+  box-shadow:inset 3px 3px 7px rgba(116,97,70,.14),inset -3px -3px 7px rgba(255,252,243,.68)!important;
+}
+body.reference-theme .side-footer b{color:var(--ref-teal-dark)!important}
+
+/* Typography and structural surfaces */
+body.reference-theme .topbar h2{color:var(--ref-ink)!important;letter-spacing:-.035em!important}
+body.reference-theme h3,body.reference-theme h4{color:var(--ref-ink)!important;letter-spacing:-.018em}
+body.reference-theme .muted{color:var(--ref-muted)!important}
+body.reference-theme .metric,
+body.reference-theme .panel,
+body.reference-theme .project-card,
+body.reference-theme .user-card,
+body.reference-theme .timeline-item,
+body.reference-theme .audit-row{
+  color:var(--ref-ink)!important;background:linear-gradient(145deg,#f7f0e3,#eae0cf)!important;
+  border:1px solid var(--ref-border)!important;
+  box-shadow:7px 8px 17px var(--ref-shadow-dark),-7px -7px 16px var(--ref-shadow-light)!important;
+}
+body.reference-theme .metric{border-radius:16px!important}
+body.reference-theme .metric span{color:var(--ref-muted)!important;text-transform:uppercase;letter-spacing:.055em;font-size:11px!important;font-weight:800}
+body.reference-theme .metric b{color:var(--ref-teal-dark)!important}
+body.reference-theme .panel{border-radius:20px!important}
+body.reference-theme .project-card,body.reference-theme .user-card,body.reference-theme .timeline-item{border-radius:16px!important}
+body.reference-theme .panel-head{border-color:rgba(82,72,55,.13)!important}
+body.reference-theme .empty{
+  color:#888176!important;background:rgba(239,231,216,.42)!important;
+  border:1px dashed rgba(82,72,55,.25)!important;border-radius:16px!important;
+  box-shadow:inset 3px 3px 8px rgba(116,97,70,.11),inset -3px -3px 8px rgba(255,252,243,.52)!important;
+}
+
+/* Controls: raised, inset and pressed layers */
+body.reference-theme .btn,
+body.reference-theme .x,
+body.reference-theme .ms-filter-btn{
+  border-radius:12px!important;transition:transform .14s ease,box-shadow .14s ease,filter .14s ease!important;
+}
+body.reference-theme .btn.primary,body.reference-theme .btn.blue{
+  color:#fff!important;background:linear-gradient(145deg,#087174,#005457)!important;
+  border:1px solid rgba(0,69,72,.28)!important;
+  box-shadow:4px 5px 11px rgba(86,70,49,.24),-3px -3px 8px rgba(255,252,243,.62)!important;
+}
+body.reference-theme .btn.secondary,body.reference-theme .btn.ghost,body.reference-theme .x{
+  color:var(--ref-ink)!important;background:linear-gradient(145deg,#f8f1e4,#e9dfce)!important;
+  border:1px solid rgba(82,72,55,.14)!important;
+  box-shadow:4px 4px 9px rgba(116,97,70,.18),-4px -4px 9px rgba(255,252,243,.82)!important;
+}
+body.reference-theme .btn.danger{color:#7e302b!important;background:linear-gradient(145deg,#f1ded5,#e4cdc4)!important;border:1px solid rgba(126,48,43,.2)!important}
+body.reference-theme .btn:hover:not(:disabled){filter:brightness(1.025)}
+body.reference-theme .btn:active:not(:disabled),body.reference-theme .x:active:not(:disabled){
+  transform:translateY(1px)!important;
+  box-shadow:inset 3px 3px 7px rgba(87,70,48,.22),inset -3px -3px 7px rgba(255,252,243,.66)!important;
+}
+body.reference-theme button:disabled,body.reference-theme .btn:disabled{opacity:.54!important;box-shadow:none!important;cursor:default!important}
+body.reference-theme .input,
+body.reference-theme input:not([type='checkbox']):not([type='radio']):not([type='color']),
+body.reference-theme select,
+body.reference-theme textarea{
+  color:var(--ref-ink)!important;background-color:#f2eadc!important;
+  border:1px solid rgba(82,72,55,.18)!important;border-radius:12px!important;
+  box-shadow:inset 3px 3px 7px rgba(116,97,70,.14),inset -3px -3px 7px rgba(255,252,243,.76)!important;
+}
+body.reference-theme input::placeholder,body.reference-theme textarea::placeholder{color:#9a9183!important;opacity:1}
+body.reference-theme .input:focus,body.reference-theme input:focus,body.reference-theme select:focus,body.reference-theme textarea:focus{
+  outline:none!important;border-color:rgba(0,97,100,.68)!important;
+  box-shadow:inset 3px 3px 7px rgba(116,97,70,.13),inset -3px -3px 7px rgba(255,252,243,.8),0 0 0 3px rgba(0,97,100,.13)!important;
+}
+body.reference-theme input[type='checkbox'],body.reference-theme input[type='radio']{accent-color:var(--ref-teal)!important}
+body.reference-theme .ms-filter-btn{background:linear-gradient(145deg,#f7f0e3,#eae0cf)!important;border-color:rgba(82,72,55,.16)!important;color:var(--ref-ink)!important;box-shadow:3px 4px 9px rgba(116,97,70,.16),-3px -3px 8px rgba(255,252,243,.8)!important}
+body.reference-theme .ms-menu,
+body.reference-theme .task-more-menu,
+body.reference-theme .mention-menu,
+body.reference-theme .mention-fix-menu{
+  background:#f4eddf!important;color:var(--ref-ink)!important;border-color:rgba(82,72,55,.18)!important;
+  box-shadow:8px 10px 24px rgba(94,77,55,.26),-5px -5px 14px rgba(255,252,243,.72)!important;
+}
+body.reference-theme .ms-row:hover,body.reference-theme .task-more-menu button:hover,body.reference-theme .mention-option:hover,body.reference-theme .mention-fix-option:hover{background:#e2e5d7!important;color:var(--ref-teal-dark)!important}
+
+/* Data display */
+body.reference-theme .badge{color:#315a56!important;background:#dfe8df!important;border:1px solid rgba(0,97,100,.12)!important}
+body.reference-theme .badge.high{color:#8b3832!important;background:#edd7cf!important;border-color:rgba(139,56,50,.14)!important}
+body.reference-theme .badge.medium{color:#7d5728!important;background:#ebdfc8!important;border-color:rgba(125,87,40,.12)!important}
+body.reference-theme .badge.low{color:#315a56!important;background:#dbe7df!important}
+body.reference-theme .badge.done{color:#35614d!important;background:#dce7da!important}
+body.reference-theme .badge.idea{color:#5f5c50!important;background:#e4dfd3!important}
+body.reference-theme .badge.waiting{color:#755d2d!important;background:#eee4c9!important}
+body.reference-theme .progress,body.reference-theme .wk-subbar{background:#ddd2c0!important;box-shadow:inset 2px 2px 4px rgba(116,97,70,.16),inset -2px -2px 4px rgba(255,252,243,.6)!important}
+body.reference-theme .progress i,body.reference-theme .wk-subbar i{background:linear-gradient(90deg,#087174,#005457)!important}
+body.reference-theme .avatar{color:#fff!important;background:linear-gradient(145deg,#0b7173,#075255)!important;border-color:#efe7d8!important}
+body.reference-theme table{background:transparent!important}
+body.reference-theme th{color:#4f5c58!important;background:rgba(232,223,207,.74)!important}
+body.reference-theme th,body.reference-theme td{border-color:rgba(82,72,55,.13)!important}
+
+/* Task board */
+body.reference-theme .kanban{gap:18px!important}
+body.reference-theme .col{
+  color:var(--ref-ink)!important;background:rgba(238,230,216,.44)!important;
+  border:1px solid rgba(82,72,55,.13)!important;border-radius:18px!important;
+  box-shadow:inset 3px 3px 9px rgba(116,97,70,.1),inset -3px -3px 9px rgba(255,252,243,.48)!important;
+}
+body.reference-theme .task-card,body.reference-theme .task-card.wk-task{
+  color:var(--ref-ink)!important;background:linear-gradient(145deg,#f8f1e5,#e9dfcf)!important;
+  border:1px solid rgba(0,97,100,.17)!important;border-radius:16px!important;
+  box-shadow:6px 7px 15px rgba(108,90,65,.22),-5px -5px 13px rgba(255,252,243,.82)!important;
+}
+body.reference-theme .task-card.overdue{background:linear-gradient(145deg,#f3e3d9,#e8d4ca)!important;border-color:rgba(163,71,63,.28)!important}
+body.reference-theme .task-card.wk-complete{opacity:.68!important}
+body.reference-theme .task-card p{color:var(--ref-muted)!important}
+body.reference-theme .wk-sub{
+  background:#eee5d7!important;border-color:rgba(82,72,55,.15)!important;border-radius:12px!important;
+  box-shadow:inset 3px 3px 7px rgba(116,97,70,.13),inset -3px -3px 7px rgba(255,252,243,.62)!important;
+}
+body.reference-theme .wk-subrow{background:rgba(248,242,231,.64)!important;border-color:rgba(82,72,55,.12)!important}
+body.reference-theme .wk-subdrag-handle{background:var(--ref-teal)!important}
+body.reference-theme .wk-subadd button{background:linear-gradient(145deg,#087174,#005457)!important;color:#fff!important;box-shadow:3px 4px 8px rgba(86,70,49,.22)!important}
+body.reference-theme .task-fav-btn,body.reference-theme .task-more-btn,body.reference-theme .task-comment-badge{
+  color:#51615d!important;background:linear-gradient(145deg,#f7f0e3,#e9dfce)!important;border:1px solid rgba(82,72,55,.13)!important;
+  box-shadow:3px 3px 7px rgba(116,97,70,.16),-3px -3px 7px rgba(255,252,243,.72)!important;
+}
+body.reference-theme .task-fav-btn.active{color:var(--ref-teal)!important}
+
+/* Modals and feedback */
+body.reference-theme dialog.modal{
+  color:var(--ref-ink)!important;background:#f2eadc!important;border:1px solid rgba(82,72,55,.16)!important;
+  box-shadow:18px 22px 54px rgba(73,59,41,.34),-10px -10px 30px rgba(255,252,243,.7)!important;
+}
+body.reference-theme dialog.modal::backdrop{background:rgba(42,39,31,.38)!important;backdrop-filter:blur(4px)}
+body.reference-theme .modal-body{background:linear-gradient(145deg,#f5eee1,#eae0d0)!important}
+body.reference-theme .form-grid,
+body.reference-theme dialog#taskModal>form#taskForm>.form-grid,
+body.reference-theme .task-comments-block,
+body.reference-theme dialog#taskModal>form#taskForm>#taskCommentsBlock.task-comments-block{
+  color:var(--ref-ink)!important;background:#f2eadc!important;border-color:rgba(82,72,55,.14)!important;
+  box-shadow:inset 3px 3px 9px rgba(116,97,70,.11),inset -3px -3px 9px rgba(255,252,243,.6)!important;
+}
+body.reference-theme .task-calendar-box,body.reference-theme .task-recurrence-box{background:rgba(236,226,210,.66)!important;border-color:rgba(82,72,55,.14)!important}
+body.reference-theme .modal-actions,body.reference-theme dialog#taskModal>form#taskForm>.modal-actions{background:transparent!important}
+body.reference-theme .task-comment{background:#f7f0e4!important;border-color:rgba(82,72,55,.14)!important;box-shadow:3px 4px 9px rgba(116,97,70,.14),-3px -3px 8px rgba(255,252,243,.7)!important}
+body.reference-theme #taskModal #taskCommentsBlock button.task-comment-send,
+body.reference-theme #taskModal button.task-comment-send.btn,
+body.reference-theme #taskModal #taskCommentsBlock button[data-action='add-task-comment']{
+  background-color:var(--ref-teal)!important;box-shadow:4px 5px 10px rgba(86,70,49,.23),-3px -3px 7px rgba(255,252,243,.62)!important;
+}
+body.reference-theme .notice{color:#6e5528!important;background:#eee2cb!important;border-color:rgba(128,91,37,.2)!important}
+body.reference-theme .assignment-panel,body.reference-theme .assignment-toast{
+  color:var(--ref-ink)!important;background:#f4eddf!important;border-color:rgba(82,72,55,.17)!important;
+  box-shadow:9px 12px 28px rgba(94,77,55,.27),-6px -6px 16px rgba(255,252,243,.72)!important;
+}
+body.reference-theme .assignment-panel-head{border-color:rgba(82,72,55,.13)!important}
+body.reference-theme .assignment-panel-head button{color:var(--ref-teal-dark)!important;background:#e8dfcf!important}
+body.reference-theme .assignment-item{color:var(--ref-ink)!important;background:#f4eddf!important;border-color:rgba(82,72,55,.13)!important}
+body.reference-theme .assignment-item:hover{background:#eee6d8!important}
+body.reference-theme .assignment-item.unread{background:#dfe9e1!important;border-color:rgba(0,97,100,.26)!important}
+body.reference-theme .assignment-type{color:#245752!important;background:#d5e6dd!important}
+
+/* Chat */
+body.reference-theme .chat-messages,body.reference-theme #chatMessages.chat-messages{
+  background:linear-gradient(145deg,#e9dfcf,#f3ecdf)!important;border-color:rgba(82,72,55,.14)!important;
+  box-shadow:inset 4px 4px 10px rgba(116,97,70,.12),inset -4px -4px 10px rgba(255,252,243,.62)!important;
+}
+body.reference-theme .message,body.reference-theme .chat-bubble{background:#f7f0e4!important;border-color:rgba(82,72,55,.14)!important;box-shadow:3px 4px 9px rgba(116,97,70,.14),-3px -3px 8px rgba(255,252,243,.68)!important}
+body.reference-theme .message.mine,body.reference-theme .chat-bubble.mine{background:#dce9e1!important;border-color:rgba(0,97,100,.2)!important}
+body.reference-theme .chat-file-btn{color:var(--ref-teal)!important;background:linear-gradient(145deg,#f8f1e4,#e9dfce)!important;border-color:rgba(82,72,55,.14)!important;box-shadow:3px 4px 9px rgba(116,97,70,.16),-3px -3px 8px rgba(255,252,243,.74)!important}
+body.reference-theme #sendChatBtn.chat-send{background-color:var(--ref-teal)!important;box-shadow:4px 5px 10px rgba(86,70,49,.23)!important}
+
+@media(max-width:980px){
+  body.reference-theme{
+    background:linear-gradient(155deg,#f4eddf,#e8decd)!important;
+  }
+  body.reference-theme .topbar{
+    background:rgba(241,233,218,.94)!important;border-bottom:1px solid rgba(82,72,55,.12)!important;
+    box-shadow:0 7px 18px rgba(116,97,70,.12)!important;backdrop-filter:blur(22px) saturate(125%)!important;
+  }
+  body.reference-theme .topbar h2{color:var(--ref-ink)!important}
+  body.reference-theme #assignmentBell,body.reference-theme #mobileTaskActionsBtn{
+    color:var(--ref-teal-dark)!important;background:linear-gradient(145deg,#f8f1e4,#e9dfce)!important;
+    border:1px solid rgba(82,72,55,.13)!important;box-shadow:3px 4px 9px rgba(116,97,70,.17),-3px -3px 8px rgba(255,252,243,.78)!important;
+  }
+  body.reference-theme #quickTaskBtn{
+    background:linear-gradient(145deg,#087174,#005457)!important;border:1px solid rgba(0,69,72,.28)!important;
+    box-shadow:4px 5px 10px rgba(86,70,49,.23),-3px -3px 8px rgba(255,252,243,.64)!important;
+  }
+  body.reference-theme #mobileTaskActionsMenu,
+  body.reference-theme .mobile-filter-body{
+    color:var(--ref-ink)!important;background:rgba(243,236,222,.98)!important;border-color:rgba(82,72,55,.16)!important;
+    box-shadow:10px 14px 34px rgba(91,74,52,.28),-6px -6px 16px rgba(255,252,243,.7)!important;
+    backdrop-filter:blur(24px) saturate(120%)!important;
+  }
+  body.reference-theme #mobileTaskActionsMenu button{color:var(--ref-ink)!important}
+  body.reference-theme #mobileTaskActionsMenu button:active{background:#dfd8c9!important}
+  body.reference-theme #tasks>.toolbar>#taskSearch,
+  body.reference-theme #mobileTaskFilters>summary{
+    color:var(--ref-ink)!important;background-color:#f1e9db!important;border-color:rgba(82,72,55,.15)!important;
+    box-shadow:inset 3px 3px 7px rgba(116,97,70,.13),inset -3px -3px 7px rgba(255,252,243,.72)!important;
+  }
+  body.reference-theme #mobileTaskFilters[open]>summary{color:var(--ref-teal-dark)!important;background:#dce8e0!important;border-color:rgba(0,97,100,.26)!important}
+  body.reference-theme .mobile-filter-close{color:var(--ref-teal-dark)!important;background:#e5dccb!important;box-shadow:inset 2px 2px 5px rgba(116,97,70,.14),inset -2px -2px 5px rgba(255,252,243,.58)!important}
+  body.reference-theme .mobile-filter-body .ms-filter-btn,
+  body.reference-theme #taskShowDoneWrap,
+  body.reference-theme #taskDateFilter{
+    color:var(--ref-ink)!important;background:#f3ebde!important;border-color:rgba(82,72,55,.14)!important;
+    box-shadow:3px 4px 9px rgba(116,97,70,.14),-3px -3px 8px rgba(255,252,243,.68)!important;
+  }
+  body.reference-theme #taskShowDoneWrap input{background:#d5cbbb!important;box-shadow:inset 2px 2px 5px rgba(116,97,70,.18),inset -2px -2px 5px rgba(255,252,243,.56)!important}
+  body.reference-theme #taskShowDoneWrap input:checked{background:var(--ref-teal)!important}
+  body.reference-theme #taskBoardModeToggle{background:#e4dac9!important;box-shadow:inset 3px 3px 7px rgba(116,97,70,.14),inset -3px -3px 7px rgba(255,252,243,.58)!important}
+  body.reference-theme #taskBoardModeToggle button{color:#5d625c!important}
+  body.reference-theme #taskBoardModeToggle button.active{
+    color:var(--ref-teal-dark)!important;background:linear-gradient(145deg,#f8f1e4,#e9dfce)!important;
+    box-shadow:3px 3px 7px rgba(116,97,70,.17),-3px -3px 7px rgba(255,252,243,.72)!important;
+  }
+  body.reference-theme #taskWeekNav .btn,
+  body.reference-theme #mobileColumnPager button{
+    color:var(--ref-teal-dark)!important;background:linear-gradient(145deg,#f7f0e3,#e9dfce)!important;
+    border:1px solid rgba(82,72,55,.13)!important;box-shadow:3px 4px 8px rgba(116,97,70,.16),-3px -3px 8px rgba(255,252,243,.72)!important;
+  }
+  body.reference-theme #mobileColumnPager{
+    background:linear-gradient(145deg,#f2eadc,#e7ddcc)!important;border-color:rgba(82,72,55,.13)!important;
+    box-shadow:5px 6px 13px rgba(116,97,70,.17),-4px -4px 11px rgba(255,252,243,.7)!important;
+  }
+  body.reference-theme .mobile-column-label strong{color:var(--ref-ink)!important}
+  body.reference-theme .mobile-column-label small{color:var(--ref-muted)!important}
+  body.reference-theme #kanban.mobile-single-column>.col{background:rgba(235,226,210,.4)!important}
+  body.reference-theme .app .sidebar{
+    background:rgba(240,232,217,.98)!important;border-top:1px solid rgba(82,72,55,.14)!important;
+    box-shadow:0 -8px 22px rgba(100,82,58,.2),0 -1px 0 rgba(255,252,243,.72)!important;
+  }
+  body.reference-theme .app .sidebar .nav>button{color:#53615d!important;background:transparent!important;border:1px solid transparent!important;box-shadow:none!important}
+  body.reference-theme .app .sidebar .nav>button.active{
+    color:#fff!important;background:linear-gradient(145deg,#087174,#005457)!important;border-color:rgba(0,69,72,.24)!important;
+    box-shadow:inset 2px 2px 5px rgba(0,55,57,.28),inset -2px -2px 5px rgba(36,139,140,.35),3px 4px 9px rgba(96,78,55,.2)!important;
+  }
+  body.reference-theme .app .sidebar .nav.mobile-more-open>button[data-view='settings']{
+    color:var(--ref-ink)!important;background:linear-gradient(145deg,#f7f0e3,#e9dfce)!important;border-color:rgba(82,72,55,.15)!important;
+    box-shadow:7px 9px 22px rgba(94,77,55,.25),-4px -4px 12px rgba(255,252,243,.68)!important;
+  }
+  body.reference-theme .assignment-panel{top:68px!important;background:#f4eddf!important}
+  body.reference-theme dialog.modal{background:#f2eadc!important}
+
+  /* The compact chat stylesheet uses id-heavy selectors; keep it inside the theme. */
+  body.reference-theme #chat #chatProject,
+  body.reference-theme #chat #chatSearch,
+  body.reference-theme #chat .chat-compose.wk-compact #chatText{
+    color:var(--ref-ink)!important;background:#f1e9db!important;border-color:rgba(82,72,55,.16)!important;
+    box-shadow:inset 3px 3px 7px rgba(116,97,70,.13),inset -3px -3px 7px rgba(255,252,243,.68)!important;
+  }
+  body.reference-theme #chat #clearChatBtn,
+  body.reference-theme #chat .chat-file-btn{
+    background-color:#f4eddf!important;border-color:rgba(82,72,55,.14)!important;
+    box-shadow:3px 4px 9px rgba(116,97,70,.16),-3px -3px 8px rgba(255,252,243,.74)!important;
+  }
+  body.reference-theme #chat #chatMessages.chat-messages{
+    background:linear-gradient(145deg,#e9dfcf,#f3ecdf)!important;border-color:rgba(82,72,55,.14)!important;
+    box-shadow:inset 4px 4px 10px rgba(116,97,70,.12),inset -4px -4px 10px rgba(255,252,243,.62)!important;
+  }
+  body.reference-theme #chat #chatMessages>.empty{
+    color:var(--ref-muted)!important;background:rgba(247,240,228,.86)!important;
+    box-shadow:3px 4px 9px rgba(116,97,70,.13),-3px -3px 8px rgba(255,252,243,.66)!important;
+  }
+  body.reference-theme #chat .chat-bubble{background:#f7f0e4!important;border-color:rgba(82,72,55,.14)!important;box-shadow:3px 4px 9px rgba(116,97,70,.14),-3px -3px 8px rgba(255,252,243,.68)!important}
+  body.reference-theme #chat .chat-bubble.mine{background:#dce9e1!important;border-color:rgba(0,97,100,.2)!important}
+  body.reference-theme #chat .chat-compose.wk-compact #sendChatBtn.chat-send{background-color:var(--ref-teal)!important;box-shadow:4px 5px 10px rgba(86,70,49,.23)!important}
+}
+
+@media(prefers-reduced-motion:reduce){body.reference-theme *,body.reference-theme *:before,body.reference-theme *:after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
