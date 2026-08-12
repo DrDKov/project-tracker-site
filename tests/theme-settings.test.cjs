@@ -9,11 +9,13 @@ const theme = fs.readFileSync(path.join(root, 'assets', 'theme-settings.js'), 'u
 
 assert.match(html, /id='appThemeBootstrap'/);
 assert.match(html, /pt_app_theme_v1/);
-assert.match(html, /app\.js\?v=20260812-theme-controls-v2/);
-assert.match(loader, /theme-settings\.js\?v=20260812-theme-controls-v2/);
+assert.match(html, /app\.js\?v=20260812-neo-skeuo-v1/);
+assert.match(loader, /theme-settings\.js\?v=20260812-neo-skeuo-v1/);
 assert.match(theme, /data-app-theme="soft"/);
 assert.match(theme, /data-app-theme="classic"/);
+assert.match(theme, /data-app-theme="sketch"/);
 assert.match(theme, /document\.body\.classList\.toggle\('reference-theme'/);
+assert.match(theme, /document\.body\.classList\.toggle\('sketch-theme'/);
 assert.match(theme, /localStorage\.setItem\(KEY, theme\)/);
 assert.match(theme, /PROJECT_PALETTE/);
 assert.match(theme, /querySelectorAll\('\.task-card\.wk-task'\)/);

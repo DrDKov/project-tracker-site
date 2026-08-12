@@ -5,7 +5,7 @@
   window.__PT_THEME_SETTINGS_V1__ = true;
 
   var KEY = 'pt_app_theme_v1';
-  var THEMES = ['soft', 'classic'];
+  var THEMES = ['soft', 'classic', 'sketch'];
   var PROJECT_PALETTE = ['#006164', '#8a5a34', '#5d5f9b', '#a24b52', '#3f7652', '#966f1f', '#386d88', '#805787', '#b35d32', '#52706d'];
   var colorFrame = 0;
 
@@ -22,6 +22,7 @@
     panel.id = 'appThemePanel';
     panel.className = 'panel app-theme-panel';
     panel.innerHTML = '<div class="panel-head"><div><h3>Стиль приложения</h3><p class="muted">Выберите оформление. Настройка сохранится на этом устройстве.</p></div></div><div class="app-theme-options" role="radiogroup" aria-label="Стиль приложения"><button class="app-theme-option" type="button" data-app-theme="soft" role="radio" aria-checked="true"><span class="app-theme-preview soft" aria-hidden="true"><i></i><i></i><i></i></span><span><b>Тёплый рельефный</b><small>Кремовые поверхности и бирюзовые акценты</small></span></button><button class="app-theme-option" type="button" data-app-theme="classic" role="radio" aria-checked="false"><span class="app-theme-preview classic" aria-hidden="true"><i></i><i></i><i></i></span><span><b>Классический светлый</b><small>Белые карточки и синие акценты</small></span></button></div><p class="muted app-theme-status" id="appThemeStatus" aria-live="polite"></p>';
+    panel.querySelector('.app-theme-options').insertAdjacentHTML('beforeend', '<button class="app-theme-option" type="button" data-app-theme="sketch" role="radio" aria-checked="false"><span class="app-theme-preview sketch" aria-hidden="true"><i></i><i></i><i></i></span><span><b>Эскизный Neo-Skeuo</b><small>Бумажные поверхности и чернильные контуры</small></span></button>');
     grid.insertBefore(panel, grid.firstChild);
   }
 
@@ -86,12 +87,14 @@
     theme = THEMES.indexOf(theme) >= 0 ? theme : 'soft';
     window.__PT_APP_THEME__ = theme;
     document.body.classList.toggle('reference-theme', theme === 'soft');
+    document.body.classList.toggle('sketch-theme', theme === 'sketch');
     document.body.dataset.appTheme = theme;
     document.documentElement.style.colorScheme = 'light';
     if(persist !== false){
       try{ localStorage.setItem(KEY, theme); }catch(e){}
     }
     syncControls(theme);
+    if(theme === 'sketch' && document.getElementById('appThemeStatus')) document.getElementById('appThemeStatus').textContent = 'Выбран эскизный стиль Neo-Skeuo.';
     scheduleProjectColors();
     window.dispatchEvent(new CustomEvent('app-theme-change', { detail: { theme: theme } }));
   }
