@@ -4,6 +4,7 @@
   import('./app-runtime.js?v=20260728-task-comment-composer-v1')
     .then(function(){
       var modules = [
+        './theme-settings.js?v=20260812-theme-controls-v2',
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
         './task-comments.js?v=20260717-comments-v3',
