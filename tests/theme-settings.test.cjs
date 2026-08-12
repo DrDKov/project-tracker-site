@@ -6,11 +6,13 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const loader = fs.readFileSync(path.join(root, 'assets', 'app.js'), 'utf8');
 const theme = fs.readFileSync(path.join(root, 'assets', 'theme-settings.js'), 'utf8');
+const deployPrep = fs.readFileSync(path.join(root, '.github', 'scripts', 'apply_recurrence_scope.py'), 'utf8');
 
 assert.match(html, /id='appThemeBootstrap'/);
 assert.match(html, /pt_app_theme_v1/);
 assert.match(html, /app\.js\?v=20260812-neo-skeuo-v1/);
 assert.match(loader, /theme-settings\.js\?v=20260812-neo-skeuo-v1/);
+assert.match(deployPrep, /ver='20260812-neo-skeuo-v1'/);
 assert.match(theme, /data-app-theme="soft"/);
 assert.match(theme, /data-app-theme="classic"/);
 assert.match(theme, /data-app-theme="sketch"/);
