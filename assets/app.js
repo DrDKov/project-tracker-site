@@ -1,7 +1,7 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20260813-subtask-states-v1')
+  import('./app-runtime.js?v=20260813-subtask-attention-v1')
     .then(function(){
       var modules = [
         './theme-settings.js?v=20260812-neo-skeuo-v1',

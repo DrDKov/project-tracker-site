@@ -6,20 +6,28 @@ const root = path.resolve(__dirname, '..');
 const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets', 'app.css'), 'utf8');
 const baseCss = fs.readFileSync(path.join(root, 'assets', 'app-base.css'), 'utf8');
-const migration = fs.readFileSync(
+const baseMigration = fs.readFileSync(
   path.join(root, 'supabase', 'migrations', '20260813075441_add_subtask_completion_state.sql'),
+  'utf8',
+);
+const attentionMigration = fs.readFileSync(
+  path.join(root, 'supabase', 'migrations', '20260813102649_add_subtask_attention_state.sql'),
   'utf8',
 );
 const setup = fs.readFileSync(path.join(root, 'supabase', 'setup.sql'), 'utf8');
 
-for (const sql of [migration, setup]) {
-  assert.match(sql, /completion_state text/);
+for (const sql of [baseMigration, setup]) {
   assert.match(sql, /'not_done', 'partial', 'done'/);
   assert.match(sql, /sync_task_subtask_completion_state/);
   assert.match(sql, /NEW\.is_done := NEW\.completion_state = 'done'/);
 }
+for (const sql of [attentionMigration, setup]) {
+  assert.match(sql, /'not_done', 'partial', 'done', 'attention'/);
+  assert.match(sql, /task_subtasks_completion_state_check/);
+}
 
-assert.match(runtime, /SUBTASK_STATES=\['not_done','partial','done'\]/);
+assert.match(runtime, /SUBTASK_STATES=\['not_done','partial','done','attention'\]/);
+assert.match(runtime, /attention:'Требует внимания'/);
 assert.match(runtime, /function subtaskState\(s\)/);
 assert.match(runtime, /function nextSubtaskState\(s\)/);
 assert.match(runtime, /subtaskState\(x\)==='partial'\?\.5:0/);
@@ -33,7 +41,10 @@ for (const sheet of [css, baseCss]) {
   assert.match(sheet, /\.wk-subcheck\[data-state="partial"\]/);
   assert.match(sheet, /stroke='%23d97706'/);
   assert.match(sheet, /\.wk-subcheck\[data-state="done"\]/);
+  assert.match(sheet, /\.wk-subcheck\[data-state="attention"\]/);
+  assert.match(sheet, /background-color:#dc2626/);
   assert.match(sheet, /\.wk-subrow\.partial/);
+  assert.match(sheet, /\.wk-subrow\.attention/);
 }
 
-console.log('subtask three-state completion checks passed');
+console.log('subtask four-state completion checks passed');

@@ -1314,7 +1314,7 @@ create table if not exists public.task_subtasks (
   title text not null check (length(trim(title)) > 0),
   is_done boolean not null default false,
   completion_state text not null default 'not_done'
-    check (completion_state in ('not_done', 'partial', 'done')),
+    check (completion_state in ('not_done', 'partial', 'done', 'attention')),
   sort_order integer not null default 0,
   created_by uuid references public.app_users(id) on delete set null,
   completed_by uuid references public.app_users(id) on delete set null,
@@ -1457,7 +1457,7 @@ alter table public.task_subtasks
 update public.task_subtasks
    set completion_state = case when is_done then 'done' else 'not_done' end
  where completion_state is null
-    or completion_state not in ('not_done', 'partial', 'done');
+    or completion_state not in ('not_done', 'partial', 'done', 'attention');
 
 alter table public.task_subtasks
   alter column completion_state set default 'not_done',
@@ -1468,7 +1468,7 @@ alter table public.task_subtasks
 
 alter table public.task_subtasks
   add constraint task_subtasks_completion_state_check
-  check (completion_state in ('not_done', 'partial', 'done'));
+  check (completion_state in ('not_done', 'partial', 'done', 'attention'));
 
 -- Save subtask rank changes as one transaction while preserving caller RLS.
 create or replace function public.reorder_task_subtasks(
