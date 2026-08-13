@@ -12,8 +12,8 @@ const deployTransform = fs.readFileSync(path.join(root, '.github', 'scripts', 'a
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260727_task_subtask_reorder_rpc.sql'), 'utf8');
 
 assert.match(loader, /subtask-reorder\.js\?v=20260728-task-comment-composer-v1/);
-assert.match(loader, /app-runtime\.js\?v=20260812-completed-toggle-v3/);
-assert.match(deployTransform, /ver='20260812-completed-toggle-v3'/);
+assert.match(loader, /app-runtime\.js\?v=20260813-actions-v1/);
+assert.match(deployTransform, /ver='20260813-actions-v1'/);
 assert.match(runtime, /class="wk-sublist" data-task-id=/);
 assert.match(runtime, /class="wk-subdrag-handle"/);
 assert.match(runtime, /Math\.max\(0,\.\.\.subs\(task_id\)\.map/);
