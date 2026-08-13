@@ -11,10 +11,10 @@ const deployPrep = fs.readFileSync(path.join(root, '.github', 'scripts', 'apply_
 
 assert.match(html, /id='appThemeBootstrap'/);
 assert.match(html, /pt_app_theme_v1/);
-assert.match(html, /app\.js\?v=20260813-actions-v2/);
-assert.match(loader, /app-runtime\.js\?v=20260813-actions-v2/);
+assert.match(html, /app\.js\?v=20260813-subtask-states-v1/);
+assert.match(loader, /app-runtime\.js\?v=20260813-subtask-states-v1/);
 assert.match(loader, /theme-settings\.js\?v=20260812-neo-skeuo-v1/);
-assert.match(deployPrep, /ver='20260813-actions-v2'/);
+assert.match(deployPrep, /ver='20260813-subtask-states-v1'/);
 assert.match(runtime, /document\.createElement\('div'\);w\.id='taskShowDoneWrap'/);
 assert.match(runtime, /w\.onclick=e=>\{e\.preventDefault\(\);e\.stopPropagation\(\);S\.tasksShowDone=!S\.tasksShowDone/);
 assert.match(runtime, /setTimeout\(renderTasks,0\)/);

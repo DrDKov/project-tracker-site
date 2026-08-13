@@ -1313,6 +1313,8 @@ create table if not exists public.task_subtasks (
   task_id uuid not null references public.tasks(id) on delete cascade,
   title text not null check (length(trim(title)) > 0),
   is_done boolean not null default false,
+  completion_state text not null default 'not_done'
+    check (completion_state in ('not_done', 'partial', 'done')),
   sort_order integer not null default 0,
   created_by uuid references public.app_users(id) on delete set null,
   completed_by uuid references public.app_users(id) on delete set null,
@@ -1449,6 +1451,25 @@ using (
   )
 );
 
+alter table public.task_subtasks
+  add column if not exists completion_state text;
+
+update public.task_subtasks
+   set completion_state = case when is_done then 'done' else 'not_done' end
+ where completion_state is null
+    or completion_state not in ('not_done', 'partial', 'done');
+
+alter table public.task_subtasks
+  alter column completion_state set default 'not_done',
+  alter column completion_state set not null;
+
+alter table public.task_subtasks
+  drop constraint if exists task_subtasks_completion_state_check;
+
+alter table public.task_subtasks
+  add constraint task_subtasks_completion_state_check
+  check (completion_state in ('not_done', 'partial', 'done'));
+
 -- Save subtask rank changes as one transaction while preserving caller RLS.
 create or replace function public.reorder_task_subtasks(
   p_task_id uuid,
@@ -1532,6 +1553,43 @@ drop trigger if exists trg_touch_task_subtasks_updated_at on public.task_subtask
 create trigger trg_touch_task_subtasks_updated_at
 before update on public.task_subtasks
 for each row execute function public.touch_task_subtasks_updated_at();
+
+create or replace function public.sync_task_subtask_completion_state()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if TG_OP = 'INSERT' then
+    if NEW.is_done then
+      NEW.completion_state := 'done';
+    else
+      NEW.completion_state := coalesce(NEW.completion_state, 'not_done');
+      NEW.is_done := NEW.completion_state = 'done';
+    end if;
+  elsif NEW.completion_state is distinct from OLD.completion_state then
+    NEW.is_done := NEW.completion_state = 'done';
+  elsif NEW.is_done is distinct from OLD.is_done then
+    NEW.completion_state := case when NEW.is_done then 'done' else 'not_done' end;
+  end if;
+
+  if NEW.completion_state = 'done' then
+    NEW.completed_at := coalesce(NEW.completed_at, now());
+  else
+    NEW.completed_at := null;
+    NEW.completed_by := null;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+drop trigger if exists trg_sync_task_subtask_completion_state
+  on public.task_subtasks;
+
+create trigger trg_sync_task_subtask_completion_state
+before insert or update on public.task_subtasks
+for each row execute function public.sync_task_subtask_completion_state();
 
 create or replace function public.audit_task_subtask_changes()
 returns trigger
