@@ -139,3 +139,9 @@
   body #chat .chat-file-summary:empty{display:none!important}
 }
 /* Mobile containment and chat polish v1 end */
+
+/* Reliable touch actions v2 */
+:where(button,[role='button'],input,select,textarea){touch-action:manipulation}
+.task-card :where(button,input,select,textarea,label){-webkit-user-drag:none}
+.task-card[draggable='false']{cursor:default}
+.wk-subadd-btn:disabled,#taskSaveBtn:disabled{cursor:wait;opacity:.62}

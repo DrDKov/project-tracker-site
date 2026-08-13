@@ -161,6 +161,13 @@
 }
 /* Mobile containment and chat polish v1 end */
 
+
+/* Reliable touch actions v2 */
+:where(button,[role='button'],input,select,textarea){touch-action:manipulation}
+.task-card :where(button,input,select,textarea,label){-webkit-user-drag:none}
+.task-card[draggable='false']{cursor:default}
+.wk-subadd-btn:disabled,#taskSaveBtn:disabled{cursor:wait;opacity:.62}
+
 /* Recurrence scope editing v3 start */
 .task-recurrence-scope{border:1px solid #dbe4ef;border-radius:14px;background:#fff;padding:12px;display:grid;gap:8px}.task-recurrence-scope.hidden{display:none!important}.task-recurrence-scope label{display:flex;align-items:center;gap:8px;font-size:13px}.task-recurrence-scope small{color:#64748b;line-height:1.35}
 /* Recurrence scope editing v3 end */
