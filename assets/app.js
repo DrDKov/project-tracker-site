@@ -1,13 +1,14 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20260813-subtask-attention-v1')
+  import('./app-runtime.js?v=20260814-native-pickers-v1')
     .then(function(){
       var modules = [
         './theme-settings.js?v=20260812-neo-skeuo-v1',
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
         './task-comments.js?v=20260717-comments-v3',
+        './native-pickers.js?v=20260814-native-pickers-v1',
         './mobile-completed-tasks-toggle.js?v=20260722-completed-v1',
         './subtask-reorder.js?v=20260728-task-comment-composer-v1',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
