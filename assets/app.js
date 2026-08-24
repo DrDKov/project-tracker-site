@@ -1,10 +1,10 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20260824-chat-file-picker-v1')
+  import('./app-runtime.js?v=20260824-chat-file-picker-v2')
     .then(function(){
       var modules = [
-        './theme-settings.js?v=20260812-neo-skeuo-v1',
+        './theme-settings.js?v=20260824-event-scope-v1',
         './materials-v2.js?v=20260715-unread-v1',
         './assignment-notifications.js?v=20260715-unread-v1',
         './task-comments.js?v=20260717-comments-v3',

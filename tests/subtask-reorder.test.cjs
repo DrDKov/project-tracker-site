@@ -12,12 +12,12 @@ const deployTransform = fs.readFileSync(path.join(root, '.github', 'scripts', 'a
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260727_task_subtask_reorder_rpc.sql'), 'utf8');
 
 assert.match(loader, /subtask-reorder\.js\?v=20260728-task-comment-composer-v1/);
-assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v1/);
-assert.match(deployTransform, /ver='20260824-chat-file-picker-v1'/);
+assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v2/);
+assert.match(deployTransform, /ver='20260824-chat-file-picker-v2'/);
 assert.match(runtime, /class="wk-sublist" data-task-id=/);
 assert.match(runtime, /class="wk-subdrag-handle"/);
 assert.match(runtime, /Math\.max\(0,\.\.\.subs\(task_id\)\.map/);
-assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20260824-chat-file-picker-v1/);
+assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20260824-chat-file-picker-v2/);
 assert.match(css, /touch-action:none/);
 assert.match(css, /appearance:none!important/);
 assert.match(css, /position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:15px!important/);

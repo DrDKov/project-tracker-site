@@ -1,0 +1,1 @@
+This harmless local file is used to verify that the chat attachment picker accepts a selected file without sending it.

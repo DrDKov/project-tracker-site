@@ -27,7 +27,7 @@
   }
 
   function syncControls(theme){
-    document.querySelectorAll('[data-app-theme]').forEach(function(button){
+    document.querySelectorAll('.app-theme-option[data-app-theme]').forEach(function(button){
       var selected = button.dataset.appTheme === theme;
       button.classList.toggle('active', selected);
       button.setAttribute('aria-checked', selected ? 'true' : 'false');
@@ -107,7 +107,7 @@
       new MutationObserver(scheduleProjectColors).observe(document.body, { childList: true, subtree: true });
     }
     document.addEventListener('click', function(event){
-      var button = event.target.closest('[data-app-theme]');
+      var button = event.target.closest('.app-theme-option[data-app-theme]');
       if(!button) return;
       event.preventDefault();
       applyTheme(button.dataset.appTheme, true);

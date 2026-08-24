@@ -11,10 +11,13 @@ const deployPrep = fs.readFileSync(path.join(root, '.github', 'scripts', 'apply_
 
 assert.match(html, /id='appThemeBootstrap'/);
 assert.match(html, /pt_app_theme_v1/);
-assert.match(html, /app\.js\?v=20260824-chat-file-picker-v1/);
-assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v1/);
-assert.match(loader, /theme-settings\.js\?v=20260812-neo-skeuo-v1/);
-assert.match(deployPrep, /ver='20260824-chat-file-picker-v1'/);
+assert.match(html, /app\.js\?v=20260824-chat-file-picker-v2/);
+assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v2/);
+assert.match(deployPrep, /ver='20260824-chat-file-picker-v2'/);
+assert.match(loader, /theme-settings\.js\?v=20260824-event-scope-v1/);
+assert.match(theme, /querySelectorAll\('\.app-theme-option\[data-app-theme\]'\)/);
+assert.match(theme, /closest\('\.app-theme-option\[data-app-theme\]'\)/);
+assert.doesNotMatch(theme, /closest\('\[data-app-theme\]'\)/);
 assert.match(runtime, /document\.createElement\('div'\);w\.id='taskShowDoneWrap'/);
 assert.match(runtime, /w\.onclick=e=>\{e\.preventDefault\(\);e\.stopPropagation\(\);S\.tasksShowDone=!S\.tasksShowDone/);
 assert.match(runtime, /setTimeout\(renderTasks,0\)/);
