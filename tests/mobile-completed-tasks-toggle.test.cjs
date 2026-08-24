@@ -18,7 +18,7 @@ assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
   deployTransform,
-  /ver='20260814-native-pickers-v1'/,
+  /ver='20260824-chat-file-picker-v1'/,
   'the Pages build must not restore an obsolete app.js cache token',
 );
 

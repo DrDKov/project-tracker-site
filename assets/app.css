@@ -184,3 +184,9 @@
 .native-picker-trigger:hover{background-color:rgba(15,118,110,.08)!important}.native-picker-trigger:active{background-color:rgba(15,118,110,.14)!important}.native-picker-trigger:focus-visible{outline:2px solid #0f766e!important;outline-offset:-3px!important}.native-picker-trigger:disabled{opacity:.38!important;cursor:default!important;background-color:transparent!important}
 @media(max-width:700px){.native-picker-field>.input[type='date'],.native-picker-field>.input[type='time']{height:48px!important;min-height:48px!important;block-size:48px!important;min-block-size:48px!important;padding:0 50px 0 12px!important;overflow:visible!important}.native-picker-trigger{height:46px!important;min-height:46px!important}}
 /* Native date and time pickers v1 end */
+
+/* Direct chat file picker v1 start */
+body #chat .chat-file-control{grid-column:1!important;position:relative!important;display:block!important;width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important}
+body #chat .chat-file-control>.chat-file-btn{position:absolute!important;inset:0!important;width:44px!important;height:44px!important;pointer-events:none!important}
+body #chat .chat-compose.wk-compact .chat-file-control>#chatFiles{position:absolute!important;inset:0!important;z-index:4!important;display:block!important;width:44px!important;height:44px!important;min-width:44px!important;min-height:44px!important;margin:0!important;padding:0!important;border:0!important;opacity:0!important;clip-path:none!important;overflow:visible!important;white-space:normal!important;cursor:pointer!important}
+/* Direct chat file picker v1 end */

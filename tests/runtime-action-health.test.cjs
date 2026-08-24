@@ -9,8 +9,8 @@ const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'ut
 
 assert.match(html, /@supabase\/supabase-js@2\.111\.0/);
 assert.doesNotMatch(html, /@supabase\/supabase-js@2(?:['"]|<)/);
-assert.match(html, /assets\/app\.js\?v=20260814-native-pickers-v1/);
-assert.match(loader, /app-runtime\.js\?v=20260814-native-pickers-v1/);
+assert.match(html, /assets\/app\.js\?v=20260824-chat-file-picker-v1/);
+assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v1/);
 assert.match(html, /id='taskSaveBtn'/);
 assert.match(html, /type='button' class='btn primary' id='taskSaveBtn'/);
 assert.match(runtime, /taskSaveBtn'\)\.onclick=e=>runTaskSave\(e\)/);
