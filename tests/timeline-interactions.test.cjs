@@ -14,8 +14,8 @@ assert.match(runtime, /window\.addEventListener\('pointermove',moveTimelineGestu
 assert.match(runtime, /timelinePointerDate\(e\.clientX,e\.clientY/);
 assert.match(runtime, /timelineMovePatch\(g\.task,g\.date,g\.targetDate,g\.newStart,g\.duration,g\.allDay\)/);
 assert.match(runtime, /timelineResizePatch\(g\.start,g\.newDuration\)/);
-assert.match(runtime, /data-tl-action="status"/);
-assert.match(runtime, /moveTask\(st\.dataset\.id,st\.value\)/);
+assert.match(runtime, /data-tl-action="complete"/);
+assert.match(runtime, /toggleTask\(complete\.dataset\.id,complete\.dataset\.done!==\'1\'\)/);
 assert.match(runtime, /data-tl-action="download"/);
 assert.match(runtime, /calendarDownloadButton\(t,'task-calendar-export'\)/);
 assert.match(runtime, /BEGIN:VCALENDAR/);
@@ -24,7 +24,7 @@ assert.match(runtime, /\.ics'/);
 assert.match(runtime, /toLocaleLowerCase\('ru-RU'\)===\'без проекта\'/);
 assert.match(css, /Interactive calendar timeline v1 start/);
 assert.match(css, /\.timeline-resize-handle/);
-assert.match(css, /\.timeline-status-select/);
+assert.match(css, /\.timeline-complete-toggle\.is-done/);
 assert.match(deployPrep, /Calendar timeline handlers v4 start/);
 
 const moveLine = runtime.split(/\r?\n/).find((line) => line.startsWith('function timelineMovePatch'));
