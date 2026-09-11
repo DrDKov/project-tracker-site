@@ -16,7 +16,7 @@
   function dt(v){ try { return v ? new Date(v).toLocaleString('ru-RU') : ''; } catch(e){ return ''; } }
   function norm(v){ return String(v||'').toLowerCase().trim(); }
   function isOwner(p){ return !!(p && p.role === 'owner'); }
-  function safeName(name){ return String(name||'file').replace(/[^a-zA-Z0-9а-яА-ЯёЁ._ -]+/g,'_').replace(/\s+/g,'_').slice(0,120); }
+  function safeName(name){ var raw=String(name||'file'),dot=raw.lastIndexOf('.'),ext=dot>0&&/^\.[A-Za-z0-9]{1,12}$/.test(raw.slice(dot))?raw.slice(dot):'',base=ext?raw.slice(0,dot):raw,out='';Array.from(base.normalize('NFKD')).forEach(function(ch){if(/[\u0300-\u036f]/.test(ch))return;if(/[A-Za-z0-9_.',!*&$@=;:+?() -]/.test(ch))out+=ch;else out+='u'+ch.codePointAt(0).toString(16)+'_'});out=out.replace(/\s+/g,'_').replace(/_+/g,'_').replace(/^[._ -]+|[. -]+$/g,'')||'file';return out.slice(0,Math.max(1,120-ext.length))+ext; }
 
   function ensureCss(){
     if($('materials-css')) return;

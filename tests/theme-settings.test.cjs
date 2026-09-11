@@ -11,9 +11,9 @@ const deployPrep = fs.readFileSync(path.join(root, '.github', 'scripts', 'apply_
 
 assert.match(html, /id='appThemeBootstrap'/);
 assert.match(html, /pt_app_theme_v1/);
-assert.match(html, /app\.js\?v=20260824-chat-file-picker-v2/);
-assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v2/);
-assert.match(deployPrep, /ver='20260824-chat-file-picker-v2'/);
+assert.match(html, /app\.js\?v=20260911-timeline-materials-v1/);
+assert.match(loader, /app-runtime\.js\?v=20260911-timeline-materials-v1/);
+assert.match(deployPrep, /ver='20260911-timeline-materials-v1'/);
 assert.match(loader, /theme-settings\.js\?v=20260824-event-scope-v1/);
 assert.match(theme, /querySelectorAll\('\.app-theme-option\[data-app-theme\]'\)/);
 assert.match(theme, /closest\('\.app-theme-option\[data-app-theme\]'\)/);

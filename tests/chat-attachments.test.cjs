@@ -9,8 +9,8 @@ const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'ut
 const css = fs.readFileSync(path.join(root, 'assets', 'app.css'), 'utf8');
 
 assert.match(html, /id='chatFiles' type='file' multiple/);
-assert.match(html, /assets\/app\.js\?v=20260824-chat-file-picker-v2/);
-assert.match(loader, /app-runtime\.js\?v=20260824-chat-file-picker-v2/);
+assert.match(html, /assets\/app\.js\?v=20260911-timeline-materials-v1/);
+assert.match(loader, /app-runtime\.js\?v=20260911-timeline-materials-v1/);
 assert.match(runtime, /document\.createElement\('span'\)/);
 assert.match(runtime, /control\.className='chat-file-control'/);
 assert.match(runtime, /lab\.className='chat-file-btn'/);

@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20260824-chat-file-picker-v2'
+ver='20260911-timeline-materials-v1'
 scope_js="""
 /* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
@@ -56,12 +56,13 @@ s=s.replace('data-action="tl-prev">← Неделя</button><button class="btn s
 s=s.replace('data-action="tl-prev">←</button><button class="btn sm secondary" data-action="tl-next">→</button>','data-action="tl-prev" title="Предыдущая неделя">←</button><button class="btn sm secondary" data-action="tl-next" title="Следующая неделя">→</button>')
 s=s.replace("((h-TL0)*60*TLP)+'px\">'+pad(h)+':00", "((h-TL0)*60*TLP+58)+'px\">'+pad(h)+':00")
 s=re.sub(r'/\* Timeline week arrows v1 start \*/[\s\S]*?/\* Timeline week arrows v1 end \*/\n?','',s)
-s=re.sub(r'/\* Calendar timeline handlers v[123] start \*/[\s\S]*?/\* Calendar timeline handlers v[123] end \*/\n?','',s)
-marker='\n})();\n\n/* Timeline dynamic lane heights v104 start */'
-pos=s.find(marker)
-if pos<0:
-    raise SystemExit('main runtime closure marker not found')
-s=s[:pos]+calendar_handler+s[pos:]
+if '/* Calendar timeline handlers v4 start */' not in s:
+    s=re.sub(r'/\* Calendar timeline handlers v[123] start \*/[\s\S]*?/\* Calendar timeline handlers v[123] end \*/\n?','',s)
+    marker='\n})();\n\n/* Timeline dynamic lane heights v104 start */'
+    pos=s.find(marker)
+    if pos<0:
+        raise SystemExit('main runtime closure marker not found')
+    s=s[:pos]+calendar_handler+s[pos:]
 r.write_text(s,encoding='utf-8')
 cs=c.read_text(encoding='utf-8') if c.exists() else ''
 cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',cs)
