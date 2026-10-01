@@ -11,6 +11,11 @@ assert.match(source,/closest\('\.workspace-layout-options \[data-workspace-layou
 assert.doesNotMatch(source,/closest\('\[data-workspace-layout\]'\)/);
 assert.match(source,/localStorage\.setItem\(KEY, layout\)/);
 assert.match(source,/ensureTaskControls\(\)/,'controls must also work when runtime initializes later');
+assert.match(html,/window\.addEventListener\('pt-task-controls-ready',setup\)/);
+assert.match(html,/if\(installed\)\{schedule\(\);return\}/,'responsive changes must not install duplicate handlers');
+assert.match(runtime,/queueMicrotask\(\(\)=>window\.dispatchEvent\(new CustomEvent\('pt-task-controls-ready'\)\)\)/);
+assert.match(source,/observe\(focus,\{childList:true\}\)/,'overview subtasks remain usable after asynchronous loading');
+assert.match(source,/observe\(nav,\{childList:true\}\)/,'late-loaded navigation sections keep compact labels');
 assert.match(source,/openComposers = new Set/);
 assert.doesNotMatch(source,/innerHTML\s*=.*kanban/);
 assert.match(css,/\.wk-sub:not\(\.compact-composer-open\)>\.wk-subadd\{display:none!important\}/);

@@ -40,6 +40,7 @@
   }
   function sync(){
     ensureTaskControls();
+    enhanceNavigation();
     const active = document.querySelector('#taskBoardModeToggle [data-task-mode].active');
     const mode = active?.dataset.taskMode || 'status';
     document.body.dataset.compactTaskMode = mode;
@@ -79,6 +80,18 @@
     const date = new Date();
     return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
   }
+  function enhanceNavigation(){
+    document.querySelectorAll('.sidebar .nav [data-view]').forEach(button => {
+      if(button.querySelector('.compact-nav-icon')) return;
+      const parts = button.textContent.trim().match(/^(\S+)\s+([\s\S]+)$/);
+      if(!parts) return;
+      button.textContent = '';
+      const icon = document.createElement('span'); icon.className = 'compact-nav-icon';
+      icon.textContent = parts[1]; icon.setAttribute('aria-hidden','true');
+      const label = document.createElement('span'); label.className = 'compact-nav-label'; label.textContent = parts[2];
+      button.append(icon,label); button.title = parts[2]; button.setAttribute('aria-label',parts[2]);
+    });
+  }
   function boot(){
     const grid = document.querySelector('#settings .settings-grid');
     if(grid && !$('workspaceLayoutPanel')){
@@ -102,17 +115,8 @@
     }
     const nav = document.querySelector('.sidebar .nav');
     if(nav){
-      nav.querySelectorAll('[data-view]').forEach(button => {
-        if(button.querySelector('.compact-nav-icon')) return;
-        const text = button.textContent.trim();
-        const parts = text.match(/^(\S+)\s+([\s\S]+)$/);
-        if(!parts) return;
-        button.textContent = '';
-        const icon = document.createElement('span'); icon.className = 'compact-nav-icon';
-        icon.textContent = parts[1]; icon.setAttribute('aria-hidden','true');
-        const label = document.createElement('span'); label.className = 'compact-nav-label'; label.textContent = parts[2];
-        button.append(icon,label); button.title = parts[2]; button.setAttribute('aria-label',parts[2]);
-      });
+      enhanceNavigation();
+      new MutationObserver(schedule).observe(nav,{childList:true});
       const sidebar = nav.closest('.sidebar');
       const toggle = document.createElement('button');
       toggle.type = 'button'; toggle.className = 'btn secondary compact-sidebar-toggle';
@@ -171,6 +175,8 @@
     });
     const board = $('kanban');
     if(board) new MutationObserver(schedule).observe(board,{childList:true,attributes:true,attributeFilter:['data-task-mode']});
+    const focus = $('focusList');
+    if(focus) new MutationObserver(schedule).observe(focus,{childList:true});
     mq.addEventListener('change',schedule);
     setLayout(layout,false);
   }
