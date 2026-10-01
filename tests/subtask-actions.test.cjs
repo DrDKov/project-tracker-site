@@ -25,6 +25,7 @@ assert.ok(!source.includes('undefined'));
 assert.match(runtime, /data-action="copy-subtask"/);
 assert.doesNotMatch(source, /label\?\.querySelector/);
 assert.match(css, /\.wk-sub \.wk-subtitle/);
+assert.match(css, /grid-template-columns:32px minmax\(0,1fr\) 28px!important/);
 
 const deferred = () => {
   let resolve;
