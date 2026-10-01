@@ -28,6 +28,8 @@ jobs:
           python .github/scripts/apply_recurrence_scope.py
           node --check assets/app-runtime.js
           node --check assets/app.js
+          node --check assets/workspace-layout.js
+          for test in tests/*.test.cjs; do node "$test"; done
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

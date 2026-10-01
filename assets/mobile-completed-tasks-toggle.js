@@ -63,7 +63,7 @@
 
     if(mq.matches){
       doneToggle.classList.add('mobile-completed-visible');
-      setText(label, 'Показывать завершённые');
+      setText(label, document.body.classList.contains('compact-workspace') ? 'Завершённые' : 'Показывать завершённые');
       setAttribute(doneToggle, 'title', 'Показывать завершённые задачи');
       setAttribute(checkbox, 'aria-label', 'Показывать завершённые задачи');
       if(doneToggle.parentElement !== toolbar || modeToggle.nextElementSibling !== doneToggle){
@@ -90,5 +90,6 @@
   }
   if(mq.addEventListener) mq.addEventListener('change', schedule);
   else if(mq.addListener) mq.addListener(schedule);
+  window.addEventListener('workspace-layout-change', schedule);
 })();
 

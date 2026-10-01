@@ -27,16 +27,20 @@ window.__WORKSPACE_SUPABASE_KEY__='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 try{localStorage.setItem('pt_workspace_supabase_cfg_v2',JSON.stringify({url:window.__WORKSPACE_SUPABASE_URL__,key:window.__WORKSPACE_SUPABASE_KEY__,saved_at:new Date().toISOString(),source:'bundled'}));}catch(e){}
 </script>
 <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.111.0'></script>
-<link rel='stylesheet' href='assets/app.css?v=20261001-announcements-v1'>
+<link rel='stylesheet' href='assets/app.css?v=20261002-compact-v1'>
 <link rel='stylesheet' href='assets/workspace-announcements.css?v=20261001-announcements-v1'>
 <link rel='stylesheet' href='assets/reference-theme.css?v=20260812-soft-teal-v3'>
 <link rel='stylesheet' href='assets/sketch-theme.css?v=20260812-neo-skeuo-v2'>
+<link rel='stylesheet' href='assets/workspace-layout.css?v=20261002-compact-v1'>
 <style>
 body:not(.v24-ready) #tasks #kanban{visibility:hidden}body:not(.v24-ready) #tasks:after{content:'Загружаю задачи…';display:block;margin:14px 0;padding:18px;border:1px solid #e5e7eb;border-radius:18px;background:#fff;color:#64748b;font-weight:700}.hidden-auth-config{display:none!important}
 .ms-source{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}.ms-filter{position:relative;min-width:180px}.ms-filter-btn{width:100%;height:42px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #dbe4ef;border-radius:13px;background:#fff;color:#0f172a;padding:0 12px;font-weight:800;cursor:pointer;white-space:nowrap}.ms-filter-btn span{overflow:hidden;text-overflow:ellipsis}.ms-filter-btn:after{content:'▾';color:#64748b;font-size:12px}.ms-filter.open .ms-filter-btn{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.10)}.ms-menu{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:90;min-width:260px;max-width:360px;max-height:320px;overflow:auto;border:1px solid #dbe4ef;border-radius:16px;background:#fff;box-shadow:0 18px 50px rgba(15,23,42,.16);padding:8px}.ms-filter.open .ms-menu{display:block}.ms-actions{display:flex;gap:6px;padding:4px 4px 8px;border-bottom:1px solid #eef2f7;margin-bottom:6px}.ms-actions button{border:0;border-radius:9px;background:#f1f5f9;color:#334155;font-size:12px;font-weight:800;padding:7px 9px;cursor:pointer}.ms-actions button:hover{background:#e2e8f0}.ms-row{display:flex;align-items:center;gap:9px;padding:8px 7px;border-radius:10px;cursor:pointer;font-size:13px;color:#0f172a}.ms-row:hover{background:#f8fafc}.ms-row input{width:15px;height:15px}.ms-row.all{font-weight:900;border-bottom:1px solid #f1f5f9;margin-bottom:3px}.toolbar .ms-filter,.timeline-filterbar .ms-filter{min-width:180px}@media(max-width:720px){.ms-filter{min-width:100%}.ms-menu{position:fixed;left:12px!important;right:12px!important;top:120px!important;max-width:none}}
 </style>
 </head>
 <body class='reference-theme'>
+<script id='appLayoutBootstrap'>
+(()=>{let layout='compact';try{layout=localStorage.getItem('pt_workspace_layout_v1')||layout}catch{}if(!['comfortable','compact','focus'].includes(layout))layout='compact';document.body.dataset.workspaceLayout=layout;document.body.classList.toggle('compact-workspace',layout!=='comfortable');document.body.classList.toggle('focus-workspace',layout==='focus')})();
+</script>
 <script id='appThemeBootstrap'>
 (function(){var key='pt_app_theme_v1',theme='soft';try{theme=localStorage.getItem(key)||'soft'}catch(e){}if(theme!=='classic'&&theme!=='sketch')theme='soft';window.__PT_APP_THEME__=theme;document.body.classList.toggle('reference-theme',theme==='soft');document.body.classList.toggle('sketch-theme',theme==='sketch');document.body.dataset.appTheme=theme})();
 </script>
@@ -58,7 +62,7 @@ body:not(.v24-ready) #tasks #kanban{visibility:hidden}body:not(.v24-ready) #task
 <dialog id='accessModal' class='modal'><form class='modal-body' id='accessForm' method='dialog'><div class='modal-head'><h3>Участники и доступ к проекту</h3><button type='button' class='x' data-close='accessModal'>✕</button></div><input type='hidden' id='accessProjectId'><div class='notice'>Участники проекта управляются здесь. Доступ реально применяется на уровне PostgreSQL RLS.</div><br><div id='accessProjectTitle' class='muted'></div><br><div class='form-grid'><label><span>Пользователь</span><select class='input' id='accessUser'></select></label><label><span>Права</span><select class='input' id='accessRole'><option value='viewer'>viewer — просмотр</option><option value='editor'>editor — задачи и вехи</option><option value='owner'>owner — управление доступом</option></select></label></div><div class='modal-actions'><button type='button' class='btn secondary' data-close='accessModal'>Закрыть</button><button class='btn primary'>Добавить / обновить</button></div><br><div id='accessList'></div></form></dialog>
 <script src='assets/assignment-notifications.js?v=20260715-order-v3'></script>
 <script src='assets/notification-polling-rescue-lite.js?v=20260715-order-v3'></script>
-<script src='assets/app.js?v=20261001-announcements-v1'></script>
+<script src='assets/app.js?v=20261002-compact-v1'></script>
 <script type='module' src='assets/push-notifications.js?v=20260715-push-v5'></script>
 <script>
 (()=>{if(window.__CHECKBOX_FILTERS_V93__)return;window.__CHECKBOX_FILTERS_V93__=1;
@@ -319,6 +323,14 @@ syncMore();
 (()=>{if(window.__MOBILE_TASK_TOOLBAR_V2__)return;window.__MOBILE_TASK_TOOLBAR_V2__=1;
 const mq=window.matchMedia('(max-width:980px)');
 let attempts=0;
+function placeFilters(){
+ const toolbar=document.querySelector('#tasks>.toolbar'),filters=document.getElementById('mobileTaskFilters'),mode=document.getElementById('taskBoardModeToggle');
+ if(!toolbar||!filters||!mode)return;
+ const body=filters.querySelector('.mobile-filter-body');
+ ['taskProjectFilter','taskAssigneeFilter'].forEach(id=>{const ui=document.getElementById(id)?.__msWrap;if(!ui)return;if(mq.matches){if(ui.parentElement!==body)body.append(ui)}else if(ui.parentElement!==toolbar)toolbar.insertBefore(ui,mode)});
+ const date=document.getElementById('taskDateFilter');
+ if(date){if(mq.matches){if(date.parentElement!==body)body.append(date)}else if(date.parentElement!==toolbar)toolbar.insertBefore(date,mode)}
+}
 function setup(){
   const toolbar=document.querySelector('#tasks>.toolbar'),topActions=document.querySelector('.top-actions');
   const mode=document.getElementById('taskBoardModeToggle'),week=document.getElementById('taskWeekNav');
@@ -330,7 +342,7 @@ function setup(){
     if(attempts++<60)setTimeout(setup,100);
     return;
   }
-  if(document.getElementById('mobileTaskFilters'))return;
+  if(document.getElementById('mobileTaskFilters')){placeFilters();return}
   [project,assignee].forEach(x=>{x.setAttribute('aria-hidden','true');x.tabIndex=-1});
   const filters=document.createElement('details');
   filters.id='mobileTaskFilters';
@@ -351,7 +363,7 @@ function setup(){
   actionsBtn.addEventListener('click',e=>{e.stopPropagation();filters.removeAttribute('open');let open=menu.classList.toggle('open');actionsBtn.setAttribute('aria-expanded',String(open))});
   menu.addEventListener('click',e=>{let b=e.target.closest('[data-proxy]');if(!b)return;document.getElementById(b.dataset.proxy)?.click();closeActions()});
   filters.addEventListener('toggle',()=>{if(filters.open)closeActions()});
-  document.addEventListener('click',e=>{if(!e.target.closest('#mobileTaskActionsMenu,#mobileTaskActionsBtn'))closeActions();if(filters.open&&!e.target.closest('#mobileTaskFilters'))filters.removeAttribute('open')});
+  document.addEventListener('click',e=>{if(!e.target.closest('#mobileTaskActionsMenu,#mobileTaskActionsBtn'))closeActions();if(mq.matches&&filters.open&&!e.target.closest('#mobileTaskFilters'))filters.removeAttribute('open')});
   const syncWeek=()=>week.classList.toggle('mobile-week-visible',!!mode.querySelector("[data-task-mode='week'].active"));
   syncWeek();
   new MutationObserver(syncWeek).observe(mode,{subtree:true,attributes:true,attributeFilter:['class']});
@@ -361,10 +373,11 @@ function setup(){
   document.getElementById('quickTaskBtn')?.setAttribute('aria-label','Создать задачу');
   document.getElementById('quickTaskBtn')?.setAttribute('title','Создать задачу');
   document.getElementById('taskSearch')?.setAttribute('aria-label','Поиск по задачам');
+  placeFilters();
   if(!mq.matches){filters.open=false;closeActions()}
 }
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',setup):setup();
-mq.addEventListener?.('change',e=>{if(e.matches)setup();else{document.getElementById('mobileTaskFilters')?.removeAttribute('open');document.getElementById('mobileTaskActionsMenu')?.classList.remove('open')}});
+mq.addEventListener?.('change',e=>{let filters=document.getElementById('mobileTaskFilters');if(e.matches){filters?.removeAttribute('open');setup()}else{placeFilters();filters?.removeAttribute('open');document.getElementById('mobileTaskActionsMenu')?.classList.remove('open')}});
 })();
 </script>
 
@@ -403,6 +416,7 @@ mq.addEventListener?.('change',e=>{if(e.matches)setup();else{document.getElement
 <script>
 (()=>{if(window.__MOBILE_SINGLE_COLUMN_V3__)return;window.__MOBILE_SINGLE_COLUMN_V3__=1;
 const mq=window.matchMedia('(max-width:980px)'),state={week:null,status:0,assignee:0};
+let requestedDate=null;
 let attempts=0,raf=0,observer=null;
 function mode(){
  const active=document.querySelector("#taskBoardModeToggle [data-task-mode].active");
@@ -429,6 +443,7 @@ function renderPager(){
  board.classList.add('mobile-single-column');pager.hidden=!list.length;
  if(!list.length)return;
  let requested=state[m];
+ if(m==='week'&&requestedDate){const selected=list.findIndex(c=>c.dataset.date===requestedDate);if(selected>=0){requested=selected;requestedDate=null}}
  if(m==='week'&&requested==null){
    const todayIndex=list.findIndex(c=>c.classList.contains('today'));
    requested=todayIndex>=0?todayIndex:0
@@ -437,23 +452,43 @@ function renderPager(){
  list.forEach((c,i)=>c.classList.toggle('mobile-column-active',i===index));
  const current=list[index],tasks=current.querySelectorAll('.task-card').length;
  pager.querySelector('#mobileColumnTitle').textContent=columnTitle(current);
- pager.querySelector('#mobileColumnMeta').textContent=(index+1)+' из '+list.length+' · '+tasks+' '+taskWord(tasks);
+ pager.querySelector('#mobileColumnMeta').textContent=(m==='week'&&document.body.classList.contains('compact-workspace')?'':(index+1)+' из '+list.length+' · ')+tasks+' '+taskWord(tasks);
  const prev=pager.querySelector('#mobileColumnPrev'),next=pager.querySelector('#mobileColumnNext');
- prev.disabled=index===0;next.disabled=index===list.length-1;
+ const dayNavigation=m==='week'&&document.body.classList.contains('compact-workspace');
+ prev.disabled=!dayNavigation&&index===0;next.disabled=!dayNavigation&&index===list.length-1;
  prev.setAttribute('aria-label','Предыдущая колонка');
  next.setAttribute('aria-label','Следующая колонка')
 }
 function schedule(){if(!raf)raf=requestAnimationFrame(renderPager)}
+function chooseDate(date){
+ const board=document.getElementById('kanban'),week=document.getElementById('taskWeekNav');
+ if(!week)return;
+ if(date==='__none__'){state.week=columns().findIndex(c=>c.dataset.date==='__none__');requestedDate=null;renderPager();return}
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return;
+ requestedDate=date;state.week=null;
+ week.dispatchEvent(new CustomEvent('pt-select-task-date',{detail:{date}}));schedule()
+}
+function stepColumn(delta){
+ const m=mode(),list=columns();
+ if(m==='week'&&document.body.classList.contains('compact-workspace')){
+   const current=list[state.week||0],date=current?.dataset.date;
+   if(date==='__none__'){chooseDate(list[delta<0?6:0]?.dataset.date);return}
+   if(date){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+delta);chooseDate(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'));return}
+ }
+ state[m]=Math.max(0,Math.min(list.length-1,(state[m]||0)+delta));renderPager()
+}
+window.ProjectTrackerColumns={selectDate:chooseDate,refresh:schedule};
 function setup(){
  const toolbar=document.querySelector('#tasks>.toolbar'),modeToggle=document.getElementById('taskBoardModeToggle');
  const board=document.getElementById('kanban'),weekNav=document.getElementById('taskWeekNav');
  if(!toolbar||!modeToggle||!board||!weekNav){if(attempts++<70)setTimeout(setup,100);return}
  if(!document.getElementById('mobileColumnPager')){
    const pager=document.createElement('div');pager.id='mobileColumnPager';pager.setAttribute('aria-label','Переключение колонки');
-   pager.innerHTML="<button id='mobileColumnPrev' type='button' aria-label='Предыдущая колонка'>‹</button><div class='mobile-column-label' aria-live='polite'><strong id='mobileColumnTitle'>Колонка</strong><small id='mobileColumnMeta'></small></div><button id='mobileColumnNext' type='button' aria-label='Следующая колонка'>›</button>";
+   pager.innerHTML="<button id='mobileColumnPrev' type='button' aria-label='Предыдущая колонка'>‹</button><button type='button' id='compactDateOpen' class='mobile-column-label' aria-label='Выбрать дату' aria-live='polite'><strong id='mobileColumnTitle'>Колонка</strong><small id='mobileColumnMeta'></small></button><button id='mobileColumnNext' type='button' aria-label='Следующая колонка'>›</button><button type='button' id='compactTodayBtn'>Сегодня</button>";
    weekNav.insertAdjacentElement('afterend',pager);
-   pager.querySelector('#mobileColumnPrev').addEventListener('click',()=>{let m=mode();state[m]=Math.max(0,(state[m]||0)-1);renderPager()});
-   pager.querySelector('#mobileColumnNext').addEventListener('click',()=>{let m=mode(),n=columns().length;state[m]=Math.min(n-1,(state[m]||0)+1);renderPager()})
+   pager.querySelector('#mobileColumnPrev').addEventListener('click',()=>stepColumn(-1));
+   pager.querySelector('#mobileColumnNext').addEventListener('click',()=>stepColumn(1));
+   pager.querySelector('#compactTodayBtn').addEventListener('click',()=>weekNav.querySelector("[data-week-nav='today']")?.click());
  }
  if(!observer){observer=new MutationObserver(schedule);observer.observe(board,{childList:true,subtree:true})}
  modeToggle.addEventListener('click',e=>{
@@ -463,10 +498,12 @@ function setup(){
  document.addEventListener('click',e=>{
    const nav=e.target.closest('[data-week-nav]');
    if(!nav)return;
+   requestedDate=null;
    state.week=nav.dataset.weekNav==='today'?null:0;
    setTimeout(schedule)
  },true);
  mq.addEventListener?.('change',schedule);
+ window.addEventListener('workspace-layout-change',schedule);
  if(mq.matches&&mode()==='week'){
    state.week=null;
    setTimeout(()=>weekNav.querySelector("[data-week-nav='today']")?.click())

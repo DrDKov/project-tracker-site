@@ -10,7 +10,7 @@ const deployTransform = fs.readFileSync(path.join(root, '.github', 'scripts', 'a
 
 assert.match(
   loader,
-  /mobile-completed-tasks-toggle\.js\?v=20260722-completed-v1/,
+  /mobile-completed-tasks-toggle\.js\?v=20261002-compact-v1/,
   'the mobile completed-task control must be loaded with a fresh cache token',
 );
 assert.match(source, /modeToggle\.insertAdjacentElement\('afterend', doneToggle\)/);
@@ -18,7 +18,7 @@ assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
   deployTransform,
-  /ver='20261001-announcements-v1'/,
+  /ver='20261002-compact-v1'/,
   'the Pages build must not restore an obsolete app.js cache token',
 );
 
@@ -69,6 +69,7 @@ const head = {
   appendChild(element){ styles.set(element.id, element); },
 };
 const documentMock = {
+  body: {classList: classList()},
   readyState: 'complete',
   head,
   documentElement: head,
@@ -91,6 +92,7 @@ class MutationObserverMock {
   observe(){}
 }
 const windowMock = {
+  addEventListener(){},
   matchMedia(){ return media; },
   MutationObserver: MutationObserverMock,
   requestAnimationFrame(callback){ callback(); return 1; },

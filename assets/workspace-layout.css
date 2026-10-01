@@ -1,0 +1,85 @@
+/* Workspace density is independent from the selected visual theme. */
+#compactTaskMode,.compact-subadd-toggle,.compact-sidebar-toggle,#layoutShowTools,#layoutExitFocus[hidden]{display:none!important}
+body #mobileColumnPager #compactTodayBtn{display:none!important}
+body #mobileColumnPager #compactDateOpen{width:100%!important;min-width:0!important;height:44px!important;font:inherit!important;background:transparent!important;display:grid!important;gap:1px!important}
+body #mobileColumnPager #compactDateOpen:disabled{opacity:1!important;cursor:default!important}
+.workspace-layout-options{display:flex;flex-wrap:wrap;gap:10px}
+.workspace-layout-options .active{outline:2px solid var(--ref-teal,var(--blue));outline-offset:2px}
+#compactDateDialog{max-width:400px}
+#compactDateDialog label{display:grid;gap:8px}
+.compact-date-weeks{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
+body.compact-workspace .task-card.wk-task{padding:34px 10px 9px!important;margin-bottom:8px!important}
+body.compact-workspace .task-card.wk-task h4{margin:4px 0!important;line-height:1.3!important}
+body.compact-workspace .task-card.wk-task>p{margin:3px 0!important;font-size:12px!important;line-height:1.35!important;overflow-wrap:anywhere}
+body.compact-workspace .task-card.wk-task .badge{padding:3px 7px!important;font-size:11px!important}
+body.compact-workspace .task-card.wk-task .task-desc-hint{margin-top:2px!important}
+body.compact-workspace .wk-sub{padding:8px!important;margin-top:8px!important}
+body.compact-workspace .wk-subh{margin-bottom:4px!important;gap:6px!important}
+body.compact-workspace .wk-subh>span{margin-left:auto!important}
+body.compact-workspace .compact-subadd-toggle{display:grid!important;place-items:center;width:28px;height:28px;min-width:28px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ref-teal,var(--text));font-size:20px;line-height:1;cursor:pointer}
+body.compact-workspace .wk-sub:not(.compact-composer-open)>.wk-subadd{display:none!important}
+body.compact-workspace .wk-sub .wk-subrow{transition:none!important}
+body.compact-workspace .task-card-footer{margin-top:7px!important}
+body.compact-workspace #layoutExitFocus:not([hidden]){display:grid!important;place-items:center;min-width:44px;min-height:44px}
+body.focus-workspace #pageSubtitle,body.focus-workspace .side-footer{display:none!important}
+body.focus-workspace .task-card.wk-task{box-shadow:none!important}
+@media(min-width:981px){
+  body #tasks>.toolbar>#mobileTaskFilters{display:none!important}
+  body.compact-workspace #tasks>.toolbar{align-items:center!important}
+  body.compact-workspace #tasks>.toolbar>#taskSearch{width:210px!important;min-width:160px!important;height:44px!important}
+  body.compact-workspace #tasks>.toolbar>.ms-filter{width:180px!important;min-width:160px!important;flex:0 1 180px!important}
+  body.compact-workspace #taskDateFilter input:disabled{display:none!important}
+  body.compact-workspace .app{grid-template-columns:76px minmax(0,1fr)!important}
+  body.compact-workspace.compact-nav-expanded .app{grid-template-columns:230px minmax(0,1fr)!important}
+  body.compact-workspace .sidebar{padding:12px 8px!important;gap:14px!important}
+  body.compact-workspace .compact-sidebar-toggle{display:grid!important;place-items:center;width:44px;height:44px;padding:0!important;margin:0 auto!important}
+  body.compact-workspace:not(.compact-nav-expanded) .brand>div:not(.logo),body.compact-workspace:not(.compact-nav-expanded) .side-footer,body.compact-workspace:not(.compact-nav-expanded) .compact-nav-label{display:none!important}
+  body.compact-workspace:not(.compact-nav-expanded) .brand{justify-content:center!important}
+  body.compact-workspace:not(.compact-nav-expanded) .nav>button{justify-content:center!important;padding:12px 0!important;min-height:44px!important}
+  .compact-nav-icon{font-size:19px;line-height:1;min-width:24px;text-align:center}
+  body.compact-workspace .main{padding:14px 16px!important}
+  body.compact-workspace .topbar{margin-bottom:12px!important}
+  body.compact-workspace .topbar h2{font-size:24px!important}
+  body.compact-workspace #pageSubtitle{display:none!important}
+  body.compact-workspace .toolbar{gap:7px!important;margin-bottom:10px!important}
+  body.compact-workspace .kanban{gap:10px!important}
+  body.compact-workspace .col{padding:9px!important}
+  body.compact-workspace .col>h3{margin-bottom:9px!important}
+  body.compact-workspace #taskModal{position:fixed;inset:12px 12px 12px auto!important;margin:0!important;width:min(560px,calc(100vw - 100px))!important;max-height:calc(100dvh - 24px)!important;height:calc(100dvh - 24px);border-radius:18px!important}
+  body.compact-workspace #taskModal::backdrop{background:rgba(15,23,42,.12)!important}
+  body.compact-workspace #timeline>.panel{padding:12px!important}
+  body.compact-workspace #timeline .panel-head{margin-bottom:10px!important}
+}
+@media(max-width:980px){
+  body.compact-workspace .topbar{margin-bottom:8px!important;padding-top:9px!important;padding-bottom:9px!important}
+  body.compact-workspace #tasks>.toolbar{grid-template-columns:minmax(0,1fr) 146px!important;gap:7px!important;margin-bottom:8px!important}
+  body.compact-workspace #tasks>.toolbar>#compactTaskMode{display:block!important;grid-column:1!important;grid-row:2!important;width:100%!important;min-width:0!important;height:44px!important;font-size:14px!important;padding:0 10px!important}
+  body.compact-workspace #tasks>.toolbar>#taskBoardModeToggle{display:none!important}
+  body.compact-workspace #tasks>.toolbar>#taskShowDoneWrap.mobile-completed-visible{grid-column:2!important;grid-row:2!important;width:100%!important;padding:0 8px!important;gap:5px!important;min-height:44px!important}
+  body.compact-workspace #tasks>.toolbar>#taskShowDoneWrap.mobile-completed-visible>span{font-size:11px!important;white-space:normal!important}
+  body.compact-workspace #taskShowDoneWrap input#taskShowDoneToggle{flex:none!important;width:36px!important;height:24px!important}
+  body.compact-workspace #taskShowDoneWrap input#taskShowDoneToggle:before{width:20px!important;height:20px!important;left:2px!important;top:2px!important}
+  body.compact-workspace #taskShowDoneWrap input#taskShowDoneToggle:checked:before{transform:translateX(12px)!important}
+  body.compact-workspace #taskWeekNav.mobile-week-visible{display:none!important}
+  body.compact-workspace #mobileColumnPager{min-height:44px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;grid-template-columns:44px minmax(0,1fr) 44px 82px!important;gap:4px!important}
+  body.compact-workspace #mobileColumnPager #compactTodayBtn{display:grid!important;width:82px!important;font-size:13px!important;line-height:1.2!important;font-weight:700!important}
+  body.compact-workspace:not([data-compact-task-mode='week']) #mobileColumnPager{grid-template-columns:44px minmax(0,1fr) 44px!important}
+  body.compact-workspace:not([data-compact-task-mode='week']) #mobileColumnPager #compactTodayBtn{display:none!important}
+  body.compact-workspace .mobile-column-label strong{font-size:14px!important}
+  body.compact-workspace .mobile-column-label small{font-size:10px!important}
+  body.compact-workspace #kanban>.col{padding:9px!important;min-height:180px!important}
+  body.compact-workspace .wk-sub .wk-subrow{grid-template-columns:24px minmax(0,1fr) 28px 28px!important;grid-template-rows:auto!important;gap:3px!important;min-height:44px!important;padding:3px 4px!important}
+  body.compact-workspace .wk-sub .wk-subdrag-handle{grid-column:1!important;grid-row:1!important;width:24px!important;min-height:38px!important;height:100%!important}
+  body.compact-workspace .wk-sub .wk-sublabel{grid-column:2!important;grid-row:1!important;min-height:38px!important}
+  body.compact-workspace .wk-sub .wk-subcomment{grid-column:3!important;grid-row:1!important}
+  body.compact-workspace .wk-sub .wk-subdelete{grid-column:4!important;grid-row:1!important}
+  body.compact-workspace .compact-subadd-toggle{width:44px!important;height:44px!important;min-width:44px!important}
+  body.compact-workspace .wk-sub .wk-subtitle{font-size:13px!important;line-height:1.35!important}
+  body.focus-workspace:not(.focus-tools-open) #tasks>.toolbar>#taskSearch,body.focus-workspace:not(.focus-tools-open) #tasks>.toolbar>#mobileTaskFilters{display:none!important}
+  body.focus-workspace:not(.focus-tools-open) #tasks>.toolbar>#compactTaskMode,body.focus-workspace:not(.focus-tools-open) #tasks>.toolbar>#taskShowDoneWrap.mobile-completed-visible{grid-row:1!important}
+  body.focus-workspace #layoutShowTools{display:grid!important;place-items:center;width:44px;height:44px;padding:0!important}
+  body.focus-workspace .topbar .top-actions{gap:4px!important;flex-shrink:0!important}
+  body.focus-workspace .topbar>div:first-child{flex:1;min-width:0!important}
+  body.focus-workspace .topbar h2{font-size:22px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
+@media(prefers-reduced-motion:reduce){body.compact-workspace *,body.compact-workspace *:before,body.compact-workspace *:after{transition:none!important;scroll-behavior:auto!important}}

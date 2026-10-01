@@ -1,0 +1,58 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const root = path.resolve(__dirname,'..');
+const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
+const source = fs.readFileSync(path.join(root,'assets/workspace-layout.js'),'utf8');
+const css = fs.readFileSync(path.join(root,'assets/workspace-layout.css'),'utf8');
+const runtime = fs.readFileSync(path.join(root,'assets/app-runtime.js'),'utf8');
+assert.match(source,/closest\('\.workspace-layout-options \[data-workspace-layout\]'\)/);
+assert.doesNotMatch(source,/closest\('\[data-workspace-layout\]'\)/);
+assert.match(source,/localStorage\.setItem\(KEY, layout\)/);
+assert.match(source,/ensureTaskControls\(\)/,'controls must also work when runtime initializes later');
+assert.match(source,/openComposers = new Set/);
+assert.doesNotMatch(source,/innerHTML\s*=.*kanban/);
+assert.match(css,/\.wk-sub:not\(\.compact-composer-open\)>\.wk-subadd\{display:none!important\}/);
+assert.match(css,/\.wk-sub \.wk-subrow\{transition:none!important\}/);
+assert.match(html,/toolbar\.insertBefore\(ui,mode\)/,'desktop reuses the actual filter controls, not hidden mobile copies');
+assert.match(css,/focus-workspace:not\(\.focus-tools-open\)/);
+const script = html.slice(html.indexOf("<style id='mobile-single-column-v3'>")).match(/<script>([\s\S]*?)<\/script>/)[1];
+const nodes = new Map();
+const classes = () => { const set = new Set(); return {add:x=>set.add(x),remove:x=>set.delete(x),contains:x=>set.has(x),toggle(x,on){if(on===undefined)on=!set.has(x);if(on)set.add(x);else set.delete(x);return on}}; };
+let columns = [];
+const D = v => new Date(v+'T00:00:00');
+const ymd = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today = () => '2026-10-02';
+const S = {tasksWeekStart:today()};
+function renderTasks(){
+  const monday = D(S.tasksWeekStart);monday.setDate(monday.getDate()-(monday.getDay()||7)+1);
+  columns = Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(d.getDate()+i);return makeColumn(ymd(d))});
+  columns.push(makeColumn('__none__'));
+}
+function makeColumn(date){
+  const classList = classes();if(date===today())classList.add('today');
+  return {dataset:{date},classList,querySelectorAll:()=>[],querySelector:()=>({cloneNode:()=>({textContent:date,querySelectorAll:()=>[]})})};
+}
+const board = {classList:classes()};
+const pager = {querySelector(id){if(!nodes.has(id))nodes.set(id,{textContent:'',setAttribute(){},disabled:false});return nodes.get(id)}};
+let dateHandler;
+const week = {dispatchEvent(event){dateHandler(event)}};
+const body = {classList:classes()};body.classList.add('compact-workspace');
+const document = {body,readyState:'loading',addEventListener(type,handler){if(type==='pt-select-task-date')dateHandler=handler},getElementById:id=>({kanban:board,mobileColumnPager:pager,taskWeekNav:week}[id]),querySelector:()=>({dataset:{taskMode:'week'}}),querySelectorAll:()=>columns};
+const window = {matchMedia:()=>({matches:true}),addEventListener(){}};
+let frame;
+const context = vm.createContext({window,document,S,D,ymd,today,renderTasks,localStorage:{setItem(){}},requestAnimationFrame(fn){frame=fn;return 1},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail}},setTimeout(){},Date});
+vm.runInContext(runtime.split(/\r?\n/).find(line=>line.startsWith("document.addEventListener('pt-select-task-date'")),context);
+vm.runInContext(script.replace('window.ProjectTrackerColumns={selectDate:chooseDate,refresh:schedule};','window.ProjectTrackerColumns={selectDate:chooseDate,refresh:schedule,step:stepColumn,render:renderPager};'),context);
+renderTasks();window.ProjectTrackerColumns.render();
+const active = () => columns.find(col=>col.classList.contains('mobile-column-active')).dataset.date;
+const flush = () => {const next=frame;frame=null;if(next)next()};
+assert.equal(active(),today(),'initial mobile day is today, not Monday');
+window.ProjectTrackerColumns.selectDate('2026-10-04');flush();assert.equal(active(),'2026-10-04');
+window.ProjectTrackerColumns.step(1);flush();assert.equal(active(),'2026-10-05','Sunday advances to next Monday');
+window.ProjectTrackerColumns.step(-1);flush();assert.equal(active(),'2026-10-04','Monday goes back to previous Sunday');
+window.ProjectTrackerColumns.selectDate('2027-01-01');flush();assert.equal(active(),'2027-01-01','selection crosses years');
+window.ProjectTrackerColumns.selectDate('__none__');assert.equal(active(),'__none__','undated tasks stay accessible');
+window.ProjectTrackerColumns.selectDate('2026-02-31');flush();assert.equal(S.tasksWeekStart,'2026-12-28','invalid dates do not change the selected week');
+console.log('Workspace layout and mobile day navigation checks passed');
