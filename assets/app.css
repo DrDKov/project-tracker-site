@@ -198,6 +198,17 @@ body.sketch-theme #taskModal .task-comment-subtask-label,body.sketch-theme #task
 @media(max-width:720px){.wk-sub .wk-subrow{grid-template-columns:44px minmax(0,1fr) 30px 30px!important}.wk-sub .wk-subcomment{width:30px;height:30px;font-size:17px}}
 /* Subtask comments and comment editing v1 end */
 
+/* Explicit subtask actions and reliable mobile tap targets v1 start */
+.wk-sub .wk-sublabel{grid-template-columns:26px minmax(0,1fr);cursor:default}
+.wk-sub .wk-subcheck{width:26px!important;height:26px!important;min-width:26px!important;min-height:26px!important;border-radius:7px!important;background-size:17px 17px!important}
+.wk-sub .wk-subtitle{display:block;min-width:0;width:100%;margin:0!important;padding:2px 0!important;border:0!important;background:transparent!important;color:inherit!important;font:inherit!important;font-weight:inherit!important;line-height:inherit!important;text-align:left;white-space:normal;overflow-wrap:anywhere;cursor:copy!important}
+.wk-sub .wk-subtitle:hover{text-decoration:underline}
+.wk-sub .wk-subtitle:focus-visible{outline:2px solid #0f766e;outline-offset:2px;border-radius:3px}
+.wk-sub .wk-subrow.done .wk-subtitle{text-decoration:line-through;color:#94a3b8!important}
+.subtask-copy-notice{position:fixed;z-index:2000;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);max-width:calc(100vw - 32px);padding:9px 13px;border-radius:12px;background:#0f172a;color:#fff;font-size:13px;font-weight:700;box-shadow:0 10px 25px rgba(15,23,42,.2);opacity:0;pointer-events:none;transition:opacity .16s ease,transform .16s ease}
+.subtask-copy-notice.visible{opacity:1;transform:translate(-50%,0)}
+/* Explicit subtask actions and reliable mobile tap targets v1 end */
+
 /* Native date and time pickers v1 start */
 .native-picker-field{position:relative!important;display:block!important;width:100%!important;min-width:0!important;max-width:100%!important;margin:0!important;color:inherit!important;font-size:inherit!important}
 .native-picker-field>.input[type='date'],.native-picker-field>.input[type='time']{box-sizing:border-box!important;width:100%!important;min-width:0!important;max-width:100%!important;padding-inline-start:12px!important;padding-inline-end:50px!important;overflow:visible!important;-webkit-appearance:auto!important;appearance:auto!important}

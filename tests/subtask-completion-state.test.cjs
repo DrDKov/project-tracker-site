@@ -35,7 +35,9 @@ assert.match(runtime, /data-action="cycle-subtask"/);
 assert.match(runtime, /role="checkbox"/);
 assert.match(runtime, /aria-checked="\$\{state==='partial'\?'mixed'/);
 assert.match(runtime, /completion_state:next,is_done:done/);
-assert.match(runtime, /SUBTASK_STATE_UPDATES\.has\(id\)/);
+assert.match(runtime, /SUBTASK_STATE_WRITES=new Map\(\)/);
+assert.match(runtime, /entry\.desired=patch/);
+assert.match(runtime, /while\(entry\.desired\)/);
 
 for (const sheet of [css, baseCss]) {
   assert.match(sheet, /\.wk-subcheck\[data-state="partial"\]/);
