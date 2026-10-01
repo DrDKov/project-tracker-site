@@ -17,7 +17,7 @@ const source = [
   take('const SUBTASK_ADDS='),
   take('const SUBTASK_STATE_WRITES='),
   ...['rtId', 'rtKey', 'rtArray', 'rtNewer', 'rtUpsert', 'rtRemove', 'subtaskState', 'nextSubtaskState',
-    'addSubtask', 'submitSubtaskForm', 'subtaskStatePatch', 'flushSubtaskState', 'cycleSubtask', 'copySubtaskTitle']
+    'addSubtask', 'submitSubtaskForm', 'subtaskStatePatch', 'flushSubtaskState', 'cycleSubtask', 'copySubtaskTitle', 'subtaskStructureKey', 'handleRealtimePayload']
     .map(name => lines.find(value => value.startsWith(`function ${name}(`) || value.startsWith(`async function ${name}(`))),
   take("document.addEventListener('click',e=>{let check="),
 ].join('\n');
@@ -35,6 +35,9 @@ const inserts = [];
 const updates = [];
 let copied = '';
 let clickHandler;
+let fullRenders = 0;
+let realtimeRenders = 0;
+let stateRefreshes = 0;
 const S = {
   subtasks: [], tasks: [], projects: [], users: [], assignees: [], taskComments: [],
   profile: { id: 'author-1' },
@@ -60,7 +63,10 @@ const context = vm.createContext({
   S, Date, Map, Set, console,
   byId: (rows, id) => rows.find(row => row.id === id),
   subs: taskId => S.subtasks.filter(row => row.task_id === taskId && !row.deleted_at),
-  render: () => {},
+  render: () => { fullRenders += 1; },
+  refreshSubtaskStateUI: () => { stateRefreshes += 1; },
+  setRealtimeStatus: () => {},
+  scheduleRealtimeRender: () => { realtimeRenders += 1; },
   alert: message => { throw new Error(message); },
   navigator: { clipboard: { writeText: async value => { copied = value; } } },
   showSubtaskCopied: () => {},
@@ -89,6 +95,7 @@ vm.runInContext(source, context);
   await new Promise(setImmediate);
   assert.equal(S.subtasks.length, 1, 'insert response and realtime event must not duplicate a row');
   assert.equal(input.value, '', 'successful insert must clear the composer');
+  const rendersAfterInsert = fullRenders;
 
   const first = vm.runInContext('cycleSubtask("sub-1")', context);
   assert.equal(S.subtasks[0].completion_state, 'partial');
@@ -99,7 +106,7 @@ vm.runInContext(source, context);
 
   const firstSaved = { ...row, ...updates[0].patch, updated_at: '2026-10-01T10:00:01Z' };
   context.incomingRow = firstSaved;
-  vm.runInContext('rtUpsert("task_subtasks", incomingRow)', context);
+  vm.runInContext('handleRealtimePayload("task_subtasks", {eventType:"UPDATE",new:incomingRow})', context);
   assert.equal(S.subtasks[0].completion_state, 'done', 'realtime must not undo a newer tap');
   updates[0].request.resolve({ data: firstSaved, error: null });
   await new Promise(setImmediate);
@@ -108,6 +115,15 @@ vm.runInContext(source, context);
   updates[1].request.resolve({ data: secondSaved, error: null });
   await first;
   assert.equal(S.subtasks[0].completion_state, 'done');
+  context.incomingRow = secondSaved;
+  vm.runInContext('handleRealtimePayload("task_subtasks", {eventType:"UPDATE",new:incomingRow})', context);
+  assert.equal(fullRenders, rendersAfterInsert, 'status taps and saving must preserve the checkbox DOM');
+  assert.equal(realtimeRenders, 0, 'status-only realtime acknowledgements must not replace the board');
+  assert.ok(stateRefreshes >= 4, 'checkbox and progress must update in place');
+  context.incomingRow = { ...secondSaved, title: 'Изменённое название', updated_at: '2026-10-01T10:00:03Z' };
+  vm.runInContext('handleRealtimePayload("task_subtasks", {eventType:"UPDATE",new:incomingRow})', context);
+  assert.equal(realtimeRenders, 1, 'structural edits must still refresh the board');
+  S.subtasks[0].title = 'Абдулин А. А.';
 
   let stopped = 0;
   clickHandler({
