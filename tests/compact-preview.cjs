@@ -30,7 +30,7 @@ const server = http.createServer((req,res) => {
   }
   if(url.pathname === '/fixture-loader.js'){
     res.writeHead(200,{'Content-Type':'application/javascript'});
-    res.end("await import('/assets/app-runtime.js');await Promise.all([import('/assets/workspace-layout.js'),import('/assets/theme-settings.js'),import('/assets/mobile-completed-tasks-toggle.js'),import('/assets/native-pickers.js')]);");return;
+    res.end("await import('/assets/app-runtime.js');await Promise.all([import('/assets/workspace-layout.js'),import('/assets/theme-settings.js'),import('/assets/mobile-completed-tasks-toggle.js'),import('/assets/native-pickers.js'),import('/assets/task-comments.js')]);");return;
   }
   const target = path.resolve(root,'.'+decodeURIComponent(url.pathname));
   if(!target.startsWith(root+path.sep)){res.writeHead(403);res.end();return}
@@ -41,4 +41,5 @@ const server = http.createServer((req,res) => {
   }
   res.writeHead(200,{'Content-Type':target.endsWith('.css')?'text/css':target.endsWith('.js')?'application/javascript':'application/octet-stream'});res.end(content);
 });
-server.listen(8766,'127.0.0.1',()=>console.log('Compact UI fixture: http://127.0.0.1:8766'));
+const port = Number(process.env.PORT) || 8766;
+server.listen(port,'127.0.0.1',()=>console.log('Compact UI fixture: http://127.0.0.1:'+port));

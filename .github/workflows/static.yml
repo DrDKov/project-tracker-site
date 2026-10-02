@@ -29,6 +29,7 @@ jobs:
           node --check assets/app-runtime.js
           node --check assets/app.js
           node --check assets/workspace-layout.js
+          node --check assets/task-inspector.js
           for test in tests/*.test.cjs; do node "$test"; done
       - name: Setup Pages
         uses: actions/configure-pages@v5

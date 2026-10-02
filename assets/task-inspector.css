@@ -1,0 +1,97 @@
+/* A modeless, single-pane task inspector. Its layout never depends on viewport-wide form columns. */
+body{--task-inspector-width:clamp(440px,40vw,600px)}
+body dialog#taskModal.task-inspector{
+  position:fixed!important;inset:0 0 0 auto!important;margin:0!important;
+  width:var(--task-inspector-width)!important;max-width:100vw!important;
+  height:100dvh!important;max-height:100dvh!important;padding:0!important;
+  border:0!important;border-left:1px solid var(--line)!important;border-radius:0!important;
+  background:var(--panel)!important;color:var(--text)!important;
+  box-shadow:-8px 0 32px rgba(0,0,0,.08)!important;z-index:150;
+  overflow:hidden!important;
+}
+body dialog#taskModal.task-inspector::backdrop{background:transparent!important;backdrop-filter:none!important}
+body dialog#taskModal.task-inspector>form#taskForm.modal-body{
+  width:100%!important;height:100%!important;max-height:none!important;
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto minmax(0,1fr) auto!important;
+  gap:0!important;padding:0!important;overflow:hidden!important;min-width:0!important;
+}
+body dialog#taskModal.task-inspector>form#taskForm>.modal-head{
+  grid-column:1!important;grid-row:1!important;gap:12px!important;margin:0!important;
+  padding:20px 22px 14px!important;min-width:0;
+}
+.task-inspector-heading{min-width:0;flex:1}
+body .task-inspector-heading h3{font-size:20px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;outline:none}
+#taskInspectorSubtitle{display:block;margin-top:4px;font-size:12px;color:var(--muted)}
+.task-inspector-head-actions{display:flex;align-items:center;gap:6px;flex:none}
+body #taskModal .task-inspector-head-actions .x{width:36px;min-width:36px;height:36px;padding:0;display:grid;place-items:center}
+#taskInspectorExpand svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+body #taskModal .task-inspector-tabs{grid-column:1;grid-row:2;display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 22px 12px;margin:0}
+body #taskModal .task-inspector-tabs>button{flex:1;min-width:0;min-height:40px;padding:7px 12px;display:flex;justify-content:center;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);font-size:14px;font-weight:650;cursor:pointer;box-shadow:none}
+body #taskModal .task-inspector-tabs>button[aria-selected='true']{color:var(--text);background:var(--bg);border-color:var(--line)}
+#taskInspectorCommentCount{font-size:11px;padding:2px 6px;min-width:20px;border-radius:6px;background:var(--panel);color:var(--muted)}
+body dialog#taskModal.task-inspector>form#taskForm>.form-grid{
+  grid-column:1!important;grid-row:4!important;display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  align-content:start!important;gap:16px 12px!important;margin:0!important;
+  padding:20px 22px 24px!important;min-width:0!important;min-height:0!important;
+  overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;
+}
+body dialog#taskModal.task-inspector>form#taskForm>.form-grid:before{display:none!important}
+body #taskModal.task-inspector .form-grid>label:has(#taskTitle),body #taskModal.task-inspector .form-grid>label:has(#taskProject){grid-column:1/-1!important}
+body #taskModal.task-inspector .form-grid label{min-width:0!important}
+body #taskModal.task-inspector .form-grid label>span{font-size:12px!important;margin-bottom:6px!important}
+body #taskModal.task-inspector .form-grid label>span.muted{font-size:11px!important;line-height:1.4;margin:6px 0 0!important}
+body #taskModal.task-inspector .form-grid .input{min-width:0!important;max-width:100%!important;width:100%!important;box-sizing:border-box!important;min-height:42px;font-size:14px!important}
+body #taskModal.task-inspector #taskAssignee{min-height:94px!important;max-height:128px!important}
+body #taskModal.task-inspector #taskNotes{min-height:110px!important;resize:vertical!important}
+body #taskModal.task-inspector .task-calendar-time-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+body #taskModal.task-inspector .task-calendar-time-grid>label:has(#taskDurationMinutes){grid-column:1/-1!important}
+body #taskModal.task-inspector .task-repeat-options{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+body #taskModal.task-inspector .task-calendar-box,body #taskModal.task-inspector .task-recurrence-box{padding:14px!important}
+body dialog#taskModal.task-inspector>form#taskForm>#taskCommentsBlock.task-comments-block{
+  grid-column:1!important;grid-row:4!important;display:grid!important;
+  grid-template-rows:auto minmax(0,1fr) auto!important;gap:12px!important;
+  min-width:0!important;min-height:0!important;margin:0!important;padding:20px 22px!important;
+  border:0!important;border-radius:0!important;overflow:hidden!important;
+  background:transparent!important;box-shadow:none!important;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comments-head{padding:0 0 10px!important;background:transparent!important}
+body #taskModal.task-inspector #taskCommentsBlock .task-comments-list{min-height:0!important;max-height:none!important;overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable}
+body #taskModal.task-inspector #taskCommentsBlock .empty{padding:26px 18px;font-size:13px}
+body #taskModal.task-inspector .task-comment-body,body #taskModal.task-inspector .task-comment-subtask-label{overflow-wrap:anywhere}
+body dialog#taskModal.task-inspector>form#taskForm>.modal-actions{
+  grid-column:1!important;grid-row:5!important;display:flex!important;align-items:center!important;
+  flex-wrap:wrap!important;gap:8px!important;margin:0!important;padding:14px 22px!important;
+  border-top:1px solid var(--line)!important;background:var(--panel)!important;
+}
+#taskInspectorSaveHint{flex:1;min-width:130px;font-size:11px;line-height:1.4}
+body #taskModal.task-inspector .modal-actions .btn{min-height:42px;font-size:13px!important;padding:10px 14px!important}
+body #taskModal.task-inspector #taskInspectorDiscard{grid-column:1;grid-row:3;margin:12px 22px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--soft-orange);font-size:12px;line-height:1.4}
+#taskInspectorDiscard b,#taskInspectorDiscard span{display:block}
+.task-inspector-discard-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-top:10px}
+body #taskModal.task-inspector .task-inspector-discard-actions button{font-size:12px;min-height:36px}
+body dialog#taskModal.task-inspector [hidden],body dialog#taskModal.task-inspector>form#taskForm>.form-grid[hidden],body dialog#taskModal.task-inspector>form#taskForm>#taskCommentsBlock[hidden]{display:none!important}
+body #taskModal.task-inspector :focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+.task-card.task-inspector-selected{outline:2px solid var(--blue);outline-offset:2px}
+@media(min-width:981px){
+  body.task-inspector-open:not(.task-inspector-expanded) .main{margin-right:var(--task-inspector-width)}
+  body.task-inspector-expanded dialog#taskModal.task-inspector{inset:12px 12px 12px auto!important;width:min(960px,calc(100vw - 32px))!important;height:calc(100dvh - 24px)!important;max-height:calc(100dvh - 24px)!important;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 10px 40px rgba(0,0,0,.16)!important}
+  body.task-inspector-expanded #taskModal.task-inspector #taskAssignee{min-height:100px!important}
+}
+@media(max-width:980px){
+  body.task-inspector-mobile-open{overflow:hidden!important}
+  body dialog#taskModal.task-inspector{inset:0!important;width:100vw!important;max-width:100vw!important;border:0!important;box-shadow:none!important}
+  body dialog#taskModal.task-inspector>form#taskForm>.modal-head{padding:calc(14px + env(safe-area-inset-top,0px)) 16px 12px!important}
+  body #taskModal .task-inspector-tabs{padding:0 16px 12px}
+  body dialog#taskModal.task-inspector>form#taskForm>.form-grid{padding:18px 16px 24px!important;gap:16px 12px!important}
+  body dialog#taskModal.task-inspector>form#taskForm>#taskCommentsBlock.task-comments-block{padding:18px 16px!important}
+  body dialog#taskModal.task-inspector>form#taskForm>.modal-actions{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))!important}
+  body #taskModal.task-inspector .form-grid .input{font-size:16px!important;min-height:44px}
+  body #taskModal.task-inspector .form-grid>label:has(#taskStart),body #taskModal.task-inspector .form-grid>label:has(#taskDue){grid-column:1/-1!important}
+  body #taskModal.task-inspector .task-calendar-time-grid,body #taskModal.task-inspector .task-repeat-options{grid-template-columns:minmax(0,1fr)!important}
+  body #taskModal .task-inspector-head-actions .x{width:44px;height:44px;min-width:44px}
+  #taskInspectorSaveHint{flex-basis:100%;min-width:0}
+  body #taskModal.task-inspector #taskInspectorDiscard{margin:12px 16px 0}
+}
