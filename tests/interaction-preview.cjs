@@ -9,10 +9,11 @@ let current = null;
 const runtime = () => fs.readFileSync(path.join(root, 'assets/app-runtime.js'), 'utf8');
 function fixtureRuntime() {
   const lines = runtime().split(/\r?\n/);
-  const names = ['rtId','rtKey','rtArray','rtNewer','rtUpsert','rtRemove','subtaskStructureKey','handleRealtimePayload','subtaskState','nextSubtaskState','subtaskToggleLabel','subs','subBlock','subtaskStatePatch','refreshSubtaskStateUI','flushSubtaskState','cycleSubtask'];
+  const names = ['completionWrites','completionResponse','rtId','rtKey','rtArray','rtNewer','rtUpsert','rtRemove','subtaskStructureKey','handleRealtimePayload','subtaskState','nextSubtaskState','subtaskToggleLabel','subs','subBlock','subtaskStatePatch','refreshSubtaskStateUI','flushSubtaskState','cycleSubtask'];
   const source = [
     lines.find(line => line.startsWith('const SUBTASK_STATES=')),
     lines.find(line => line.startsWith('const SUBTASK_STATE_WRITES=')),
+    lines.find(line => line.startsWith('const TASK_STATE_WRITES=')),
     ...names.map(name => { const line = lines.find(line => line.includes('function '+name+'(')); if (!line) throw new Error('Missing fixture function: '+name); return line; }),
     lines.find(line => line.startsWith("document.addEventListener('click',e=>{let check="))
   ].join('\n');
@@ -34,7 +35,7 @@ function dbClient(){
     if(table==='task_subtasks')return{update(patch){let id;return{eq(key,value){id=value;return this},select(){return this},async single(){await new Promise(resolve=>setTimeout(resolve,250));const row={...byId(S.subtasks,id),...patch,updated_at:new Date().toISOString()};setTimeout(()=>handleRealtimePayload(table,{eventType:'UPDATE',new:row}),100);return{data:row,error:null}}}}};
     let operation='select',values=null,filters={},count=20;
     const query={select(){return this},eq(key,value){filters[key]=value;return this},is(key,value){filters[key]=value;return this},order(){return this},limit(value){count=value;return this},insert(value){operation='insert';values=value;return this},update(value){operation='update';values=value;return this},upsert(value){operation='upsert';values=value;return this},single(){filters.single=true;return this},maybeSingle(){filters.single=true;return this},async then(resolve,reject){try{const response=await fetch('/fixture-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({table,operation,values,filters,count,role,userId:profile.id})});resolve(await response.json())}catch(error){reject(error)}}};return query
-  },async rpc(name,args){return await (await fetch('/fixture-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rpc:name,args,role,userId:profile.id})})).json()}};
+  },async rpc(name,args){if(name==='set_subtask_completion')return this.from('task_subtasks').update({completion_state:args.p_state,is_done:args.p_state==='done'}).eq('id',args.p_subtask).select().single();return await (await fetch('/fixture-api',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rpc:name,args,role,userId:profile.id})})).json()}};
 }
 S.sb=dbClient();Object.defineProperties(window,{currentProfile:{get:()=>profile},currentAuth:{get:()=>({id:profile.id})},sb:{get:()=>S.sb}});
 ` + source + `

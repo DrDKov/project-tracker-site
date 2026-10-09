@@ -16,6 +16,9 @@ const source = [
   take('const SUBTASK_STATES='),
   take('const SUBTASK_ADDS='),
   take('const SUBTASK_STATE_WRITES='),
+  take('const TASK_STATE_WRITES='),
+  take('function completionWrites('),
+  take('function completionResponse('),
   ...['rtId', 'rtKey', 'rtArray', 'rtNewer', 'rtUpsert', 'rtRemove', 'subtaskState', 'nextSubtaskState',
     'addSubtask', 'submitSubtaskForm', 'subtaskStatePatch', 'flushSubtaskState', 'cycleSubtask', 'copySubtaskTitle', 'subtaskStructureKey', 'handleRealtimePayload']
     .map(name => lines.find(value => value.startsWith(`function ${name}(`) || value.startsWith(`async function ${name}(`))),
@@ -43,6 +46,12 @@ const S = {
   profile: { id: 'author-1' },
 };
 S.sb = {
+  rpc(name,args) {
+    assert.equal(name,'set_subtask_completion');
+    const request=deferred();
+    updates.push({patch:{completion_state:args.p_state,is_done:args.p_state==='done'},request});
+    return request.promise;
+  },
   from(table) {
     assert.equal(table, 'task_subtasks');
     return {

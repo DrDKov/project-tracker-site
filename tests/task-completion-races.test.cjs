@@ -1,0 +1,64 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const runtime=fs.readFileSync(path.join(__dirname,'../assets/app-runtime.js'),'utf8');
+const lines=runtime.split(/\r?\n/);
+const take=prefix=>{const line=lines.find(l=>l.startsWith(prefix));assert.ok(line,prefix);return line};
+const functions=['completionWrites','mergeCompletionRows','completionResponse','rtId','rtArray','rtNewer','rtUpsert',
+  'subtaskState','nextSubtaskState','subtaskStatePatch','toggleTask','flushTaskState','cycleSubtask','flushSubtaskState'];
+const source=[take('const SUBTASK_STATES='),take('const SUBTASK_STATE_WRITES='),take('const TASK_STATE_WRITES='),
+  ...functions.map(name=>lines.find(l=>l.startsWith('function '+name+'(')||l.startsWith('async function '+name+'(')))].join('\n');
+const tick=()=>new Promise(setImmediate);
+async function test(profile){
+  const task={id:'t',status:'planned',updated_at:'2026-10-09T10:00:00Z'};
+  const sub={id:'s',task_id:'t',completion_state:'not_done',is_done:false,updated_at:task.updated_at};
+  const S={tasks:[{...task}],subtasks:[{...sub}],profile:{id:profile}};
+  const requests=[],alerts=[];
+  S.sb={rpc(name,args){return new Promise(resolve=>requests.push({name,args,resolve}))}};
+  const c=vm.createContext({S,Date,Map,Set,Error,byId:(a,id)=>a.find(x=>x.id===id),
+    refreshTaskCompletionUI(){},refreshSubtaskStateUI(){},scheduleRender(){},alert:m=>alerts.push(m)});
+  vm.runInContext(source,c);
+  const call=code=>vm.runInContext(code,c);
+  const first=call("toggleTask('t',true)");
+  call("toggleTask('t',false)");call("toggleTask('t',true)");
+  assert.equal(requests.length,1,'one task write in flight');
+  S.tasks=call("mergeCompletionRows('tasks',[{id:'t',status:'planned',updated_at:'2026-10-09T10:00:00Z'}])");
+  assert.equal(S.tasks[0].status,'done','refresh cannot undo a pending task tap');
+  requests[0].resolve({data:{...task,status:'done',updated_at:'2026-10-09T10:00:01Z'},error:null});
+  await tick();assert.equal(requests.length,2,'only latest queued task intent saved');
+  requests[1].resolve({data:{...task,status:'done',completed_by_id:profile,updated_at:'2026-10-09T10:00:02Z'},error:null});
+  await first;
+  S.tasks=call("mergeCompletionRows('tasks',[{id:'t',status:'planned',updated_at:'2026-10-09T10:00:00Z'}])");
+  assert.equal(S.tasks[0].status,'done','late snapshot cannot undo a confirmed write');
+  c.incoming={...task,status:'in_progress',updated_at:'2026-10-09T10:00:01Z'};
+  call("rtUpsert('tasks',incoming)");assert.equal(S.tasks[0].status,'done');
+  const subFirst=call("cycleSubtask('s')");call("cycleSubtask('s')");
+  assert.equal(S.subtasks[0].completion_state,'done');
+  S.subtasks=call("mergeCompletionRows('task_subtasks',[{id:'s',task_id:'t',completion_state:'not_done',is_done:false,updated_at:'2026-10-09T10:00:00Z'}])");
+  assert.equal(S.subtasks[0].completion_state,'done');
+  c.incoming={...sub,completion_state:'partial',updated_at:'2026-10-09T10:00:01Z'};
+  call("rtUpsert('task_subtasks',incoming)");assert.equal(S.subtasks[0].completion_state,'done');
+  requests[2].resolve({data:c.incoming,error:null});await tick();
+  requests[3].resolve({data:{...sub,completion_state:'done',is_done:true,updated_at:'2026-10-09T10:00:02Z'},error:null});
+  await subFirst;assert.equal(S.subtasks[0].completion_state,'done');
+  const error=call("toggleTask('t',false)");requests[4].resolve({data:null,error:{message:'Network error'}});
+  await assert.rejects(error,/Network error/);assert.equal(S.tasks[0].status,'done','failed task rolls back');
+  const denied=call("cycleSubtask('s')");requests[5].resolve({data:null,error:{message:'No access'}});
+  await denied;assert.equal(S.subtasks[0].completion_state,'done');assert.match(alerts[0],/No access/);
+  const empty=call("toggleTask('t',false)");requests[6].resolve({data:[],error:null});
+  await assert.rejects(empty,/сервер не подтвердил/);assert.equal(S.tasks[0].status,'done','zero updated rows is not success');
+  const interrupted=call("toggleTask('t',false)");
+  c.incoming={...task,status:'done',title:'Updated by another editor',updated_at:'2026-10-09T10:00:03Z'};
+  call("rtUpsert('tasks',incoming)");
+  requests[7].resolve({data:null,error:{message:'Connection lost'}});
+  await assert.rejects(interrupted,/Connection lost/);
+  assert.equal(S.tasks[0].status,'done');
+  assert.equal(S.tasks[0].title,'Updated by another editor','rollback retains the latest confirmed realtime row');
+  assert.equal(call('TASK_STATE_WRITES.size+SUBTASK_STATE_WRITES.size'),0);
+}
+(async()=>{for(const p of ['owner','nurse','orthopedist','doctor'])await test(p);
+  assert.match(runtime,/mergeCompletionRows\('tasks',rows\)/);
+  assert.equal((runtime.match(/mergeCompletionRows\('task_subtasks',await optional/g)||[]).length,2);
+  console.log('Task/subtask completion: all profiles, queued taps, stale loads/realtime, rollback and zero-row response checks passed');
+})().catch(e=>{console.error(e);process.exitCode=1});
