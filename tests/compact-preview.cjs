@@ -66,7 +66,7 @@ const server = http.createServer((req,res) => {
   if(!fs.existsSync(target)||!fs.statSync(target).isFile()){res.writeHead(404);res.end();return}
   let content = fs.readFileSync(target);
   if(url.pathname === '/assets/app-runtime.js'){
-    content = content.toString().replace(/async function init\(\)[^\n]+/,bootstrap).replace(/async function load\(\)[^\n]+/,'async function load(){render()}');
+    content = content.toString().replace(/async function init\(\)[^\n]+/,bootstrap).replace(/async function load\(\)[\s\S]*?(?=\nfunction vals\()/,'async function load(){render()}\n');
   }
   res.writeHead(200,{'Content-Type':target.endsWith('.css')?'text/css':target.endsWith('.js')?'application/javascript':'application/octet-stream'});res.end(content);
 });

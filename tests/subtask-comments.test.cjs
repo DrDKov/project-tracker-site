@@ -6,7 +6,7 @@ const vm = require('node:vm');
 const root = path.join(__dirname, '..');
 const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260928_task_comment_subtasks.sql'), 'utf8');
-const names = ['subBlock', 'taskCommentList', 'commentAuthor', 'canDeleteComment', 'canEditComment', 'commentSubtask', 'renderTaskCommentsModal', 'addTaskComment', 'saveTaskCommentEdit'];
+const names = ['subBlock', 'taskCommentList', 'taskCommentCount', 'commentAuthor', 'canDeleteComment', 'canEditComment', 'commentSubtask', 'renderTaskCommentsModal', 'addTaskComment', 'saveTaskCommentEdit'];
 const indexHelpers = runtime.slice(runtime.indexOf('let RENDER_DATA_INDEXES='),runtime.indexOf('function byId('));
 const source = indexHelpers+'\n'+names.map(name => {
   const line = runtime.split(/\r?\n/).find(row => row.startsWith(`function ${name}(`) || row.startsWith(`async function ${name}(`));
@@ -73,6 +73,9 @@ const context = vm.createContext({
   subtaskToggleLabel: () => 'Не выполнено',
   pcolor: () => '#075d65',
   renderCommentSubtaskContext: () => {},
+  loadTaskComments: () => Promise.resolve(true),
+  workspaceHistoryState: () => ({loaded:true}),
+  historyNotice: () => '',
   scheduleRender: () => {},
   rtUpsert: (table, row) => {
     assert.equal(table, 'task_comments');

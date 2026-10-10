@@ -59,6 +59,6 @@ async function test(profile){
 }
 (async()=>{for(const p of ['owner','nurse','orthopedist','doctor'])await test(p);
   assert.match(runtime,/mergeCompletionRows\('tasks',rows\)/);
-  assert.equal((runtime.match(/mergeCompletionRows\('task_subtasks',await optional/g)||[]).length,2);
+  assert.equal((runtime.match(/mergeCompletionRows\('task_subtasks',subtasks\)/g)||[]).length,2,'both parallel snapshots keep the completion merge guard');
   console.log('Task/subtask completion: all profiles, queued taps, stale loads/realtime, rollback and zero-row response checks passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
