@@ -92,6 +92,17 @@ async function failures(){
   h.setIntercept(null);await call("loadProjectMessages('p',true)");assert.equal(call("workspaceHistoryState('chat','p').error"),'');
   data.project_messages=[];await call("loadProjectMessages('p',true)");assert.equal(S.messages.length,0,'confirmed empty snapshot clears old history');
 }
+async function overlappingSnapshots(){
+  const h=harness(),{S,call}=h;
+  let releaseIndex;
+  h.setIntercept(request=>request.columns==='*'?Promise.resolve({data:[{id:'new',task_id:'task-a',body:'Newer task history',created_at:'2026-10-10T10:00:00Z'}],error:null}):new Promise(resolve=>releaseIndex=resolve));
+  const index=call('loadCommentIndex()');await tick();
+  await call("loadTaskComments('task-a')");
+  releaseIndex({data:[],error:null});await index;
+  assert.equal(S.taskComments.length,1,'an older counter snapshot cannot erase a newer scoped read');
+  assert.equal(S.taskComments[0].body,'Newer task history');
+  assert.equal(call("taskCommentCount('task-a')"),1);
+}
 async function startup(){
   const block=runtime.slice(runtime.indexOf('async function load(){'),runtime.indexOf('function vals('));
   const S={loading:false,user:{id:'u'},profile:{id:'u',role:'owner'},users:[],warnings:[],projects:[],tasks:[],members:[],assignees:[],subtasks:[]};
@@ -106,4 +117,4 @@ async function startup(){
   assert.ok(!started.includes('project_messages')&&!started.includes('activity_log'));
   pending.forEach(resolve=>resolve());await promise;assert.equal(S.loading,false);
 }
-(async()=>{await histories();await races();await failures();await startup();console.log('Lazy workspace data: parallel startup, counters, >1000-row histories, deduplication, session isolation, retry and snapshot races passed')})().catch(error=>{console.error(error);process.exitCode=1});
+(async()=>{await histories();await races();await failures();await overlappingSnapshots();await startup();console.log('Lazy workspace data: parallel startup, counters, >1000-row histories, deduplication, session isolation, retry and snapshot races passed')})().catch(error=>{console.error(error);process.exitCode=1});

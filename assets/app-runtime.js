@@ -170,7 +170,14 @@ function loadCommentIndex(force=false){
 function loadTaskComments(taskId,force=false){
   if(!taskId)return Promise.resolve(false);
   return loadWorkspaceHistory('comments',taskId,valid=>readHistoryRows(()=>S.sb.from('task_comments').select('*').eq('task_id',taskId).is('deleted_at',null),'Комментарии задачи',valid),
-    (rows,revision)=>{S.taskComments=mergeHistorySnapshot('task_comments',rows,r=>r.task_id===taskId,revision)},
+    (rows,revision)=>{
+      let previous=S.taskComments.filter(r=>r.task_id===taskId);
+      S.taskComments=mergeHistorySnapshot('task_comments',rows,r=>r.task_id===taskId,revision);
+      let current=S.taskComments.filter(r=>r.task_id===taskId),ids=new Set(current.map(r=>r.id));
+      // A newer scoped read is also authoritative over an older counter snapshot.
+      previous.filter(r=>!ids.has(r.id)).forEach(r=>noteHistoryChange('task_comments',r,true));
+      current.forEach(r=>noteHistoryChange('task_comments',r));
+    },
     ()=>{if($('taskId')?.value===taskId)renderTaskCommentsModal();scheduleRender('task-comment-history')},force);
 }
 function loadProjectMessages(projectId,force=false){
@@ -412,6 +419,8 @@ async function createRecurringTasks(baseRow,selected){let start=baseRow.start_da
 document.addEventListener('change',e=>{if(e.target&&['taskRepeatEnabled','taskRepeatType'].includes(e.target.id))syncTaskRecurrenceUi()},true);
 setTimeout(ensureTaskRecurrenceUi,0);
 /* Task recurrence v2 end */
+
+
 
 
 
