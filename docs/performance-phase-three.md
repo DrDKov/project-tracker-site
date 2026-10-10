@@ -38,4 +38,23 @@ Browser baseline: four notification reads every approximately five seconds, plus
 a separate read-state timer. DevTools also reports a proxy event for many requests;
 measurements count only script-initiated requests, not those proxy duplicates.
 
-Published browser verification is recorded after deployment below.
+## Published browser verification
+
+GitHub Pages deployment of `7abdd3e` succeeded. The built-in browser confirmed:
+
+- Startup has no `workspace_templates`, `material_folders`, `material_files` or
+  announcement-history request. The current announcement and receipt still load.
+- Settings loads the owner's two saved announcements without errors.
+- Materials loads one template, four folders and document lists correctly. Its
+  three initial requests start within 0.4 ms of one another. Reopening within the
+  cache period performs zero new material reads.
+- In an idle foreground tab, backup polls are 15.34 seconds apart, with exactly
+  one read-state request per batch (previously about 5 seconds plus another timer).
+- The task board has 351 unique tasks, 624 displayed subtasks and comment-counter
+  sum 306, identical to the pre-change browser. No data was edited for verification.
+- Only one notification panel is present, with the explicit mark-read button.
+  Its first item's browser node remains the same across idle polling: unchanged
+  notifications are no longer replaced in the DOM.
+- Browser console contains no warnings/errors in the tested flows.
+
+This verifies reduced request/DOM work, not a universal application speed factor.

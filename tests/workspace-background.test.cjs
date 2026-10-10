@@ -19,7 +19,11 @@ function mockClient() {
       is(...args) { call.filters.push(args); return this; }, order(...args) { call.order = args; return this; },
       limit(n) { call.limit = n; return this; }, maybeSingle() { return this; },
       abortSignal(signal) {call.signal=signal;return this;},
-      then(resolve, reject) { return Promise.resolve(data.get(table) || {data: []}).then(resolve, reject); }};
+      then(resolve, reject) {
+        const result=Promise.resolve(data.get(table)||{data:[]});
+        const aborted=call.signal&&new Promise(done=>{const abort=()=>done({error:{message:'aborted'}});call.signal.aborted?abort():call.signal.addEventListener('abort',abort,{once:true});});
+        return (aborted?Promise.race([result,aborted]):result).then(resolve,reject);
+      }};
     return query;
   }};
 }
@@ -40,6 +44,15 @@ function pollingHarness() {
 }
 
 (async () => {
+  const runtime=read('app-runtime.js'), events=emitter();let contextEvents=0;
+  events.addEventListener('pt-workspace-context-changed',()=>contextEvents++);
+  const core={user:null,profile:null,view:'tasks'};
+  const cc=vm.createContext({S:core,window:events,CustomEvent:class {constructor(type){this.type=type;}}});
+  vm.runInContext(runtime.slice(runtime.indexOf('/* Optional modules react to context changes'),runtime.indexOf('function render(){')),cc);
+  cc.publishWorkspaceContext();cc.publishWorkspaceContext();assert.equal(contextEvents,1,'unchanged rendering does not notify optional modules');
+  core.user={id:'auth'};core.profile={id:'owner',role:'owner'};cc.publishWorkspaceContext();assert.equal(contextEvents,2);
+  core.view='settings';cc.publishWorkspaceContext();assert.equal(contextEvents,3,'view entry reaches lazy modules');
+  core.user=null;core.profile=null;cc.publishWorkspaceContext();assert.equal(contextEvents,4,'logout reaches optional module cleanup');
   const h=pollingHarness();await flush();
   assert.equal(h.client.calls.length,4,'one reconciliation has four independent reads');
   assert.equal([...h.timers.values()].at(-1).delay,15000,'healthy realtime retains a slower backup poll');
@@ -69,6 +82,11 @@ function pollingHarness() {
   assert.equal([...h.timers.values()].at(-1).delay,0,'return to tab checks missed events immediately');
   h.context.navigator.onLine=false;h.window.dispatchEvent({type:'offline'});assert.equal(h.timers.size,0);
   h.context.navigator.onLine=true;h.window.dispatchEvent({type:'online'});assert.equal([...h.timers.values()].at(-1).delay,0);
+
+  const hung=pollingHarness();await flush();hung.client.data.set('tasks',deferred().promise);
+  await hung.tick();assert.equal(hung.timers.size,1,'a pending batch keeps only its deadline');
+  await hung.tick();assert.ok(hung.client.calls.at(-2).signal.aborted,'deadline aborts the stalled request');
+  assert.equal([...hung.timers.values()].at(-1).delay,5000,'timeout releases polling and enables fast retry');
 
   const race=pollingHarness();await flush();const pending=deferred();
   race.client.data.set('tasks',pending.promise);race.client.data.set('task_assignees',{data:[{id:'old-assignment',task_id:'old-task',created_at:new Date().toISOString()}]});
