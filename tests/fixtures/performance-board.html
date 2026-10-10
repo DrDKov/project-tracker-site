@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Workspace performance regression fixture</title>
+<style>
+body{font:16px system-ui;margin:20px;background:#f4f6f8;color:#152326}
+button,input{font:inherit;padding:8px}#kanban{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:12px;margin-top:12px}
+.col{background:#e9edee;padding:10px;border-radius:12px}.task-card{background:white;padding:10px;margin:10px 0;border-radius:10px}
+input{box-sizing:border-box;max-width:100%;width:100%}#result{padding:12px;background:#dff2e9}
+@media(max-width:700px){#kanban{grid-template-columns:1fr}}
+</style>
+<h1>Проверка точечных обновлений</h1>
+<p>Тестовые данные, без подключения к базе.</p>
+<button id="same">Обновить без изменений</button>
+<button id="change">Изменить одну карточку</button>
+<button id="filter">Скрыть половину</button>
+<button id="restore">Показать все</button>
+<p id="result" role="status">Загрузка…</p>
+<div id="kanban"></div>
+<script>
+(async()=>{
+  const source=await (await fetch('../../assets/app-runtime.js')).text();
+  const part=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end));
+  const helpers=part('/* Render-scoped indexes:','/* Render-scoped indexes end */')+
+    part('/* Keyed board updates preserve','/* Keyed board updates end */');
+  const api=new Function('document','requestAnimationFrame','S',helpers+';return {syncTaskBoard};')(document,requestAnimationFrame,{});
+  const board=document.getElementById('kanban'),result=document.getElementById('result');
+  const rows=Array.from({length:357},(_,i)=>({id:'task-'+i,title:'Задача '+i,group:i%4}));
+  let hidden=false;
+  const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function html(){return [0,1,2,3].map(group=>'<section class="col" data-status="'+group+'"><h3>Колонка '+group+'</h3>'+
+    rows.filter(row=>row.group===group&&(!hidden||Number(row.id.slice(5))%2===0)).map(row=>
+    '<article class="task-card" data-task-id="'+row.id+'"><h4>'+escape(row.title)+'</h4><div class="wk-subadd"><input name="title" aria-label="Подзадача '+row.id+'" placeholder="Добавить подзадачу"></div></article>').join('')+'</section>').join('');}
+  function render(){
+    const previous=new Map([...board.querySelectorAll('.task-card')].map(el=>[el.dataset.taskId,el]));
+    const started=performance.now();api.syncTaskBoard(board,html());const duration=performance.now()-started;
+    const cards=[...board.querySelectorAll('.task-card')],retained=cards.filter(el=>previous.get(el.dataset.taskId)===el).length;
+    result.textContent='Карточек: '+cards.length+' · сохранено: '+retained+' · обновление: '+duration.toFixed(1)+' мс';
+    result.dataset.cards=cards.length;result.dataset.retained=retained;
+    result.dataset.unique=new Set(cards.map(el=>el.dataset.taskId)).size;
+  }
+  document.getElementById('same').onclick=render;
+  document.getElementById('change').onclick=()=>{rows[0].title+=' ✓';render();};
+  document.getElementById('filter').onclick=()=>{hidden=true;render();};
+  document.getElementById('restore').onclick=()=>{hidden=false;render();};
+  render();document.body.dataset.ready='true';
+})().catch(error=>{document.getElementById('result').textContent=error.message;console.error(error)});
+</script>
+</html>

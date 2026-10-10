@@ -546,7 +546,15 @@
     rebindProfile();
     setInterval(rebindProfile,1200);
     setInterval(loadRemoteReadState,15000);
-    setInterval(function(){ ensureMentionHint(); decorateRenderedComments(); },700);
+    var commentFrame=0;
+    function scheduleCommentDecorations(){
+      if(commentFrame||document.visibilityState==='hidden') return;
+      commentFrame=requestAnimationFrame(function(){commentFrame=0;ensureMentionHint();decorateRenderedComments();});
+    }
+    var comments=$('taskCommentsBlock');
+    if(comments) new MutationObserver(scheduleCommentDecorations).observe(comments,{childList:true,subtree:true});
+    document.addEventListener('visibilitychange',scheduleCommentDecorations);
+    scheduleCommentDecorations();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',boot,{once:true});
   else boot();

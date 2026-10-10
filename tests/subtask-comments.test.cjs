@@ -7,7 +7,8 @@ const root = path.join(__dirname, '..');
 const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260928_task_comment_subtasks.sql'), 'utf8');
 const names = ['subBlock', 'taskCommentList', 'commentAuthor', 'canDeleteComment', 'canEditComment', 'commentSubtask', 'renderTaskCommentsModal', 'addTaskComment', 'saveTaskCommentEdit'];
-const source = names.map(name => {
+const indexHelpers = runtime.slice(runtime.indexOf('let RENDER_DATA_INDEXES='),runtime.indexOf('function byId('));
+const source = indexHelpers+'\n'+names.map(name => {
   const line = runtime.split(/\r?\n/).find(row => row.startsWith(`function ${name}(`) || row.startsWith(`async function ${name}(`));
   assert.ok(line, `${name} must be present`);
   return line;
