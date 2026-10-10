@@ -5,7 +5,7 @@
 
   const byId = id => document.getElementById(id);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-  const state = { session: '', generation: 0, history: [], historyLimit: 20, draftId: null, busy: false, loadingHistory: false, current: null, pending: null, dialog: null, acknowledging: false, checked: false, checking: false };
+  const state = { session: '', generation: 0, history: [], historyLimit: 20, historyLoadedAt: 0, draftId: null, busy: false, loadingHistory: false, current: null, pending: null, dialog: null, acknowledging: false, checked: false, checking: false };
   const profile = () => window.currentProfile;
   const isOwner = () => profile()?.role === 'owner';
   const client = () => window.sb;
@@ -123,6 +123,7 @@
       if (generation !== state.generation) return;
       if (response.error) throw response.error;
       state.history = response.data || [];
+      state.historyLoadedAt = Date.now();
       renderHistory();
     } catch (error) { if (generation === state.generation) setStatus('Не удалось загрузить историю: ' + (error.message || error), true); }
     finally { if (generation === state.generation) state.loadingHistory = false; }
@@ -220,11 +221,12 @@
     const currentProfile = profile();
     const session = window.currentAuth?.id && currentProfile?.id && client() ? window.currentAuth.id + ':' + currentProfile.id + ':' + currentProfile.role : '';
     byId('workspaceAnnouncementsPanel')?.classList.toggle('hidden', !session || !isOwner());
-    if (session === state.session) return;
+    if (session === state.session) { loadVisibleHistory(); return; }
     state.session = session;
     state.generation++;
     state.history = [];
     state.historyLimit = 20;
+    state.historyLoadedAt = 0;
     state.draftId = null;
     state.pending = null;
     state.current = null;
@@ -239,12 +241,18 @@
     renderHistory();
     if (!session) return;
     checkCurrent(state.generation);
-    if (isOwner()) loadHistory();
+    loadVisibleHistory();
+  }
+
+  function loadVisibleHistory() {
+    if (state.session && isOwner() && byId('settings')?.classList.contains('active') && (!state.historyLoadedAt || Date.now() - state.historyLoadedAt > 60000)) loadHistory();
   }
 
   function boot() {
     syncSession();
-    new MutationObserver(syncSession).observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('pt-workspace-context-changed', syncSession);
+    const settings = byId('settings');
+    if (settings) new MutationObserver(loadVisibleHistory).observe(settings, { attributes: true, attributeFilter: ['class'] });
     document.addEventListener('close', tryPending, true);
     document.addEventListener('visibilitychange', () => { syncSession(); tryPending(); });
     const retryOnReturn = () => { syncSession(); if (state.session && !state.checked) checkCurrent(state.generation); tryPending(); };

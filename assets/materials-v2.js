@@ -4,7 +4,7 @@
   window.__WORKSPACE_MATERIALS_V2__ = true;
 
   var BUCKET='workspace-materials', WID='00000000-0000-0000-0000-000000000001';
-  var S={sb:null,me:null,owner:false,tab:'templates',q:'',templates:[],folders:[],files:[],tpl:null,folder:null,edit:false,loading:false,lastCheck:0};
+  var S={sb:null,me:null,owner:false,tab:'templates',q:'',templates:[],folders:[],files:[],tpl:null,folder:null,edit:false,loading:false,lastCheck:0,session:'',generation:0,pending:null,loadedAt:0,error:''};
   function $(id){return document.getElementById(id)}
   function qa(s){return Array.prototype.slice.call(document.querySelectorAll(s))}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
@@ -60,14 +60,24 @@
     if($('pageTitle'))$('pageTitle').textContent='Материалы';
     if($('pageSubtitle'))$('pageSubtitle').textContent='Закрытые шаблоны и документы владельца workspace';
     render();
+    if(!S.loadedAt||Date.now()-S.loadedAt>60000)loadAll().catch(err);
   }
 
-  async function loadAll(){
-    if(!S.owner||!S.sb)return;S.loading=true;render();
-    var t=await S.sb.from('workspace_templates').select('*').is('deleted_at',null).order('updated_at',{ascending:false});if(t.error)throw Error(t.error.message);
-    var f=await S.sb.from('material_folders').select('*').is('deleted_at',null).order('name',{ascending:true});if(f.error)throw Error(f.error.message);
-    var fl=await S.sb.from('material_files').select('*').is('deleted_at',null).order('created_at',{ascending:false});if(fl.error)throw Error(fl.error.message);
-    S.templates=t.data||[];S.folders=f.data||[];S.files=fl.data||[];if(!S.folder&&S.folders[0])S.folder=S.folders[0].id;S.loading=false;render();
+  function loadAll(){
+    if(!S.owner||!S.sb)return Promise.resolve();if(S.pending)return S.pending;
+    var generation=S.generation,c=S.sb,controller=new AbortController(),deadline=setTimeout(function(){controller.abort()},15000);S.loading=true;S.error='';render();
+    var pending=(async function(){try{
+      var results=await Promise.all([
+        c.from('workspace_templates').select('*').is('deleted_at',null).order('updated_at',{ascending:false}).abortSignal(controller.signal),
+        c.from('material_folders').select('*').is('deleted_at',null).order('name',{ascending:true}).abortSignal(controller.signal),
+        c.from('material_files').select('*').is('deleted_at',null).order('created_at',{ascending:false}).abortSignal(controller.signal)
+      ]);
+      if(generation!==S.generation)return;
+      results.forEach(function(r){if(r.error)throw Error(r.error.message)});
+      S.templates=results[0].data||[];S.folders=results[1].data||[];S.files=results[2].data||[];if(!S.folder&&S.folders[0])S.folder=S.folders[0].id;S.loadedAt=Date.now();
+    }catch(e){if(generation===S.generation){S.error=e.message||String(e);throw e}}
+    finally{clearTimeout(deadline);if(generation===S.generation){S.loading=false;S.pending=null;render()}}})();
+    S.pending=pending;return pending;
   }
   function fTemplates(){var q=norm(S.q);return q?S.templates.filter(function(t){return norm(t.title).indexOf(q)>=0||norm(t.body).indexOf(q)>=0}):S.templates}
   function fFolders(){var q=norm(S.q);return q?S.folders.filter(function(f){return norm(f.name).indexOf(q)>=0}):S.folders}
@@ -93,6 +103,14 @@
   async function delFile(id){var f=S.files.find(function(x){return x.id===id});if(!f||!confirm('Удалить файл?'))return;await S.sb.storage.from(BUCKET).remove([f.storage_path]);var r=await S.sb.from('material_files').update({deleted_at:new Date().toISOString()}).eq('id',id);if(r.error)throw Error(r.error.message);await loadAll()}
 
   document.addEventListener('click',function(e){var nb=e.target.closest('.nav button[data-view="materials"]');if(nb){e.preventDefault();e.stopPropagation();open();return}var tab=e.target.closest('[data-tab]');if(tab){S.tab=tab.dataset.tab;render();return}var a=e.target.closest('[data-mat]');if(!a)return;var act=a.dataset.mat,id=a.dataset.id||'';if(act==='reload')loadAll().catch(err);if(act==='clear'){S.q='';render()}if(act==='new-template'){S.tpl=null;S.edit=true;content()}if(act==='select-template'){S.tpl=id;S.edit=false;content()}if(act==='open-template'){S.q='';S.tab='templates';S.tpl=id;open()}if(act==='edit-template'){S.tpl=id;S.edit=true;content()}if(act==='cancel-template'){S.edit=false;content()}if(act==='save-template')saveTemplate(id).catch(err);if(act==='delete-template')delTpl(id).catch(err);if(act==='copy-template')copyTpl(id).catch(err);if(act==='new-folder')newFolder().catch(err);if(act==='select-folder'){S.folder=id;content()}if(act==='open-folder'){S.q='';S.tab='documents';S.folder=id;open()}if(act==='rename-folder')renFolder(id).catch(err);if(act==='delete-folder')delFolder(id).catch(err);if(act==='open-file')openFile(id).catch(err);if(act==='delete-file')delFile(id).catch(err)},true);
-  async function tick(){var was=S.owner;await detectOwner(false);nav();if(S.owner&&!was){loadAll().catch(err)}var active=$('materials')&&$('materials').classList.contains('active');if(active&&!S.owner){var b=document.querySelector('.nav button[data-view="tasks"],.nav button[data-view="overview"]');if(b)b.click()}}
-  setInterval(tick,1000);tick();
+  function tick(){
+    var p=prof(),c=api(),session=window.currentAuth&&p&&p.id&&c?window.currentAuth.id+':'+p.id+':'+p.role+':'+(p.is_active!==false):'';
+    if(session===S.session&&c===S.sb)return;
+    S.session=session;S.generation++;S.sb=c;S.me=session?p:null;S.owner=!!(session&&p.role==='owner'&&p.is_active!==false);
+    S.templates=[];S.folders=[];S.files=[];S.tpl=null;S.folder=null;S.edit=false;S.q='';S.pending=null;S.loading=false;S.loadedAt=0;S.error='';
+    var active=$('materials')&&$('materials').classList.contains('active');nav();
+    if(active){if(S.owner)loadAll().catch(err);else{var b=document.querySelector('.nav button[data-view="tasks"],.nav button[data-view="overview"]');if(b)b.click()}}
+  }
+  window.addEventListener('pt-workspace-context-changed',tick);
+  window.addEventListener('focus',tick);window.addEventListener('online',tick);tick();
 })();

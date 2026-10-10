@@ -7,6 +7,8 @@
   var STORE_PREFIX = 'pt_assignment_notifications_v1:';
   var MAX_ITEMS = 40;
   var MEMBERS_TTL = 45000;
+  var renderedList = '';
+  window.__PT_NOTIFICATION_REALTIME__ = { profileId:'', status:'CLOSED' };
   var state = { sb:null, profile:null, profileId:'', channel:null, items:[], unread:0, readBefore:'1970-01-01T00:00:00.000Z', readSyncBusy:false, recent:{}, members:[], membersLoadedAt:0, mentionMenu:null, bypassCommentSubmit:false };
 
   function $(id){ return document.getElementById(id); }
@@ -78,9 +80,11 @@
   }
   async function loadRemoteReadState(){
     if(!state.sb || !state.profileId || state.readSyncBusy) return;
+    var sb = state.sb, profileId = state.profileId;
     state.readSyncBusy = true;
     try{
-      var result = await state.sb.from('notification_read_state').select('read_before').eq('user_id',state.profileId).maybeSingle();
+      var result = await sb.from('notification_read_state').select('read_before').eq('user_id',profileId).maybeSingle();
+      if(sb !== state.sb || profileId !== state.profileId) return;
       if(!result.error && result.data && readTime(result.data.read_before) > readTime(state.readBefore)){
         state.readBefore = result.data.read_before;
         applyReadBefore();
@@ -154,6 +158,9 @@
     }
     var list = $('assignmentList');
     if(list){
+      var signature = JSON.stringify(state.items);
+      if(renderedList === signature && list.childNodes.length) return;
+      renderedList = signature;
       if(!state.items.length){ list.innerHTML = '<div class="assignment-empty">Новых уведомлений пока нет</div>'; }
       else{
         list.innerHTML = state.items.map(function(item){
@@ -201,8 +208,10 @@
     var local = tasks().find(function(t){ return t && t.id === taskId; });
     if(local) return local;
     if(!state.sb) return {id:taskId,title:'Задача',project_id:null};
+    var sb=state.sb, profileId=state.profileId;
     try{
-      var r = await state.sb.from('tasks').select('id,project_id,title,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id').eq('id',taskId).maybeSingle();
+      var r = await sb.from('tasks').select('id,project_id,title,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id').eq('id',taskId).maybeSingle();
+      if(sb!==state.sb||profileId!==state.profileId)return null;
       if(!r.error && r.data){
         var arr = tasks();
         if(arr && !arr.some(function(t){ return t && t.id === r.data.id; })) arr.push(r.data);
@@ -215,16 +224,17 @@
   function pushItem(type,task,extra){
     extra = extra || {};
     var key = type === 'mention' ? ('mention:'+(extra.comment_id || Date.now())+':'+task.id) : ('assignment:'+(extra.notification_id || task.id));
+    var existing=state.items.find(function(x){return x&&x.id===key});
     var item = { id:key, type:type || 'assignment', task_id:task.id, title:task.title || 'Задача', project:projectName(task.project_id), author:extra.author || '', comment_id:extra.comment_id || '', created_at:extra.created_at || new Date().toISOString(), unread:true };
     if(readTime(item.created_at) <= readTime(state.readBefore)) item.unread = false;
+    if(existing) item.unread=existing.unread;
     state.items = state.items.filter(function(x){ return x && x.id !== item.id && !(item.type === 'assignment' && x.type !== 'mention' && x.task_id === item.task_id); });
     state.items.unshift(item);
     state.items = state.items.slice(0,MAX_ITEMS);
     state.unread = state.items.filter(function(x){ return x && x.unread; }).length;
     saveStore();
     ensureUi();
-    pulseBell();
-    showToast(item);
+    if(!existing&&item.unread){pulseBell();showToast(item)}
   }
   function pulseBell(){
     var bell = $('assignmentBell');
@@ -252,7 +262,9 @@
     var notificationId = assignment && assignment.id ? assignment.id : taskId;
     var key = 'assignment:' + notificationId;
     if(isRecent(key,8000)) return;
+    var profileId = state.profileId, sb = state.sb;
     var task = await getTask(taskId);
+    if(profileId !== state.profileId || sb !== state.sb) return;
     if(!task || task.deleted_at) return;
     pushItem('assignment',task,{notification_id:notificationId,created_at:assignment && assignment.created_at});
   }
@@ -282,8 +294,10 @@
   async function refreshMembers(force){
     if(!state.sb) return [];
     if(!force && Date.now() - state.membersLoadedAt < MEMBERS_TTL) return state.members;
+    var sb=state.sb,profileId=state.profileId;
     try{
-      var r = await state.sb.from('project_members').select('*').order('created_at',{ascending:true});
+      var r = await sb.from('project_members').select('*').order('created_at',{ascending:true});
+      if(sb!==state.sb||profileId!==state.profileId)return state.members;
       if(!r.error && Array.isArray(r.data)){
         state.members = r.data;
         state.membersLoadedAt = Date.now();
@@ -329,11 +343,14 @@
     if(isRecent(commentKey,8000)) return;
     var me = users().find(function(u){ return u && u.id === state.profileId; }) || state.profile;
     if(!me || !bodyMentionsUser(row.body || row.content || '',me)) return;
+    var profileId = state.profileId, sb = state.sb;
     await refreshMembers(false);
+    if(profileId !== state.profileId || sb !== state.sb) return;
     if(!canUserMentionTarget(row.user_id,state.profileId)) return;
     var task = await getTask(row.task_id);
+    if(profileId !== state.profileId || sb !== state.sb) return;
     if(!task || task.deleted_at) return;
-    pushItem('mention',task,{comment_id:row.id || '',author:userName(row.user_id)});
+    pushItem('mention',task,{comment_id:row.id || '',author:userName(row.user_id),created_at:row.created_at});
   }
 
   function ensureMentionHint(){
@@ -472,6 +489,9 @@
     });
     state.channel = ch;
     ch.subscribe(function(status){
+      if(state.channel !== ch) return;
+      window.__PT_NOTIFICATION_REALTIME__ = { profileId:state.profileId, status:status };
+      window.dispatchEvent(new CustomEvent('pt-notification-realtime-status'));
       if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].indexOf(status) !== -1){
         try{ if(state.sb && state.channel) state.sb.removeChannel(state.channel); }catch(e){}
         state.channel = null;
@@ -481,17 +501,24 @@
   }
   function rebindProfile(){
     var sb = client(), p = profile();
-    if(!sb || !p || !p.id) return;
-    if(state.profileId === p.id && state.sb === sb) return;
+    if(!sb || !p || !p.id){
+      try{ if(state.channel && state.sb) state.sb.removeChannel(state.channel); }catch(e){}
+      state.channel=null;state.sb=sb;state.profile=null;state.profileId='';state.items=[];state.unread=0;state.recent={};state.readBefore='1970-01-01T00:00:00.000Z';
+      window.__PT_NOTIFICATION_REALTIME__={profileId:'',status:'CLOSED'};
+      renderUi();return;
+    }
+    if(state.profileId === p.id && state.sb === sb){state.profile=p;return;}
     try{ if(state.channel && state.sb) state.sb.removeChannel(state.channel); }catch(e){}
     state.sb = sb;
     state.profile = p;
     state.profileId = p.id;
     state.channel = null;
     state.membersLoadedAt = 0;
+    state.recent = {}; state.members = [];
+    window.__PT_NOTIFICATION_REALTIME__={profileId:p.id,status:'CONNECTING'};
     loadStore();
     ensureUi();
-    loadRemoteReadState();
+    if(!window.__POLLING_RESCUE_LITE__) loadRemoteReadState();
     refreshMembers(true).then(function(){ updateMentionMenu(); decorateRenderedComments(); });
     subscribe();
   }
@@ -544,8 +571,9 @@
   function boot(){
     ensureUi();
     rebindProfile();
-    setInterval(rebindProfile,1200);
-    setInterval(loadRemoteReadState,15000);
+    window.addEventListener('pt-workspace-context-changed',rebindProfile);
+    window.addEventListener('focus',rebindProfile);
+    setInterval(function(){if(!window.__POLLING_RESCUE_LITE__&&document.visibilityState!=='hidden'&&navigator.onLine!==false)loadRemoteReadState();},15000);
     var commentFrame=0;
     function scheduleCommentDecorations(){
       if(commentFrame||document.visibilityState==='hidden') return;

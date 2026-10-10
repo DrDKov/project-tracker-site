@@ -283,6 +283,9 @@ document.addEventListener('click',async e=>{let sub=e.target.closest?.('[data-ac
 document.addEventListener('input',e=>{if(e.target?.matches?.('.task-comment-edit-text'))S.commentEditingDraft=e.target.value},true);
 /* Subtask comment context and inline editing v1 end */
 function cardT(t){let over=t.status!=='done'&&t.due_date&&t.due_date<today(),ids=tids(t).map(uname).join(', ')||'Не назначено',fav=isTaskFavorite(t),canDrag=!!window.matchMedia?.('(hover:hover) and (pointer:fine)').matches;return`<article class="task-card wk-task ${t.status==='done'?'wk-complete':''} ${over?'overdue':''}" draggable="${canDrag?'true':'false'}" data-task-id="${t.id}" style="--accent:${pcolor(t.project_id)};--bg:${rgba(pcolor(t.project_id),.12)};--bd:${rgba(pcolor(t.project_id),.34)};"><div class="task-card-topline">${taskSeenButton(t)}<div class="task-card-topline-actions"><button type="button" class="task-fav-btn ${fav?'active':''}" data-id="${t.id}" aria-label="Избранное" title="Избранное">${fav?'★':'☆'}</button><label class="wk-done" title="Отметить выполнение задачи"><input aria-label="Выполнение задачи" type="checkbox" data-action="toggle-task" data-id="${t.id}" ${t.status==='done'?'checked':''}><span></span></label></div></div><div class="task-seen-summary" data-task-id="${esc(t.id)}" hidden></div><div class="row"><span class="badge">${PR[t.priority]||t.priority||'—'}</span>${over?'<span class="badge high">Просрочено</span>':''}</div><h4>${esc(t.title)} ${t.recurrence_rule_id?'<span class="task-repeat-badge" title="Повторяется">↻</span>':''}</h4><p>${esc(pname(t.project_id))}</p><p class="muted">${fmt(t.start_date)} → ${fmt(t.due_date)}</p><p class="muted">${esc(ids)}</p>${t.notes?'<p class="muted task-desc-hint">Есть описание</p>':''}${doneWho(t)}${subBlock(t)}<div class="task-card-footer"><div class="task-card-footer-left">${calendarDownloadButton(t,'task-calendar-export')}<button type="button" class="task-comment-badge" data-action="open-task" data-id="${t.id}">💬 ${taskCommentCount(t.id)}</button></div><div class="task-more"><button type="button" class="task-more-btn" data-action="task-menu" data-id="${t.id}">⋯</button><div class="task-more-menu" data-menu-id="${t.id}"><button type="button" data-action="open-task" data-id="${t.id}">Редактировать</button><button type="button" class="danger" data-action="delete-task" data-id="${t.id}">Убрать</button></div></div></div></article>`}
+/* Optional modules react to context changes, not every DOM mutation. */
+let WORKSPACE_CONTEXT_SIGNATURE='';
+function publishWorkspaceContext(){let signature=[S.user?.id||'',S.profile?.id||'',S.profile?.role||'',S.profile?.is_active!==false,S.view].join(':');if(signature===WORKSPACE_CONTEXT_SIGNATURE)return;WORKSPACE_CONTEXT_SIGNATURE=signature;window.dispatchEvent(new CustomEvent('pt-workspace-context-changed',{detail:{view:S.view}}))}
 function render(){
   selectsMaybe();qa('.admin-only').forEach(x=>x.classList.toggle('hidden',!admin()));
   let audit=document.querySelector('.nav [data-view="audit"]');if(audit)audit.style.display=owner()?'':'none';
@@ -295,7 +298,7 @@ function render(){
     $('overviewProjects')&&($('overviewProjects').innerHTML=S.projects.length?S.projects.slice(0,8).map(cardP).join(''):'<div class="empty">Нет загруженных проектов</div>');
     $('focusList')&&($('focusList').innerHTML=(S.tasks.filter(t=>t.status!=='done').slice(0,8).map(cardT).join('')||'<div class="empty">Нет открытых задач</div>'));
   }
-  if(S.view==='projects')renderProjects();if(S.view==='tasks')renderTasks();if(S.view==='team')renderTeam();if(S.view==='audit')renderAudit();if(S.view==='timeline')renderTimeline();if(S.view==='chat')renderChat();renderAccess()
+  if(S.view==='projects')renderProjects();if(S.view==='tasks')renderTasks();if(S.view==='team')renderTeam();if(S.view==='audit')renderAudit();if(S.view==='timeline')renderTimeline();if(S.view==='chat')renderChat();renderAccess();publishWorkspaceContext()
 }
 function renderProjects(){let q=($('projectSearch')?.value||'').toLowerCase(),sts=vals('projectStatusFilter'),owns=vals('projectOwnerFilter'),list=S.projects.filter(p=>(sts.includes('all')||sts.includes(p.status))&&(owns.includes('all')||owns.includes(p.owner_id))&&(!q||[p.name,p.description,p.next_step].join(' ').toLowerCase().includes(q)));$('projectGrid')&&($('projectGrid').innerHTML=list.length?list.map(cardP).join(''):'<div class="empty">Нет проектов</div>')}
 /* Keyed board updates preserve unchanged cards, focus and composer drafts. */
@@ -419,6 +422,8 @@ async function createRecurringTasks(baseRow,selected){let start=baseRow.start_da
 document.addEventListener('change',e=>{if(e.target&&['taskRepeatEnabled','taskRepeatType'].includes(e.target.id))syncTaskRecurrenceUi()},true);
 setTimeout(ensureTaskRecurrenceUi,0);
 /* Task recurrence v2 end */
+
+
 
 
 

@@ -1,13 +1,13 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20261010-lazy-data-v3')
+  import('./app-runtime.js?v=20261010-background-v1')
     .then(function(){
       var modules = [
         './workspace-layout.js?v=20261002-compact-v2',
-        './workspace-announcements.js?v=20261001-announcements-v1',
+        './workspace-announcements.js?v=20261010-background-v1',
         './theme-settings.js?v=20260824-event-scope-v1',
-        './materials-v2.js?v=20261001-subtask-actions-v2',
+        './materials-v2.js?v=20261010-background-v1',
         // Notifications are loaded once by index.html, including their fallback polling.
         './task-comments.js?v=20260717-comments-v3',
         './native-pickers.js?v=20260814-native-pickers-v1',
