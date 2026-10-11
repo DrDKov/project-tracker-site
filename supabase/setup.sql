@@ -902,45 +902,80 @@ insert into storage.buckets (id, name, public)
 values ('project-chat-files', 'project-chat-files', false)
 on conflict (id) do nothing;
 
--- Storage policies. Files are stored as <project_id>/<message_id-or-random>/<filename>.
+-- Secure project-scoped private chat Storage policies.
 drop policy if exists "project_chat_files_select" on storage.objects;
 drop policy if exists "project_chat_files_insert" on storage.objects;
 drop policy if exists "project_chat_files_update" on storage.objects;
 drop policy if exists "project_chat_files_delete" on storage.objects;
 
 create policy "project_chat_files_select" on storage.objects
-for select to authenticated
-using (
+for select to authenticated using (
   bucket_id = 'project-chat-files'
-  and public.can_view_project(((storage.foldername(name))[1])::uuid)
+  and (select exists (
+    select 1 from public.app_users u
+    where u.auth_user_id = (select auth.uid()) and u.is_active
+  ))
+  and case when name ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/[^/]+$'
+    then public.can_view_project(split_part(name, '/', 1)::uuid)
+    else false end
 );
 
 create policy "project_chat_files_insert" on storage.objects
-for insert to authenticated
-with check (
+for insert to authenticated with check (
   bucket_id = 'project-chat-files'
-  and public.can_view_project(((storage.foldername(name))[1])::uuid)
+  and (select exists (
+    select 1 from public.app_users u
+    where u.auth_user_id = (select auth.uid()) and u.is_active
+  ))
+  and case when name ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/[^/]+$'
+    then public.can_view_project(split_part(name, '/', 1)::uuid)
+    else false end
 );
 
 create policy "project_chat_files_update" on storage.objects
-for update to authenticated
-using (
+for update to authenticated using (
   bucket_id = 'project-chat-files'
-  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
-)
-with check (
+  and (select exists (
+    select 1 from public.app_users u
+    where u.auth_user_id = (select auth.uid()) and u.is_active
+  ))
+  and case when name ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/[^/]+$'
+    then public.can_view_project(split_part(name, '/', 1)::uuid)
+      and (
+        owner_id = (select auth.uid())::text
+        or public.can_edit_project(split_part(name, '/', 1)::uuid)
+      )
+    else false end
+) with check (
   bucket_id = 'project-chat-files'
-  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
+  and (select exists (
+    select 1 from public.app_users u
+    where u.auth_user_id = (select auth.uid()) and u.is_active
+  ))
+  and case when name ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/[^/]+$'
+    then public.can_view_project(split_part(name, '/', 1)::uuid)
+      and (
+        owner_id = (select auth.uid())::text
+        or public.can_edit_project(split_part(name, '/', 1)::uuid)
+      )
+    else false end
 );
 
 create policy "project_chat_files_delete" on storage.objects
-for delete to authenticated
-using (
+for delete to authenticated using (
   bucket_id = 'project-chat-files'
-  and public.can_edit_project(((storage.foldername(name))[1])::uuid)
+  and (select exists (
+    select 1 from public.app_users u
+    where u.auth_user_id = (select auth.uid()) and u.is_active
+  ))
+  and case when name ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}/[^/]+$'
+    then public.can_view_project(split_part(name, '/', 1)::uuid)
+      and (
+        owner_id = (select auth.uid())::text
+        or public.can_edit_project(split_part(name, '/', 1)::uuid)
+      )
+    else false end
 );
-
-
 
 -- =====================================================================
 -- Source: migration_v5_soft_delete_tasks.sql
