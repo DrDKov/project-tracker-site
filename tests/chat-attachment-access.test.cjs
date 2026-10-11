@@ -24,6 +24,7 @@ assert.doesNotMatch(chat.render('📎 image.png: '+legacy,OTHER),/data-pt-chat-p
 const runtime=fs.readFileSync(path.join(__dirname,'../assets/app-runtime.js'),'utf8');
 assert.match(runtime,/ProjectTrackerChatFiles\.fileLine/);
 assert.match(runtime,/ProjectTrackerChatFiles\.hydrate/);
+assert.match(runtime,/box\.__ptChatMarkup!==html/);
 assert.doesNotMatch(runtime,/createSignedUrl\(path,60\*60\*24\*30\)/);
 const migration=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261011_project_chat_storage_acl.sql'),'utf8');
 assert.match(migration,/can_view_project/);
