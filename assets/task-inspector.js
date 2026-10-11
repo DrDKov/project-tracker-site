@@ -94,6 +94,7 @@
   function guard(action){
     if(saving()) return false;
     if(!dirty()){ action(); return true; }
+    if(typeof window!=='undefined')window.ProjectTrackerDrafts?.capture();
     pendingAction = action;
     $('taskInspectorDiscard').hidden = false;
     $('taskInspectorKeep').focus({preventScroll:true});
@@ -169,7 +170,7 @@
     const details = form.querySelector('.form-grid'); details.id = 'taskDetailsPanel'; details.setAttribute('role','tabpanel'); details.setAttribute('aria-labelledby','taskInspectorDetailsTab');
     $('taskCommentsBlock').setAttribute('role','tabpanel'); $('taskCommentsBlock').setAttribute('aria-labelledby','taskInspectorCommentsTab');
     const warning = document.createElement('div'); warning.id = 'taskInspectorDiscard'; warning.hidden = true; warning.setAttribute('role','alert');
-    warning.innerHTML = '<div><b>Есть несохранённые изменения</b><span>Продолжить без их сохранения?</span></div><div class="task-inspector-discard-actions"><button type="button" class="btn secondary" id="taskInspectorKeep">Остаться</button><button type="button" class="btn danger" id="taskInspectorDiscardConfirm">Не сохранять</button></div>';
+    warning.innerHTML = '<div><b>Изменения ещё не отправлены</b><span>Можно закрыть с локальным черновиком или удалить его.</span></div><div class="task-inspector-discard-actions"><button type="button" class="btn secondary" id="taskInspectorKeep">Остаться</button><button type="button" class="btn secondary" id="taskInspectorKeepDraft">Закрыть с черновиком</button><button type="button" class="btn danger" id="taskInspectorDiscardConfirm">Удалить черновик</button></div>';
     tabs.after(warning);
     const hint = document.createElement('span'); hint.id = 'taskInspectorSaveHint'; hint.className = 'muted'; hint.setAttribute('role','status');
     form.querySelector('.modal-actions').prepend(hint);
@@ -181,7 +182,8 @@
       if(button){ chooseTab(button.dataset.inspectorTab); return; }
       if(event.target.closest('#taskInspectorExpand')){ expanded = !expanded; syncPresentation(); return; }
       if(event.target.closest('#taskInspectorKeep')){ hideWarning(); form.querySelector('[data-inspector-tab][aria-selected="true"]').focus({preventScroll:true}); return; }
-      if(event.target.closest('#taskInspectorDiscardConfirm')){ const action = pendingAction; hideWarning(); action?.(); }
+      if(event.target.closest('#taskInspectorKeepDraft')){if(!window.ProjectTrackerDrafts?.capture())return;const action=pendingAction;hideWarning();action?.();return;}
+      if(event.target.closest('#taskInspectorDiscardConfirm')){ const action = pendingAction; window.ProjectTrackerDrafts?.discard(); hideWarning(); action?.(); }
     },true);
     tabs.addEventListener('keydown',event => {
       if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){

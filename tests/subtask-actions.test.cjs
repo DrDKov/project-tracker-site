@@ -24,7 +24,7 @@ const source = [
     .map(name => lines.find(value => value.startsWith(`function ${name}(`) || value.startsWith(`async function ${name}(`))),
   take("document.addEventListener('click',e=>{let check="),
 ].join('\n');
-assert.ok(!source.includes('undefined'));
+assert.doesNotMatch(source,/^undefined$/m,'every extracted function must exist');
 assert.match(runtime, /data-action="copy-subtask"/);
 assert.doesNotMatch(source, /label\?\.querySelector/);
 assert.match(css, /\.wk-sub \.wk-subtitle/);

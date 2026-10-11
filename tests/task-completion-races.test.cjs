@@ -56,6 +56,11 @@ async function test(profile){
   assert.equal(S.tasks[0].status,'done');
   assert.equal(S.tasks[0].title,'Updated by another editor','rollback retains the latest confirmed realtime row');
   assert.equal(call('TASK_STATE_WRITES.size+SUBTASK_STATE_WRITES.size'),0);
+  S.user={id:'auth-old'};const oldSession=call("toggleTask('t',false)");call("toggleTask('t',true)");
+  S.user={id:'auth-new'};S.tasks=[{...task,status:'planned'}];call('TASK_STATE_WRITES.clear()');
+  requests[8].resolve({data:{...task,status:'in_progress',updated_at:'2026-10-09T10:00:04Z'},error:null});await oldSession;
+  assert.equal(requests.length,9,'queued intent from a signed-out user is never sent as the next user');
+  assert.equal(S.tasks[0].status,'planned','old session response cannot mutate the next user UI');
 }
 (async()=>{for(const p of ['owner','nurse','orthopedist','doctor'])await test(p);
   assert.match(runtime,/mergeCompletionRows\('tasks',rows\)/);

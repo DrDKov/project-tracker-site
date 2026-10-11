@@ -1,0 +1,31 @@
+-- Synthetic local PostgreSQL schema only. Never run this against the workspace.
+create role anon;create role authenticated;
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$select (nullif(current_setting('request.jwt.claims',true),'')::jsonb->>'sub')::uuid$$;
+grant usage on schema auth to authenticated;
+create table public.app_users(id uuid primary key default gen_random_uuid(),auth_user_id uuid,display_name text,role text,is_active boolean default true);
+create table public.projects(id uuid primary key default gen_random_uuid(),owner_id uuid,deleted_at timestamptz);
+create table public.project_members(id uuid default gen_random_uuid(),project_id uuid,user_id uuid,access_role text);
+create table public.tasks(id uuid primary key default gen_random_uuid(),project_id uuid,title text,status text default 'planned',priority text,notes text,assignee_id uuid,start_date date,due_date date,start_time time,end_time time,duration_minutes integer,is_all_day boolean default true,sort_order integer,completed_at timestamptz,completed_by_id uuid,deleted_at timestamptz,created_at timestamptz default now(),updated_at timestamptz default now());
+create table public.task_subtasks(id uuid primary key default gen_random_uuid(),task_id uuid,title text,completion_state text default 'not_done',is_done boolean default false,completed_at timestamptz,completed_by uuid,deleted_at timestamptz,sort_order integer,created_at timestamptz default now(),updated_at timestamptz default now());
+create table public.task_assignees(task_id uuid,user_id uuid);
+create function public.can_view_project(pid uuid) returns boolean language sql security definer set search_path='' as $$select exists(select 1 from public.app_users u join public.projects p on p.id=pid left join public.project_members pm on pm.project_id=p.id and pm.user_id=u.id where u.auth_user_id=(select auth.uid()) and u.is_active and (u.role in ('owner','admin') or p.owner_id=u.id or pm.id is not null))$$;
+create function public.can_edit_project(pid uuid) returns boolean language sql security definer set search_path='' as $$select exists(select 1 from public.app_users u join public.projects p on p.id=pid left join public.project_members pm on pm.project_id=p.id and pm.user_id=u.id where u.auth_user_id=(select auth.uid()) and u.is_active and (u.role in ('owner','admin') or p.owner_id=u.id or pm.access_role in ('owner','editor')))$$;
+alter table public.tasks enable row level security;
+alter table public.task_subtasks enable row level security;
+create policy task_read on public.tasks for select to authenticated using(deleted_at is null and public.can_view_project(project_id));
+create policy task_edit on public.tasks for update to authenticated using(public.can_edit_project(project_id)) with check(public.can_edit_project(project_id));
+create policy sub_read on public.task_subtasks for select to authenticated using(exists(select 1 from public.tasks t where t.id=task_id));
+create policy sub_edit on public.task_subtasks for update to authenticated using(exists(select 1 from public.tasks t where t.id=task_id and public.can_edit_project(t.project_id)));
+grant select on public.app_users,public.projects,public.project_members,public.task_assignees to authenticated;
+grant select,update on public.tasks,public.task_subtasks to authenticated;
+create function public.touch_updated_at() returns trigger language plpgsql as $$begin new.updated_at=clock_timestamp();return new;end;$$;
+create trigger task_touch before update on public.tasks for each row execute function public.touch_updated_at();
+create trigger sub_touch before update on public.task_subtasks for each row execute function public.touch_updated_at();
+-- Existing production capability, modeled for isolated soft-delete verification.
+create function public.soft_delete_task(p_task_id uuid) returns public.tasks language plpgsql security definer set search_path='' as $$declare t public.tasks;begin select * into t from public.tasks where id=p_task_id and deleted_at is null;if (select auth.uid()) is null or not public.can_edit_project(t.project_id) then raise exception 'No permission' using errcode='42501';end if;update public.tasks set deleted_at=clock_timestamp() where id=p_task_id returning * into t;return t;end;$$;
+grant execute on function public.soft_delete_task(uuid) to authenticated;
+insert into public.app_users(auth_user_id,display_name,role) values(gen_random_uuid(),'Owner fixture','owner'),(gen_random_uuid(),'Nurse fixture','member'),(gen_random_uuid(),'Doctor fixture','member'),(gen_random_uuid(),'Inactive fixture','member');
+update public.app_users set is_active=false where display_name='Inactive fixture';
+insert into public.projects(owner_id) select id from public.app_users where role='owner';
+insert into public.project_members(project_id,user_id,access_role) select p.id,u.id,case when u.display_name='Doctor fixture' then 'editor' else 'viewer' end from public.projects p cross join public.app_users u where u.role<>'owner';
