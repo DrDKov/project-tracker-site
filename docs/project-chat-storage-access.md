@@ -9,6 +9,14 @@ Supabase Storage bucket `project-chat-files` is private. Existing objects are na
 * Other-project paths, unknown projects, inactive/unlinked accounts and invalid paths fail closed.
 * No existing objects or message rows are modified by the migration.
 
+## Root cause and legacy-file recovery verification (2026-10-11)
+
+The previous uploader persisted 30-day Supabase signed URLs directly in chat message bodies. A read-only production audit found 9 such stored URL references: **8 signed tokens already expired, 1 still valid**. All 9 URL paths resolve to real existing Storage objects under the correct project. Expiration is the historical cause of failed old-link downloads; it is not loss of file bytes.
+
+The new chat renderer extracts the file path from legacy URLs and requests it using the current authenticated user, bypassing expired URL tokens **without bypassing project RLS**. Browser asset query versions were bumped to `20261011-chat-legacy-fix-v2` so cached old runtime code is refreshed. No mass edits to historical messages or Storage objects were needed.
+
+Verification: in the live workspace, as an authorized user, open old chat messages and download any archived file. Clicking its button must issue a `/storage/v1/object/authenticated/` download, not follow a `/storage/v1/object/sign/` link. If this fails, capture the network response code and message; a successful policy SELECT check alone is not an end-to-end Storage API test.
+
 ## Frontend
 
 New messages contain `storage://project-chat-files/<project_uuid>/<filename>` file references, not 30-day signed URLs. The chat renders images and files by calling `storage.from('project-chat-files').download(path)` with the current user's JWT. It parses legacy Storage URLs but never navigates to their previously signed `token` URLs. Image preview uses a browser-local blob URL which is released when the chat re-renders or the user signs out.
