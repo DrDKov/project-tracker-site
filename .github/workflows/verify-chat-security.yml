@@ -1,0 +1,21 @@
+name: Verify chat attachment security
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [security/project-chat-storage-rls]
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare deployment runtime
+        run: python .github/scripts/apply_recurrence_scope.py
+      - name: Check JavaScript syntax and security regression
+        run: |
+          node --check assets/chat-attachment-access.js
+          node --check assets/app-runtime.js
+          node --check assets/app.js
+          for test in tests/*.test.cjs; do node "$test"; done
