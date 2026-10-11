@@ -30,4 +30,17 @@ const migration=fs.readFileSync(path.join(__dirname,'../supabase/migrations/2026
 assert.match(migration,/can_view_project/);
 assert.match(migration,/auth_user_id/);
 assert.match(migration,/can_edit_project/);
+// Legacy signed links can expire, but the new renderer must retain the file path
+// and must never reuse the historical bearer token in its DOM output.
+const expiredLegacy=legacy.replace('old-long-lived-token','expired-2026-06-13');
+assert.match(chat.render('📎 archived.xlsx: '+expiredLegacy,P),new RegExp('data-pt-chat-path="'+file.replace('.','\\.')+'"'));
+assert.doesNotMatch(chat.render('📎 archived.xlsx: '+expiredLegacy,P),/expired-2026-06-13/);
+// Cache-bust both the classic loader and its dynamic module import. Otherwise
+// existing browsers may continue executing the old 30-day signed-URL renderer.
+const index=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const loader=fs.readFileSync(path.join(__dirname,'../assets/app.js'),'utf8');
+assert.match(index,/chat-attachment-access\.js\?v=20261011-chat-legacy-fix-v2/);
+assert.match(index,/app\.js\?v=20261011-chat-legacy-fix-v2/);
+assert.match(loader,/app-runtime\.js\?v=20261011-chat-legacy-fix-v2/);
+
 console.log('Secure chat attachment tests passed');
