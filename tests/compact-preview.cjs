@@ -18,6 +18,11 @@ S.subtasks=[{id:'fixture-subtask',task_id:'fixture-task',title:'Абдулин �
 S.taskBoardMode='week';S.tasksWeekStart=sampleDay;
 let fixtureId=0;
 S.sb={auth:{onAuthStateChange(){}},async rpc(name,args){if(name==='set_task_completion'||name==='set_subtask_completion'){if(new URLSearchParams(location.search).has('fail_completion'))return{data:null,error:{message:'Тестовая ошибка сохранения'}};const table=name==='set_task_completion'?'tasks':'task_subtasks',id=args.p_task||args.p_subtask,row=byId(rtArray(table),id);await new Promise(resolve=>setTimeout(resolve,350));return await(await fetch('/fixture-completion',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({table,row,args,userId:S.profile.id})})).json()}if(name==='sync_task_assignees'){S.assignees=S.assignees.filter(a=>a.task_id!==args.p_task||args.p_users.includes(a.user_id));args.p_users.forEach(user_id=>{if(!S.assignees.some(a=>a.task_id===args.p_task&&a.user_id===user_id))S.assignees.push({id:'fixture-new-assignment-'+(++fixtureId),task_id:args.p_task,user_id})});return{data:null,error:null}}if(name==='acknowledge_task'){if(new URLSearchParams(location.search).has('fail_ack'))return{data:null,error:{message:'Тестовая ошибка сети'}};let t=byId(S.tasks,args.p_task);const response=await fetch('/fixture-ack',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task_id:t.id,user_id:S.profile.id,assignment_token:taskAssignmentToken(t,S.profile.id)})});return response.json()}return{data:null,error:null}},from(table){let op='select',row=null,id=null;const query={select(){return this},insert(value){op='insert';row=value;return this},update(value){op='update';row=value;return this},delete(){op='delete';return this},eq(key,value){if(key==='id')id=value;return this},is(){return this},order(){return this},range(){return this},limit(){return this},single(){return this},maybeSingle(){return this},async then(resolve){const list=rtArray(table)||[];let data=list;if(table==='task_acknowledgements'&&op==='select')data=await (await fetch('/fixture-ack')).json();if(op==='insert'){data={...row,id:'fixture-new-'+(++fixtureId)};list.push(data)}if(op==='update'){data=list.find(x=>x.id===id);if(data)Object.assign(data,row)}if(op==='delete'){const index=list.findIndex(x=>x.id===id);if(index>=0)list.splice(index,1);data=null}resolve({data,error:null})}};return query}};
+const originalFixtureRpc=S.sb.rpc.bind(S.sb);
+S.sb.rpc=async(name,args)=>{
+  if(name==='get_workspace_undo'||name==='undo_workspace_action')return(await fetch('/fixture-undo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,args,userId:S.profile.id})})).json();
+  return originalFixtureRpc(name,args);
+};
 S.rtStatus='SUBSCRIBED';
 const fixtureEvents=new EventSource('/fixture-events');fixtureEvents.onmessage=e=>{const event=JSON.parse(e.data);handleRealtimePayload(event.table||'task_acknowledgements',event.payload||event)};
 fetch('/fixture-completion').then(r=>r.json()).then(rows=>{rows.forEach(({table,row})=>rtUpsert(table,row));render()});
@@ -26,6 +31,14 @@ bind();selects();setView('tasks');status('Тестовый режим','Данн
 `;
 const receipts=[];
 const completionRows=new Map();
+const completionBaseline={
+  'fixture-task':{status:'planned',completed_at:null,completed_by_id:null},
+  'fixture-multi':{status:'planned',completed_at:null,completed_by_id:null},
+  'fixture-done':{status:'done',completed_at:null,completed_by_id:null},
+  'fixture-subtask':{completion_state:'not_done',is_done:false,completed_at:null,completed_by:null},
+  'fixture-subtask-2':{completion_state:'partial',is_done:false,completed_at:null,completed_by:null}
+};
+const undoReceipts=[];
 const subscribers=new Set();
 const server = http.createServer((req,res) => {
   const url = new URL(req.url,'http://127.0.0.1');
@@ -35,14 +48,33 @@ const server = http.createServer((req,res) => {
     if(req.method==='GET'){res.end(JSON.stringify([...completionRows.values()]));return}
     let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{
       const {table,row,args,userId}=JSON.parse(body),key=table+':'+row.id;
-      const saved={...(completionRows.get(key)?.row||row),updated_at:new Date().toISOString()};
+      const before={...row,...(completionRows.get(key)?.row||completionBaseline[row.id]||{})};
+      const saved={...before,updated_at:new Date().toISOString()};
       const done=table==='tasks'?args.p_done:args.p_state==='done';
       if(table==='tasks'){saved.status=done?'done':'in_progress';saved.completed_by_id=done?userId:null}
       else{saved.completion_state=args.p_state;saved.is_done=done;saved.completed_by=done?userId:null}
       saved.completed_at=done?new Date().toISOString():null;
       completionRows.set(key,{table,row:saved});
+      undoReceipts.push({token:'fixture-undo-'+(undoReceipts.length+1),table,id:row.id,userId,before,after:{...saved},expires_at:new Date(Date.now()+120000).toISOString(),consumed:false});
       subscribers.forEach(client=>client.write('data: '+JSON.stringify({table,payload:{eventType:'UPDATE',new:saved}})+'\n\n'));
       res.end(JSON.stringify({data:saved,error:null}));
+    });return;
+  }
+  if(url.pathname==='/fixture-undo'){
+    let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{
+      const {name,args,userId}=JSON.parse(body),latest=undoReceipts.filter(r=>r.userId===userId).at(-1);
+      res.setHeader('Content-Type','application/json');
+      if(name==='get_workspace_undo'){
+        const valid=latest&&!latest.consumed&&Date.parse(latest.expires_at)>Date.now()&&latest.table===args.p_table&&latest.id===args.p_id;
+        res.end(JSON.stringify({data:valid?{token:latest.token,expires_at:latest.expires_at}:null,error:null}));return;
+      }
+      const r=undoReceipts.find(r=>r.token===args.p_token),current=r&&completionRows.get(r.table+':'+r.id)?.row;
+      if(!r||r!==latest||r.userId!==userId||r.consumed||Date.parse(r.expires_at)<=Date.now()||JSON.stringify(current)!==JSON.stringify(r.after)){
+        res.end(JSON.stringify({data:null,error:{message:'Запись уже изменена или время отмены истекло'}}));return;
+      }
+      r.consumed=true;const restored={...r.before,updated_at:new Date().toISOString()};completionRows.set(r.table+':'+r.id,{table:r.table,row:restored});
+      subscribers.forEach(client=>client.write('data: '+JSON.stringify({table:r.table,payload:{eventType:'UPDATE',new:restored}})+'\n\n'));
+      res.end(JSON.stringify({data:{table:r.table,row:restored},error:null}));
     });return;
   }
   if(url.pathname==='/fixture-ack'){

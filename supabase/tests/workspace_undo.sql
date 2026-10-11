@@ -14,6 +14,7 @@ insert into public.task_assignees(task_id,user_id) select task_id,user_id from u
 do $$
 declare f record; receipt jsonb; result jsonb; token uuid; n integer;
 begin
+  if not exists(select 1 from undo_fixtures) then raise exception 'FAIL: no active user/project fixtures'; end if;
   for f in select * from undo_fixtures loop
     perform set_config('request.jwt.claims',jsonb_build_object('sub',f.auth_user_id,'role','authenticated')::text,true);
     execute 'set local role authenticated';
@@ -27,6 +28,14 @@ begin
     receipt:=public.get_workspace_undo('task_subtasks',f.subtask_id);
     result:=public.undo_workspace_action((receipt->>'token')::uuid);
     if result->'row'->>'completion_state'<>'not_done' then raise exception 'FAIL: subtask undo'; end if;
+    perform public.set_task_completion(f.task_id,true);
+    receipt:=public.get_workspace_undo('tasks',f.task_id);token:=(receipt->>'token')::uuid;
+    perform public.set_subtask_completion(f.subtask_id,'partial');
+    if public.get_workspace_undo('tasks',f.task_id) is not null then raise exception 'FAIL: old action still offered'; end if;
+    begin perform public.undo_workspace_action(token);raise exception 'FAIL: older action accepted';exception when invalid_parameter_value then null;end;
+    receipt:=public.get_workspace_undo('task_subtasks',f.subtask_id);
+    perform public.undo_workspace_action((receipt->>'token')::uuid);
+    perform public.set_task_completion(f.task_id,false);
     begin perform count(*) from private.workspace_undo_receipts;raise exception 'FAIL: receipts exposed';exception when insufficient_privilege then null;end;
     perform public.set_task_completion(f.task_id,true);receipt:=public.get_workspace_undo('tasks',f.task_id);token:=(receipt->>'token')::uuid;
     execute 'reset role';
@@ -64,4 +73,4 @@ begin
   end loop;
 end $$;
 rollback;
-select 'PASS: all active users/projects; exact completion undo, schedule and soft-delete undo; foreign, reused, expired and stale receipts rejected; private data and editor permissions unchanged; fixtures rolled back' verification;
+select 'PASS: all active users/projects; exact completion undo, schedule and soft-delete undo; foreign, reused, expired, stale and non-latest receipts rejected; private data and editor permissions unchanged; fixtures rolled back' verification;
