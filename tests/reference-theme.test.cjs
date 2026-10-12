@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets', 'reference-theme.css'), 'utf8');
 
-assert.match(html, /reference-theme\.css\?v=20260812-soft-teal-v3/);
+assert.match(html, /reference-theme\.css\?v=20261013-stable-ui-v1/);
 assert.match(html, /<body class='reference-theme'>/);
 assert.match(css, /--ref-base:#eee6d8/);
 assert.match(css, /--ref-teal:#006164/);

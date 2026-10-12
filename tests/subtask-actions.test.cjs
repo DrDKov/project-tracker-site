@@ -73,6 +73,8 @@ const context = vm.createContext({
   byId: (rows, id) => rows.find(row => row.id === id),
   subs: taskId => S.subtasks.filter(row => row.task_id === taskId && !row.deleted_at),
   render: () => { fullRenders += 1; },
+  releaseTaskBoard: () => {},
+  holdTaskBoard: () => {},
   refreshSubtaskStateUI: () => { stateRefreshes += 1; },
   setRealtimeStatus: () => {},
   scheduleRealtimeRender: () => { realtimeRenders += 1; },

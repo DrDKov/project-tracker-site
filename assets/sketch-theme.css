@@ -22,7 +22,7 @@ body.sketch-theme .logo{background:var(--sk-ink)!important;color:var(--sk-paper)
 body.sketch-theme .brand h1,body.sketch-theme .topbar h2,body.sketch-theme h3,body.sketch-theme h4{color:var(--sk-ink)!important}
 body.sketch-theme .brand p,body.sketch-theme .muted{color:var(--sk-muted)!important}
 body.sketch-theme .nav button{color:#36342e!important;background:transparent!important;border:1.5px solid transparent!important;border-radius:6px!important;box-shadow:none!important}
-body.sketch-theme .nav button:hover{background:#f8f5ec!important;border-color:var(--sk-line)!important;box-shadow:3px 3px 0 var(--sk-shadow)!important;transform:translate(-1px,-1px)}
+body.sketch-theme .nav button:hover{background:#f8f5ec!important;border-color:var(--sk-line)!important;box-shadow:3px 3px 0 var(--sk-shadow)!important}
 body.sketch-theme .nav button.active{color:var(--sk-paper)!important;background:var(--sk-ink)!important;border-color:var(--sk-ink)!important;box-shadow:4px 4px 0 rgba(36,35,31,.28)!important}
 body.sketch-theme .side-footer{color:var(--sk-muted)!important;border-top:1.5px dashed var(--sk-line)!important}
 
@@ -44,8 +44,8 @@ body.sketch-theme .btn.primary,body.sketch-theme .btn.blue,body.sketch-theme #qu
   color:var(--sk-paper)!important;background:var(--sk-ink)!important;border-color:var(--sk-ink)!important;box-shadow:4px 4px 0 rgba(36,35,31,.3)!important;
 }
 body.sketch-theme .btn.danger{color:#6d2824!important;background:#f6eee8!important;border-color:#6d2824!important}
-body.sketch-theme .btn:hover:not(:disabled),body.sketch-theme .x:hover:not(:disabled){transform:translate(-1px,-1px)}
-body.sketch-theme .btn:active:not(:disabled),body.sketch-theme .x:active:not(:disabled),body.sketch-theme .ms-filter-btn:active{transform:translate(2px,2px)!important;box-shadow:inset 2px 2px 0 rgba(36,35,31,.18)!important}
+body.sketch-theme .btn:hover:not(:disabled),body.sketch-theme .x:hover:not(:disabled){filter:brightness(1.015)}
+body.sketch-theme .btn:active:not(:disabled),body.sketch-theme .x:active:not(:disabled),body.sketch-theme .ms-filter-btn:active{box-shadow:inset 2px 2px 0 rgba(36,35,31,.18)!important}
 body.sketch-theme button:disabled,body.sketch-theme .btn:disabled{opacity:.48!important;box-shadow:none!important}
 
 body.sketch-theme .input,body.sketch-theme input:not([type='checkbox']):not([type='radio']):not([type='color']),body.sketch-theme select,body.sketch-theme textarea{

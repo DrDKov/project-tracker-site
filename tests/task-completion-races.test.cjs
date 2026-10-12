@@ -17,7 +17,7 @@ async function test(profile){
   const requests=[],alerts=[];
   S.sb={rpc(name,args){return new Promise(resolve=>requests.push({name,args,resolve}))}};
   const c=vm.createContext({S,Date,Map,Set,Error,byId:(a,id)=>a.find(x=>x.id===id),
-    refreshTaskCompletionUI(){},refreshSubtaskStateUI(){},scheduleRender(){},alert:m=>alerts.push(m)});
+    holdTaskBoard(){},refreshTaskCompletionUI(){},refreshSubtaskStateUI(){},scheduleRender(){},alert:m=>alerts.push(m)});
   vm.runInContext(source,c);
   const call=code=>vm.runInContext(code,c);
   const first=call("toggleTask('t',true)");

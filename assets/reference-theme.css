@@ -135,7 +135,6 @@ body.reference-theme .btn.secondary,body.reference-theme .btn.ghost,body.referen
 body.reference-theme .btn.danger{color:#7e302b!important;background:linear-gradient(145deg,#f1ded5,#e4cdc4)!important;border:1px solid rgba(126,48,43,.2)!important}
 body.reference-theme .btn:hover:not(:disabled){filter:brightness(1.025)}
 body.reference-theme .btn:active:not(:disabled),body.reference-theme .x:active:not(:disabled){
-  transform:translateY(1px)!important;
   box-shadow:inset 3px 3px 7px rgba(87,70,48,.22),inset -3px -3px 7px rgba(255,252,243,.66)!important;
 }
 body.reference-theme button:disabled,body.reference-theme .btn:disabled{opacity:.54!important;box-shadow:none!important;cursor:default!important}

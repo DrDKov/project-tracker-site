@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'assets', 'sketch-theme.css'), 'utf8');
 
-assert.match(html, /sketch-theme\.css\?v=20260812-neo-skeuo-v2/);
+assert.match(html, /sketch-theme\.css\?v=20261013-stable-ui-v1/);
 assert.match(html, /theme!==\'classic\'&&theme!==\'sketch\'/);
 assert.match(html, /classList\.toggle\(\'sketch-theme\'/);
 assert.match(css, /body\.sketch-theme\{/);

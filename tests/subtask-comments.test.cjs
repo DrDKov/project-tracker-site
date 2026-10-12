@@ -59,6 +59,7 @@ const client = {
 S.sb = client;
 const context = vm.createContext({
   S,
+  syncStableContent(element,html){element.innerHTML=html},
   $: id => elements[id],
   document: { querySelector(selector) {
     if (selector.includes('add-task-comment')) return send;

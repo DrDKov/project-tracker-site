@@ -48,7 +48,7 @@ class Element{
   append(...nodes){nodes.forEach(n=>this.insertBefore(n,null));return this;}
 }
 const boardSource=block('/* Keyed board updates preserve','/* Keyed board updates end */');
-const boardContext=vm.createContext({document:{activeElement:null},requestAnimationFrame:()=>{},withRenderDataIndexes:fn=>fn()});
+const boardContext=vm.createContext({document:{activeElement:null},requestAnimationFrame:()=>{},withRenderDataIndexes:fn=>fn(),syncStableNode(previous,fresh){previous.markup=fresh.markup;return previous}});
 vm.runInContext(boardSource,boardContext);
 const card=(id,title=id)=>new Element('ARTICLE','task-card',{taskId:id},'<article data-task-id="'+id+'">'+title+'</article>');
 const col=(id,...cards)=>new Element('DIV','col',{status:id}).append(new Element('H3','','',id),...cards);
