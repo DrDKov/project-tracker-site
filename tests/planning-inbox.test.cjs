@@ -105,6 +105,17 @@ const emit=(name,event)=>{for(const fn of events[name]||[])fn(event)};
  assert.ok(dom.get('focusList').innerHTML.includes('Collect materials'));
  assert.ok(!dom.get('focusList').innerHTML.includes('Other project'),'Only editable projects selectable');
  const first=api.getRows()[0];
+ // Dragging an inbox card onto a project assigns the project but retains the card.
+ const transfer={values:{},setData(k,v){this.values[k]=v},getData(k){return this.values[k]||''}};
+ const dragTarget={closest:sel=>sel==='.planning-row[draggable]'?{dataset:{planningId:first.id}}:null};
+ emit('dragstart',{target:dragTarget,dataTransfer:transfer});
+ const projectTarget={dataset:{planningProject:'p1'},classList:{add(){},remove(){}}};
+ const dropTarget={closest:sel=>sel.includes('.project-card')?projectTarget:null};
+ emit('drop',{target:dropTarget,dataTransfer:transfer,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+ await pause();await pause();
+ assert.equal(api.getRows().length,2,'Drop on project does not remove inbox card');
+ assert.equal(api.getRows()[0].project_id,'p1','Project drop assigns the project');
+
  const changeField=(name,value)=>emit('change',{target:{closest:sel=>sel==='[data-planning-field]'?{dataset:{planningField:name,id:first.id},value}:null}});
  changeField('project_id','p1');await pause();await pause();
  assert.equal(api.getRows().length,2,'Setting a project must NOT schedule the task');
@@ -123,6 +134,18 @@ const emit=(name,event)=>{for(const fn of events[name]||[])fn(event)};
  assert.equal(promotions[0].assignee_id,'u2');
  assert.equal(promotions[0].due_date,'2026-10-21');
  assert.equal(promotions[1].received,true,'Existing tasks UI is updated');
+ // Drag the remaining item onto a dated weekly column; it becomes a task.
+ const second=api.getRows()[0];
+ emit('change',{target:{closest:sel=>sel==='[data-planning-field]'?{dataset:{planningField:'project_id',id:second.id},value:'p1'}:null}});
+ await pause();await pause();
+ const nextTransfer={values:{},setData(k,v){this.values[k]=v},getData(k){return this.values[k]||''}};
+ emit('dragstart',{target:{closest:sel=>sel==='.planning-row[draggable]'?{dataset:{planningId:second.id}}:null},dataTransfer:nextTransfer});
+ const day={dataset:{date:'2026-10-22'},classList:{add(){},remove(){}}};
+ emit('drop',{target:{closest:sel=>sel.includes('.week-col')?day:null},dataTransfer:nextTransfer,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){}});
+ await pause();await pause();
+ assert.equal(api.getRows().length,0,'Dropped dated task is removed from planning inbox');
+ assert.equal(promotions[2].due_date,'2026-10-22','Dropped task keeps calendar date');
+
  api.close();assert.equal(dom.get('planningDrawer').hidden,true);
  api.reset();assert.equal(api.getRows().length,0);
  console.log('Planning capture, per-project assignees, inbox persistence, scheduling and drawer tests passed');
