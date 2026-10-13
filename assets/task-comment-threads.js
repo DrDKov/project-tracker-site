@@ -7,6 +7,12 @@ function threadStructure(rows,taskId){
  for(const c of usable){if(c.reply_to_comment_id&&c.thread_root_id&&byId.has(c.thread_root_id)){const list=groups.get(c.thread_root_id)||[];list.push(c);groups.set(c.thread_root_id,list)}else roots.push(c)}
  return {byId,threads:roots.map(root=>{const group=groups.get(root.id)||[],linked=new Set(group.filter(c=>!c.deleted_at).map(c=>c.reply_to_comment_id));return {root,replies:group.filter(c=>!c.deleted_at||linked.has(c.id)),count:group.filter(c=>!c.deleted_at).length}}).filter(x=>!x.root.deleted_at||x.count>0)};
 }
+function commentBodyWithMaterials(body,esc){
+ const url=/https:\/\/drdkov\.github\.io\/project-tracker-site\/#materials\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/gi;
+ return esc(body||'').replace(url,(_,id)=>
+   '<button type="button" class="task-comment-material-link" data-library-open="'+id.toLowerCase()+'" title="Просмотреть материал в Workspace">▤ Открыть материал</button>'
+ );
+}
 function renderThreadCard(c,byId,h){
  const {esc,dt,author,canEdit,canDelete,subtask,editingId,editingDraft,selectedSubtaskId}=h;
  const deleted=!!c.deleted_at,reply=!!c.reply_to_comment_id,edited=!deleted&&c.updated_at&&new Date(c.updated_at)-new Date(c.created_at)>1000;
@@ -17,7 +23,7 @@ function renderThreadCard(c,byId,h){
  const parent=reply?byId.get(c.reply_to_comment_id):null;
  const quote=reply?`<button type="button" class="task-comment-quote" data-action="jump-task-comment" data-id="${esc(c.reply_to_comment_id)}" aria-label="Перейти к цитируемому сообщению"><b>Ответ ${esc(parent?author(parent.user_id):'на сообщение')}</b><span>${esc(parent&&!parent.deleted_at?String(parent.body||'').replace(/\s+/g,' ').slice(0,140):'Комментарий удалён')}</span></button>`:'';
  const s=subtask(c);
- const body=deleted?'<div class="task-comment-deleted">Комментарий удалён</div>':`${quote}${s?`<div class="task-comment-subtask-label">@${esc(s.title)}</div>`:c.subtask_id?'<div class="task-comment-subtask-label">@Подзадача удалена</div>':''}${editingId===c.id?`<div class="task-comment-edit"><textarea class="input textarea task-comment-edit-text" data-id="${esc(c.id)}" aria-label="Редактировать комментарий">${esc(editingDraft??c.body)}</textarea><div class="task-comment-edit-actions"><button type="button" data-action="cancel-task-comment-edit">Отмена</button><button type="button" data-action="save-task-comment-edit" data-id="${esc(c.id)}">Сохранить</button></div></div>`:`<div class="task-comment-body">${esc(c.body)}</div>`}`;
+ const body=deleted?'<div class="task-comment-deleted">Комментарий удалён</div>':`${quote}${s?`<div class="task-comment-subtask-label">@${esc(s.title)}</div>`:c.subtask_id?'<div class="task-comment-subtask-label">@Подзадача удалена</div>':''}${editingId===c.id?`<div class="task-comment-edit"><textarea class="input textarea task-comment-edit-text" data-id="${esc(c.id)}" aria-label="Редактировать комментарий">${esc(editingDraft??c.body)}</textarea><div class="task-comment-edit-actions"><button type="button" data-action="cancel-task-comment-edit">Отмена</button><button type="button" data-action="save-task-comment-edit" data-id="${esc(c.id)}">Сохранить</button></div></div>`:`<div class="task-comment-body">${commentBodyWithMaterials(c.body,esc)}</div>`}`;
  return `<div class="task-comment ${deleted?'is-deleted':''} ${reply?'is-reply':''} ${selectedSubtaskId&&c.subtask_id===selectedSubtaskId?'is-current-subtask':''}" data-comment-id="${esc(c.id)}"><div class="task-comment-meta"><b>${esc(author(c.user_id))}</b><span>${dt(c.created_at)}</span>${edited?'<span>изменено</span>':''}${actions}</div>${body}</div>`;
 }
 function renderThreads(rows,taskId,collapsed,helpers){

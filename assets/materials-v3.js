@@ -80,5 +80,27 @@ else if(a.dataset.libraryDownload)fileLink(a.dataset.libraryDownload,false);
 else if(a.dataset.libraryLink){const x=state.rows.find(x=>x.id===a.dataset.libraryLink);if(x&&/^https?:\/\//i.test(x.body||''))window.open(x.body,'_blank','noopener,noreferrer')}
 },true);
 function tick(){const p=profile(),c=client(),id=p?.is_active!==false?p?.id||'':'';if(id===state.identity&&c===state.sb)return;state.generation++;state.sb=c;state.profile=id?p:null;state.identity=id;state.rows=[];state.projects=[];state.active=null;state.editor=false;state.loadedAt=0;nav();if(id&&$('materials')?.classList.contains('active'))load();else if($('materials')?.classList.contains('active')){q('.nav [data-view="overview"]')?.click()}}
-window.addEventListener('pt-workspace-context-changed',tick);window.addEventListener('focus',tick);window.addEventListener('online',()=>{if(state.identity&&$('materials')?.classList.contains('active'))load()});tick();
+const LIBRARY_HASH=/^#materials\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+async function openMaterialById(id){
+ if(!LIBRARY_HASH.test('#materials/'+id))return;
+ if(!state.identity)return;
+ state.view='all';state.active=id;state.editor=false;
+ open();
+ if(!state.rows.some(m=>m.id===id))await load();
+ if(state.rows.some(m=>m.id===id)){state.active=id;render()}
+ else{state.active=null;render();notify('Материал недоступен или удалён.',true)}
+}
+let handledMaterialHash='';
+function handleMaterialHash(){
+ const found=String(window.location?.hash||'').match(LIBRARY_HASH);
+ if(!found||!state.identity)return;
+ const key=state.identity+':'+found[1];
+ if(handledMaterialHash===key)return;
+ handledMaterialHash=key;
+ openMaterialById(found[1]).catch(err=>notify(err.message||String(err),true));
+}
+window.ProjectTrackerMaterials={openMaterialById};
+window.addEventListener('hashchange',handleMaterialHash);
+window.addEventListener('pt-workspace-context-changed',()=>queueMicrotask(handleMaterialHash));
+window.addEventListener('pt-workspace-context-changed',tick);window.addEventListener('focus',tick);window.addEventListener('online',()=>{if(state.identity&&$('materials')?.classList.contains('active'))load()});tick();queueMicrotask(handleMaterialHash);
 })();

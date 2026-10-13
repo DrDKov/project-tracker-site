@@ -223,3 +223,44 @@ body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context > 
 body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context > button:hover{
   background:rgba(13,102,109,.10)
 }
+
+
+/* Materials 3.1: task attachments and in-inspector resource picker. */
+body #taskModal .task-materials-section{display:grid;gap:8px;min-width:0;margin-top:14px;padding:13px;border:1px solid var(--line,#dce3e5);border-radius:12px;background:var(--panel,#fff)}
+body #taskModal .task-materials-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}
+body #taskModal .task-materials-heading .btn{font-size:12px;min-height:31px;padding:6px 9px;white-space:nowrap}
+body #taskModal .task-materials-list{display:grid;gap:6px;min-width:0}
+body #taskModal .task-material-empty{margin:2px 0;font-size:12px;line-height:1.5;color:var(--muted,#64748b)}
+body #taskModal .task-material-attached{display:flex;align-items:center;gap:8px;min-width:0;background:var(--bg,#f8fafc);border-radius:8px;padding:6px 8px}
+body #taskModal .task-material-attached>button:first-child{flex:1;text-align:left;border:0;background:none;padding:4px 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:650;color:inherit;cursor:pointer}
+body #taskModal .task-material-attached>span{flex:none;font-size:10px;color:var(--muted,#64748b)}
+body #taskModal .task-material-unlink{display:grid;place-items:center;flex:none;width:27px;height:27px;border:0;border-radius:6px;background:none;color:#ac4949;font-size:20px;cursor:pointer}
+body #taskModal .task-material-unlink:hover{background:rgba(160,60,60,.10)}
+body #taskModal .task-material-status{font-size:11px;color:#00676c;line-height:1.4}
+body #taskModal .task-material-status:empty{display:none}
+body #taskModal .task-material-status[data-error=true]{color:#ad512c}
+body #taskModal .task-material-comment-button{border:1px solid var(--line,#dce3e5);border-radius:9px;background:var(--panel,#fff);color:var(--text,#24373b);width:34px;height:34px;flex:none;font-size:20px;cursor:pointer}
+body #taskModal.task-inspector>.task-material-picker{position:absolute;right:12px;top:74px;bottom:12px;z-index:25;display:flex;flex-direction:column;gap:10px;width:min(440px,calc(100% - 24px));min-width:0;padding:17px;box-sizing:border-box;border:1px solid var(--line,#dce3e5);border-radius:14px;background:var(--panel,#fff);box-shadow:0 8px 38px rgba(20,30,35,.22);overflow:hidden;color:var(--text,#24373b)}
+body #taskModal.task-inspector>.task-material-picker[hidden]{display:none!important}
+body #taskModal .task-material-picker-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+body #taskModal .task-material-picker-head>b{font-size:15px}
+body #taskModal .task-material-picker-close{border:0;border-radius:8px;background:var(--bg,#f1f5f9);color:inherit;width:30px;height:30px;font-size:20px;cursor:pointer}
+body #taskModal .task-material-picker-results{display:grid;grid-auto-rows:max-content;align-content:start;gap:8px;min-height:0;overflow-y:auto;flex:1}
+body #taskModal .task-material-option{display:grid;gap:7px;padding:10px;border:1px solid var(--line,#dce3e5);border-radius:9px;background:var(--bg,#f8fafc)}
+body #taskModal .task-material-option>div:first-child{display:grid;gap:2px;min-width:0}
+body #taskModal .task-material-option b{overflow-wrap:anywhere;font-size:13px}
+body #taskModal .task-material-option small{font-size:11px;color:var(--muted,#64748b)}
+body #taskModal .task-material-option-actions{display:flex;gap:6px;flex-wrap:wrap}
+body #taskModal .task-material-option-actions button{border:1px solid var(--line,#dce3e5);border-radius:8px;background:var(--panel,#fff);color:inherit;padding:6px 9px;font-size:11px;cursor:pointer}
+body #taskModal .task-material-option-actions button:last-child:not(:first-child){background:rgba(0,103,108,.12);color:var(--text,#24373b)}
+body #taskModal .task-material-picker-preview{max-height:45%;min-height:0;overflow:auto;border-top:1px solid var(--line,#dce3e5);padding-top:12px}
+body #taskModal .task-material-picker-preview[hidden]{display:none!important}
+body #taskModal .task-material-picker-preview>h4{margin:0 0 10px;font-size:14px}
+body #taskModal .task-material-preview-content{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.6}
+body #taskModal .task-material-preview-content img{display:block;max-width:100%;height:auto;border-radius:8px}
+body #taskModal .task-material-preview-content iframe{width:100%;height:260px;border:0;border-radius:8px}
+body #taskModal .task-material-picker[data-mode=preview] .task-material-picker-results{display:none}
+body #taskModal .task-material-picker[data-mode=preview] .task-material-picker-preview{max-height:none;flex:1}
+body #taskModal .task-comment-material-link{display:inline-flex;align-items:center;gap:3px;white-space:normal;text-align:left;padding:4px 7px;margin:2px 0;border-radius:8px;border:1px solid var(--line,#dce3e5);background:rgba(0,103,108,.08);color:inherit;font-weight:650;font-size:12px;cursor:pointer}
+body #taskModal .task-comment-material-link:hover{background:rgba(0,103,108,.16)}
+@media(max-width:700px){body #taskModal.task-inspector>.task-material-picker{top:55px;bottom:8px;right:8px;width:calc(100% - 16px);padding:12px}}
