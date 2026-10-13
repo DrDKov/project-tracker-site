@@ -10,10 +10,11 @@ const deployTransform = fs.readFileSync(path.join(root, '.github', 'scripts', 'a
 
 assert.match(
   loader,
-  /mobile-completed-tasks-toggle\.js\?v=20261013-mobile-task-controls-v1/,
+  /mobile-completed-tasks-toggle\.js\?v=20261014-ipad-completed-v1/,
   'the mobile completed-task control must be loaded with a fresh cache token',
 );
 assert.match(source, /filterBody\.appendChild\(doneToggle\)/);
+assert.match(source, /max-width:1366px/, 'Tablet drawer retains completed tasks toggle');
 assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
