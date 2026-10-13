@@ -37,16 +37,28 @@ Deno.serve(async (req: Request) => {
     stage = "assignment";
     const { data: assignment, error: assignmentError } = await admin
       .from("task_assignees")
-      .select("id,user_id")
+      .select("id,user_id,task_id")
       .eq("id", assignmentId)
       .maybeSingle();
     if (assignmentError) throw assignmentError;
     if (!assignment) return json({ error: "assignment_not_found" }, 404);
 
+    stage = "series";
+    const taskId = assignment.task_id;
+    const { data: task, error: taskError } = await admin
+      .from("tasks")
+      .select("recurrence_rule_id")
+      .eq("id", taskId)
+      .single();
+    if (taskError) throw taskError;
+
+    // The DB unique index atomically claims a series once per recipient.
+    // Concurrent assignment webhooks cannot produce duplicate pushes.
     stage = "claim";
     const { error: claimError } = await admin.from("push_delivery_log").insert({
       task_assignee_id: assignment.id,
       user_id: assignment.user_id,
+      recurrence_rule_id: task?.recurrence_rule_id || null,
       status: "processing",
     });
     if (claimError?.code === "23505") return json({ ok: true, duplicate: true });
@@ -81,7 +93,7 @@ Deno.serve(async (req: Request) => {
     );
 
     const payload = JSON.stringify({
-      title: "Вам назначена новая задача",
+      title: task?.recurrence_rule_id ? "Вам назначена серия повторяющихся задач" : "Вам назначена новая задача",
       body: "Откройте Project Tracker, чтобы посмотреть подробности.",
       icon: "https://drdkov.github.io/project-tracker-site/assets/icon-192.png?v=20260715-push-v2",
       badge: "https://drdkov.github.io/project-tracker-site/favicon-32.png?v=20260715-push-v2",
