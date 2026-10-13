@@ -151,6 +151,7 @@
     $('taskBoardModeToggle')&&new MutationObserver(reflect).observe($('taskBoardModeToggle'),{subtree:true,attributes:true,attributeFilter:['class']});
     const week=$('taskWeekLabel');
     if(week)new MutationObserver(reflect).observe(week,{childList:true,characterData:true,subtree:true});
+    schedule(); // Ensure late-loaded task controls are arranged after first installation.
     return true;
   }
   function arrange(){
