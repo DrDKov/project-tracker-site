@@ -92,6 +92,18 @@ begin
  if not found then raise exception 'Planning item unavailable'; end if;
  if v_item.project_id is null then raise exception 'Choose a project first'; end if;
  if not public.can_edit_project(v_item.project_id) then raise exception 'No permission to schedule this project'; end if;
+ if not exists(select 1 from public.projects p where p.id=v_item.project_id and p.deleted_at is null) then
+  raise exception 'Project is no longer available';
+ end if;
+ if v_item.assignee_id is not null and not exists (
+  select 1 from public.app_users u join public.projects p on p.id=v_item.project_id
+  where u.id=v_item.assignee_id and u.is_active
+    and (u.role in ('owner','admin') or u.id=p.owner_id
+         or exists(select 1 from public.project_members pm
+                   where pm.project_id=p.id and pm.user_id=u.id))
+ ) then
+  raise exception 'Executor lost access to this project';
+ end if;
  insert into public.tasks(project_id,title,notes,status,priority,start_date,due_date,assignee_id)
  values(v_item.project_id,v_item.title,v_item.notes,'planned','medium',p_date,p_date,v_item.assignee_id)
  returning * into v_task;
@@ -105,3 +117,12 @@ end
 $$;
 revoke all on function public.schedule_planning_item(uuid,date) from public,anon;
 grant execute on function public.schedule_planning_item(uuid,date) to authenticated;
+
+-- Deliver cross-device inbox updates to subscribed authorized users.
+do $$
+begin
+ if exists(select 1 from pg_publication where pubname='supabase_realtime')
+ and not exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='planning_inbox') then
+  alter publication supabase_realtime add table public.planning_inbox;
+ end if;
+end $$;
