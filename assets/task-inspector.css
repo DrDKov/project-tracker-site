@@ -264,3 +264,60 @@ body #taskModal .task-material-picker[data-mode=preview] .task-material-picker-p
 body #taskModal .task-comment-material-link{display:inline-flex;align-items:center;gap:3px;white-space:normal;text-align:left;padding:4px 7px;margin:2px 0;border-radius:8px;border:1px solid var(--line,#dce3e5);background:rgba(0,103,108,.08);color:inherit;font-weight:650;font-size:12px;cursor:pointer}
 body #taskModal .task-comment-material-link:hover{background:rgba(0,103,108,.16)}
 @media(max-width:700px){body #taskModal.task-inspector>.task-material-picker{top:55px;bottom:8px;right:8px;width:calc(100% - 16px);padding:12px}}
+
+/* Comment composer layout fix: the materials icon belongs inside the input.
+   Keep exactly two grid children: [input wrapper] [send button]. */
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-form{
+  grid-template-columns:minmax(0,1fr) 44px!important;
+  grid-template-rows:auto!important;
+  align-items:end!important;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-form>.task-comment-input-wrap{
+  position:relative;
+  grid-column:1;
+  grid-row:1;
+  min-width:0;
+  width:100%;
+  align-self:end;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-input-wrap>#taskCommentText{
+  display:block!important;
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0!important;
+  padding-left:48px!important;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-input-wrap>.task-material-comment-button{
+  position:absolute!important;
+  z-index:2;
+  left:7px;
+  top:50%;
+  transform:translateY(-50%);
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  min-width:30px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  color:var(--muted,#64748b);
+  font-size:19px;
+  line-height:1;
+  cursor:pointer;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-input-wrap>.task-material-comment-button:hover{
+  background:rgba(0,103,108,.10);
+  color:var(--text,#24373b);
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-input-wrap>.task-material-comment-button:focus-visible{
+  outline:2px solid #00676c;
+  outline-offset:1px;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-form>.task-comment-send{
+  grid-column:2;
+  grid-row:1;
+  align-self:end;
+}
