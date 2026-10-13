@@ -17,7 +17,7 @@ function normalize(items){
   var seen={};
   return (Array.isArray(items)?items:[]).filter(function(x){
     if(!x||!x.task_id)return false;
-    var key=x.type==='mention'?(x.id||('mention:'+x.task_id)):'assignment-task:'+x.task_id;
+    var key=['mention','reply','thread'].includes(x.type)?(x.id||x.type+':'+x.task_id):x.type==='recurrence'?'recurrence:'+x.recurrence_rule_id:'assignment-task:'+x.task_id;
     if(seen[key])return false;
     seen[key]=1;
     return true;
@@ -66,7 +66,7 @@ function render(){
   var b=q('assignmentBadge'),l=q('assignmentList'),clear=document.querySelector('[data-assignment-clear]');
   if(b){b.textContent=n>99?'99+':String(n);b.classList.toggle('hidden',!n)}
   if(clear){clear.textContent='Отметить все прочитанными';clear.disabled=!n}
-  if(l){l.innerHTML=items.length?items.map(function(x){return'<button type="button" class="assignment-item '+(x.unread?'unread':'')+'" data-open-task="'+esc(x.task_id)+'"><div class="assignment-item-title">'+esc(x.type==='mention'?'Упоминание':'Назначение')+'</div><div>'+esc(x.title||'Задача')+'</div></button>'}).join(''):'<div class="assignment-empty">Уведомлений пока нет</div>'}
+  if(l){l.innerHTML=items.length?items.map(function(x){var label=x.type==='reply'?'Ответ на комментарий':x.type==='thread'?'Новое сообщение в треде':x.type==='mention'?'Упоминание':x.type==='recurrence'?'Повторяющиеся задачи':'Назначение';return'<button type="button" class="assignment-item '+(x.unread?'unread':'')+'" data-open-task="'+esc(x.task_id)+'" data-open-comment="'+esc(x.comment_id||'')+'" data-open-notification="'+esc(x.id)+'"><div class="assignment-item-title">'+esc(label)+'</div><div>'+esc(x.title||'Задача')+'</div></button>'}).join(''):'<div class="assignment-empty">Уведомлений пока нет</div>'}
 }
 async function saveRemote(value){
   var c=api();if(!c||!me||!me.id)return;
@@ -87,18 +87,21 @@ async function loadRemote(c,key,signal){
 function markRead(){
   var value=getState();value.read_before=new Date().toISOString();value.items.forEach(function(x){if(x)x.unread=false});setState(value);render();saveRemote(value)
 }
-function markTaskRead(taskId){
-  var value=getState();value.items.forEach(function(x){if(x&&x.task_id===taskId)x.unread=false});setState(value);render()
+function markNotificationRead(id){
+  var value=getState();value.items.forEach(function(x){if(x&&x.id===id)x.unread=false});setState(value);render()
 }
-function add(type,taskId,title,uniq,createdAt){
-  var value=applyReadBefore(getState()),existing=value.items.find(function(x){return x&&x.id===uniq});
-  if(existing){existing.title=title||existing.title;existing.created_at=createdAt||existing.created_at;setState(value);return}
-  var previous=type!=='mention'&&value.items.find(function(x){return x&&x.type!=='mention'&&x.task_id===taskId});
-  if(previous&&time(previous.created_at)>=time(createdAt))return;
-  var item={id:uniq,type:type,task_id:taskId,title:title||'Задача',created_at:createdAt||new Date().toISOString(),unread:true};
+function add(type,taskId,title,uniq,createdAt,meta){
+  meta=meta||{};
+  var value=applyReadBefore(getState());
+  var existing=value.items.find(function(x){return x&&x.id===uniq});
+  if(existing)return;
+  var item={id:uniq,type:type,task_id:taskId,title:title||'Задача',
+    created_at:createdAt||new Date().toISOString(),unread:true,
+    comment_id:meta.comment_id||'',recurrence_rule_id:meta.recurrence_rule_id||'',author:meta.author||''};
   if(time(item.created_at)<=time(value.read_before))item.unread=false;
-  if(type!=='mention')value.items=value.items.filter(function(x){return x&&!(x.type!=='mention'&&x.task_id===taskId)});
-  value.items.unshift(item);setState(value)
+  if(type==='assignment')value.items=value.items.filter(function(x){return x&&!(x.type==='assignment'&&x.task_id===taskId)});
+  value.items.unshift(item);
+  setState(value);
 }
 async function current(c){try{var p=window.currentProfile;if(p&&p.id)return p;if('currentAuth' in window)return null;var r=await c.rpc('current_app_user_id');if(r.data){var u=await c.from('app_users').select('id,display_name,email').eq('id',r.data).maybeSingle();return u.data}}catch(e){}return null}
 function mentioned(body){if(!me)return false;body=String(body||'').toLowerCase();return[me.display_name,me.email].filter(Boolean).some(function(x){return body.indexOf('@'+String(x).toLowerCase())>=0})}
@@ -112,19 +115,33 @@ async function sync(){
     var before=JSON.stringify(getState());ui();
     var since=new Date(Date.now()-7*86400000).toISOString(),tasks=[],assignments=[];
     var results=await Promise.all([
-      c.from('tasks').select('id,title,assignee_id,created_at,updated_at').gte('updated_at',since).abortSignal(controller.signal),
+      c.from('tasks').select('id,title,assignee_id,recurrence_rule_id,created_at,updated_at').gte('updated_at',since).abortSignal(controller.signal),
       c.from('task_assignees').select('id,task_id,created_at').eq('user_id',me.id).gte('created_at',since).abortSignal(controller.signal),
       c.from('task_comments').select('id,task_id,body,user_id,created_at').gte('created_at',since).order('created_at',{ascending:false}).limit(80).abortSignal(controller.signal),
+      c.from('task_comment_alerts').select('id,recipient_id,task_id,comment_id,author_id,kind,created_at').eq('recipient_id',me.id).gte('created_at',since).order('created_at',{ascending:false}).limit(100).abortSignal(controller.signal),
       loadRemote(c,key,controller.signal)
     ]);
     if(!valid(c,key))return;
-    var tr=results[0],ar=results[1],cr=results[2];lastError=!!(tr.error||ar.error||cr.error||results[3]===false);
+    var tr=results[0],ar=results[1],cr=results[2],nr=results[3];lastError=!!(tr.error||ar.error||cr.error||nr.error||results[4]===false);
     if(!tr.error&&tr.data)tasks=tr.data;
     if(!ar.error&&ar.data)assignments=ar.data;
     var multiTaskIds=new Set(assignments.map(function(a){return a.task_id}));
-    assignments.forEach(function(a){var t=tasks.find(function(x){return x.id===a.task_id});add('assignment',a.task_id,t&&t.title,'assignment:'+a.id,a.created_at)});
-    tasks.filter(function(t){return t.assignee_id===me.id&&!multiTaskIds.has(t.id)}).forEach(function(t){add('assignment',t.id,t.title,'assignment:direct:'+t.id,t.updated_at||t.created_at)});
-    if(!cr.error&&cr.data)cr.data.forEach(function(cm){if(cm.user_id!==me.id&&mentioned(cm.body)){var t=tasks.find(function(x){return x.id===cm.task_id});add('mention',cm.task_id,t&&t.title,'mention:'+cm.id+':'+cm.task_id,cm.created_at)}});
+    assignments.forEach(function(a){
+      var t=tasks.find(function(x){return x.id===a.task_id});
+      var series=t&&t.recurrence_rule_id;
+      add(series?'recurrence':'assignment',a.task_id,t&&t.title,series?'recurrence:'+series+':'+me.id:'assignment:'+a.id,a.created_at,{recurrence_rule_id:series});
+    });
+    tasks.filter(function(t){return t.assignee_id===me.id&&!multiTaskIds.has(t.id)}).forEach(function(t){
+      var series=t.recurrence_rule_id;
+      add(series?'recurrence':'assignment',t.id,t.title,series?'recurrence:'+series+':'+me.id:'assignment:direct:'+t.id,t.updated_at||t.created_at,{recurrence_rule_id:series});
+    });
+    if(!nr.error&&nr.data)nr.data.forEach(function(a){
+      if(a.author_id===me.id)return;
+      var t=tasks.find(function(x){return x.id===a.task_id});
+      add(a.kind==='reply'?'reply':'thread',a.task_id,t&&t.title,
+        (a.kind==='reply'?'reply:':'thread:')+a.id+':'+a.task_id,a.created_at,{comment_id:a.comment_id});
+    });
+    if(!cr.error&&cr.data)cr.data.forEach(function(cm){if(cm.user_id!==me.id&&mentioned(cm.body)){var t=tasks.find(function(x){return x.id===cm.task_id});add('mention',cm.task_id,t&&t.title,'mention:'+cm.id+':'+cm.task_id,cm.created_at,{comment_id:cm.id})}});
     if(before!==JSON.stringify(getState()))render();
   }catch(e){lastError=true;console.warn('Notification reconciliation failed',e)}
   finally{clearTimeout(deadline);busy=false;if(document.visibilityState!=='hidden'&&navigator.onLine!==false){var immediate=retry;retry=false;schedule(immediate?0:undefined)}}
@@ -132,9 +149,10 @@ async function sync(){
 document.addEventListener('click',function(e){
   if(e.target.closest('[data-assignment-clear]')){if(window.__ASSIGNMENT_NOTIFICATIONS_V3__)return;e.preventDefault();markRead();return}
   var b=e.target.closest('[data-open-task]');if(!b)return;
-  var id=b.getAttribute('data-open-task');markTaskRead(id);
+  var id=b.getAttribute('data-open-task'),commentId=b.getAttribute('data-open-comment');
+  markNotificationRead(b.getAttribute('data-open-notification'));
   var nav=document.querySelector('.nav button[data-view="tasks"]');if(nav)nav.click();
-  setTimeout(function(){var x=document.createElement('button');x.type='button';x.style.display='none';x.setAttribute('data-action','open-task');x.setAttribute('data-id',id);document.body.appendChild(x);x.click();setTimeout(function(){x.remove()},50)},150)
+  document.dispatchEvent(new CustomEvent('pt-open-task',{detail:{id:id,preset:commentId?{tab:'comments',focus_comment_id:commentId}:{}}}))
 },true);
 window.addEventListener('pt-workspace-context-changed',function(){var next=identity();if(next===lastIdentity)return;lastIdentity=next;me=null;resume()});
 window.addEventListener('pt-notification-realtime-status',function(){if(window.__PT_NOTIFICATION_REALTIME__.status!=='SUBSCRIBED')resume()});
