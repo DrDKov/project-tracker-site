@@ -31,4 +31,24 @@ assert.match(runtime, /file\.addEventListener\('change'/);
 assert.match(runtime, /async function uploadChatFiles\(project_id\)/);
 assert.match(runtime, /storage\.from\(BUCKET\)\.upload/);
 
+// A single bubble must not occupy the entire message area, and two
+// bubbles must not be split into equal-height rows. Layout stays flex/auto.
+const scopedCss = css.slice(css.indexOf('/* Chat messages size to their own content'));
+assert.ok(scopedCss.includes('/* End content-sized chat bubbles */'), 'Content-sized bubble styles must be present');
+const transcriptRule = scopedCss.match(/body #chat #chatMessages\.chat-messages\s*\{([^}]*)\}/)?.[1] || '';
+assert.match(transcriptRule,/display:flex!important/);
+assert.match(transcriptRule,/flex-direction:column!important/);
+assert.match(transcriptRule,/justify-content:flex-start!important/);
+const bubbleRule = scopedCss.match(/body #chat #chatMessages\.chat-messages > \.chat-bubble\s*\{([^}]*)\}/)?.[1] || '';
+assert.match(bubbleRule,/flex:0 0 auto!important/);
+assert.match(bubbleRule,/width:fit-content!important/);
+assert.match(bubbleRule,/height:auto!important/);
+assert.match(bubbleRule,/max-width:84%!important/);
+const mineRule = scopedCss.match(/body #chat #chatMessages\.chat-messages > \.chat-bubble\.mine\s*\{([^}]*)\}/)?.[1] || '';
+assert.match(mineRule,/align-self:flex-end!important/);
+const appHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const pagesTransform=fs.readFileSync(path.join(root,'.github/scripts/apply_recurrence_scope.py'),'utf8');
+assert.match(appHtml,/app\.css\?v=20261013-chat-bubble-height-v1/);
+assert.match(pagesTransform,/css_ver='20261013-chat-bubble-height-v1'/);
+
 console.log('chat attachment picker checks passed');
