@@ -189,6 +189,28 @@ begin
  return v;
 end $$;
 
+create or replace function public.library_save_file_metadata(
+ p_id uuid,p_expected_version integer,p_title text,p_collection text
+) returns public.workspace_library language plpgsql security definer set search_path='' as $
+declare v public.workspace_library%rowtype;
+begin
+ select * into v from public.workspace_library where id=p_id for update;
+ if not found or v.kind<>'file' or v.deleted_at is not null
+  or not public.library_can_edit_id(p_id) then
+  raise exception 'File not found or edit access denied'; end if;
+ if v.version_number<>p_expected_version then
+  raise exception 'Revision conflict: material has changed' using errcode='40001'; end if;
+ if length(btrim(coalesce(p_title,''))) not between 1 and 500 then
+  raise exception 'Invalid file title'; end if;
+ perform set_config('app.library_revision_write','yes',true);
+ update public.workspace_library
+ set title=btrim(p_title),collection_name=coalesce(p_collection,''),
+     version_number=version_number+1
+ where id=p_id returning * into v;
+ perform set_config('app.library_revision_write','',true);
+ return v;
+end $;
+
 create or replace function public.library_replace_file(
  p_id uuid,p_expected_version integer,p_path text,p_name text,p_mime text,p_size bigint
 ) returns public.workspace_library language plpgsql security definer set search_path='' as $$
@@ -280,6 +302,8 @@ revoke all on function public.library_set_trashed(uuid,boolean) from public,anon
 revoke all on function public.library_create_workflow_task(uuid,uuid,date) from public,anon;
 grant execute on function public.library_save_revision(uuid,integer,text,text,text) to authenticated;
 grant execute on function public.library_restore_revision(uuid,integer,integer) to authenticated;
+revoke all on function public.library_save_file_metadata(uuid,integer,text,text) from public,anon;
+grant execute on function public.library_save_file_metadata(uuid,integer,text,text) to authenticated;
 grant execute on function public.library_replace_file(uuid,integer,text,text,text,bigint) to authenticated;
 grant execute on function public.library_set_trashed(uuid,boolean) to authenticated;
 grant execute on function public.library_create_workflow_task(uuid,uuid,date) to authenticated;
