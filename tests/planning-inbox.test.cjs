@@ -16,7 +16,7 @@ assert.match(html,/id='planningDrawer'/);
 assert.match(html,/planning-inbox\.js\?v=20261013-planning-inbox-v1/);
 assert.match(runtime,/window\.ProjectTrackerPlanning\?\.init/);
 assert.match(runtime,/window\.ProjectTrackerPlanning\?\.render/);
-assert.doesNotMatch(runtime,/\$('focusList'\)\.innerHTML=\(S\.tasks/);
+assert.ok(!runtime.includes("$('focusList')&&($('focusList').innerHTML=(S.tasks"), 'Old Focus Week rendering must be removed');
 assert.match(runtime,/data-planning-project/);
 assert.match(style,/\.planning-drawer\{position:fixed/);
 assert.match(sql,/alter table public\.planning_inbox enable row level security/);
