@@ -14,7 +14,7 @@ const generator=fs.readFileSync(path.join(root,'.github','scripts','apply_recurr
 const expectedVersion=generator.match(/ver='([^']+)'/)?.[1];
 assert.ok(expectedVersion,'Deployment cache version must be specified');
 assert.equal(html.match(/assets\/app\.js\?v=([^'"]+)/)?.[1],expectedVersion+'-native-calendar-v2-ipad-v1-timeline-v1');
-assert.equal(loader.match(/app-runtime\.js\?v=([^'"]+)/)?.[1],expectedVersion);
+assert.equal(loader.match(/app-runtime\.js\?v=([^'"]+)/)?.[1],expectedVersion+'-timeline-v1');
 assert.match(runtime, /document\.createElement\('span'\)/);
 assert.match(runtime, /control\.className='chat-file-control'/);
 assert.match(runtime, /lab\.className='chat-file-btn'/);
