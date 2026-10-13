@@ -33,6 +33,6 @@ assert.match(runtime,/if\(du!=null&&\(!Number\.isFinite\(du\)\|\|du<=0\)\)throw 
   'Task calendar validation must permit positive minute durations');
 assert.match(loader,/app-runtime\.js\?v=20261013-mobile-task-toolbar-v2/,
   'Browser must fetch the fixed runtime, not the stale cached bundle');
-assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v2/,
+assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3/,
   'Browser must fetch the new app loader');
 console.log('Task duration 1–60 minute validation and browser cache checks passed');
