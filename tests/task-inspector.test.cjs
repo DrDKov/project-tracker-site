@@ -8,7 +8,7 @@ const css = fs.readFileSync(path.join(root,'assets/task-inspector.css'),'utf8');
 const runtime = fs.readFileSync(path.join(root,'assets/app-runtime.js'),'utf8');
 const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
 
-assert.match(html,/assets\/task-inspector\.css\?v=20261013-comment-action-icons-v1/);
+assert.match(html,/assets\/task-inspector\.css\?v=20261013-threaded-comments-v1/);
 assert.match(html,/assets\/task-inspector\.js\?v=20261011-reliability-v1/);
 assert.ok(html.indexOf("src='assets/task-inspector.js") < html.indexOf("src='assets/app.js"),'inspector installs before the task runtime');
 assert.match(source,/mq\.matches \? dialog\.show\(\) : dialog\.showModal\(\)/,'desktop is modeless, mobile is an accessible full-screen dialog');
