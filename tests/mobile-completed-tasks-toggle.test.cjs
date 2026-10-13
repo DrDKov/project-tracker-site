@@ -13,7 +13,7 @@ assert.match(
   /mobile-completed-tasks-toggle\.js\?v=20261013-mobile-task-controls-v1/,
   'the mobile completed-task control must be loaded with a fresh cache token',
 );
-assert.match(source, /modeToggle\.insertAdjacentElement\('afterend', doneToggle\)/);
+assert.match(source, /filterBody\\.appendChild\\(doneToggle\\)/);
 assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
@@ -37,7 +37,7 @@ const checkbox = {
   getAttribute(name){ return this.attributes[name] || null; },
   setAttribute(name, value){ this.attributes[name] = value; },
 };
-const filterBody = {};
+const filterBody = { appendChild(element){ element.parentElement=this; } };
 const doneToggle = {
   parentElement: filterBody,
   nextElementSibling: null,
@@ -73,7 +73,7 @@ const documentMock = {
   readyState: 'complete',
   head,
   documentElement: head,
-  querySelector(selector){ return selector === '#tasks>.toolbar' ? toolbar : null; },
+  querySelector(selector){ return selector === '#tasks>.toolbar' ? toolbar : selector === '#mobileTaskFilters .mobile-filter-body' ? filterBody : null; },
   getElementById(id){
     if(id === 'taskBoardModeToggle') return modeToggle;
     if(id === 'taskShowDoneWrap') return doneToggle;
@@ -106,8 +106,7 @@ vm.runInNewContext(source, {
   clearTimeout,
 });
 
-assert.equal(doneToggle.parentElement, toolbar);
-assert.equal(modeToggle.nextElementSibling, doneToggle);
+assert.equal(doneToggle.parentElement, filterBody);
 assert.equal(label.textContent, 'Показывать завершённые');
 assert.equal(checkbox.attributes['aria-label'], 'Показывать завершённые задачи');
 assert.equal(doneToggle.classList.contains('mobile-completed-visible'), true);
