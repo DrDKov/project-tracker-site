@@ -4,7 +4,7 @@
   import('./app-runtime.js?v=20261013-mobile-task-toolbar-v2')
     .then(function(){
       var modules = [
-        './workspace-layout.js?v=20261002-compact-v2',
+        './workspace-layout.js?v=20261013-task-filter-icon-v3',
         './workspace-announcements.js?v=20261010-background-v1',
         './theme-settings.js?v=20260824-event-scope-v1',
         './materials-rich-editor.js?v=20261013-materials-v32-v1',
@@ -14,7 +14,7 @@
         './task-comments.js?v=20260717-comments-v3',
         './native-pickers.js?v=20260814-native-pickers-v1',
         './mobile-completed-tasks-toggle.js?v=20261013-mobile-task-controls-v1',
-        './mobile-task-compact-toolbar.js?v=20261013-mobile-task-toolbar-v2',
+        './mobile-task-compact-toolbar.js?v=20261013-mobile-task-toolbar-v3',
         './subtask-reorder.js?v=20260728-task-comment-composer-v1',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
 
