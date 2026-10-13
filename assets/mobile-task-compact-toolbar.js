@@ -30,6 +30,8 @@
       btn.querySelector('.mobile-task-view-label').textContent=modes[current]?.name||'Неделя';
       btn.setAttribute('aria-label','Отображение задач: '+(modes[current]?.name||'Неделя'));
     }
+    const undated=$('mobileUndatedTasksBtn');
+    if(undated)undated.hidden=current!=='week';
     document.querySelectorAll('#mobileTaskView [data-mobile-task-mode]').forEach(x=>{
       const selected=x.dataset.mobileTaskMode===current;
       x.classList.toggle('selected',selected);
@@ -148,6 +150,21 @@
       filterSummary.setAttribute('aria-label','Открыть фильтры задач');
     }
     const filterBody=filter.querySelector('.mobile-filter-body');
+    // The old date dialog also allowed opening the undated tasks column.
+    // Preserve that action in the existing filter sheet, not in another modal.
+    if(filterBody&&!$('mobileUndatedTasksBtn')){
+      const undated=document.createElement('button');
+      undated.id='mobileUndatedTasksBtn';
+      undated.type='button';
+      undated.className='btn secondary mobile-undated-tasks-btn';
+      undated.textContent='Задачи без даты';
+      undated.setAttribute('aria-label','Показать задачи без даты');
+      filterBody.appendChild(undated);
+      undated.addEventListener('click',()=>{
+        window.ProjectTrackerColumns?.selectDate('__none__');
+        filter.removeAttribute('open');
+      });
+    }
     // Preserve the original completed-toggle checkbox and its established handler.
     if(mq.matches&&filterBody&&done.parentElement!==filterBody)filterBody.appendChild(done);
     function syncPlacement(){
