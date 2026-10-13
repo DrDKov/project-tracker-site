@@ -46,7 +46,7 @@
     document.body.dataset.compactTaskMode = mode;
     if($('compactTaskMode')) $('compactTaskMode').value = mode;
     if($('compactDateOpen')) {
-      $('compactDateOpen').disabled = mode !== 'week' || layout === 'comfortable';
+      $('compactDateOpen').disabled = mode !== 'week';
       $('compactDateOpen').setAttribute('aria-label', mode === 'week' ? 'Выбрать дату' : 'Текущая колонка');
     }
     const summary = document.querySelector('#mobileTaskFilters > summary');
@@ -135,19 +135,6 @@
       toolbar.addEventListener('change',schedule);
       new MutationObserver(schedule).observe(toolbar,{childList:true});
     }
-    const dialog = document.createElement('dialog');
-    dialog.id = 'compactDateDialog'; dialog.className = 'modal';
-    dialog.innerHTML = '<form class="modal-body" method="dialog"><div class="modal-head"><h3>Перейти к дню</h3><button type="button" class="x" data-compact-date-close aria-label="Закрыть календарь">×</button></div><label><span>Дата</span><input class="input" type="date" id="compactDateInput" required></label><div class="compact-date-weeks"><button class="btn secondary" type="button" data-compact-week="prev">← Неделя</button><button class="btn secondary" type="button" data-compact-week="next">Неделя →</button></div><div class="modal-actions"><button class="btn secondary" type="button" id="compactUndatedBtn">Без даты</button><button class="btn primary" type="submit">Перейти</button></div></form>';
-    document.body.append(dialog);
-    dialog.querySelector('form').addEventListener('submit',event => {
-      event.preventDefault(); window.ProjectTrackerColumns?.selectDate($('compactDateInput').value); dialog.close();
-    });
-    dialog.addEventListener('click',event => {
-      if(event.target.closest('[data-compact-date-close]')) dialog.close();
-      const week = event.target.closest('[data-compact-week]');
-      if(week){ $('taskWeekNav')?.querySelector('[data-week-nav="'+week.dataset.compactWeek+'"]')?.click(); dialog.close(); }
-      if(event.target.closest('#compactUndatedBtn')){ window.ProjectTrackerColumns?.selectDate('__none__'); dialog.close(); }
-    });
     document.addEventListener('click',event => {
       const choice = event.target.closest('.workspace-layout-options [data-workspace-layout]');
       if(choice){ setLayout(choice.dataset.workspaceLayout); return; }
@@ -156,10 +143,20 @@
         const expanded = document.body.classList.toggle('focus-tools-open');
         $('layoutShowTools').setAttribute('aria-expanded',String(expanded)); return;
       }
-      if(event.target.closest('#compactDateOpen') && !event.target.closest('button').disabled){
-        const selected = document.querySelector('#kanban > .mobile-column-active');
-        $('compactDateInput').value = selected?.dataset.date !== '__none__' && selected?.dataset.date || dateToday();
-        dialog.showModal(); return;
+      // Pointer taps reach the native date input directly, including on
+      // iOS Safari. This fallback supports keyboard or assistive activation.
+      const dateButton=event.target.closest('#compactDateOpen');
+      if(dateButton && !dateButton.disabled){
+        event.preventDefault();
+        const input=$('compactNativeDate');
+        if(input && !input.disabled){
+          try{ input.focus({preventScroll:true}); }catch(_err){ input.focus(); }
+          if(typeof input.showPicker==='function'){
+            try{ input.showPicker(); return; }catch(_err){}
+          }
+          try{ input.click(); }catch(_err){}
+        }
+        return;
       }
       const add = event.target.closest('.compact-subadd-toggle');
       if(add){
