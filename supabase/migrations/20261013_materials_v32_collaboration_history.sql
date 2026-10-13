@@ -36,13 +36,24 @@ returns boolean language sql stable security definer set search_path='' as $$
  select exists(select 1 from public.workspace_library m where m.id=p_id
   and m.owner_id=public.current_app_user_id())
 $$;
+create or replace function public.library_user_project_access(p_project uuid,p_user uuid)
+returns boolean language sql stable security definer set search_path='' as $
+ select exists(select 1 from public.app_users u
+  where u.id=p_user and u.is_active and
+  (u.role in ('owner','admin') or exists(
+    select 1 from public.projects p
+    where p.id=p_project and p.deleted_at is null and
+    (p.owner_id=p_user or exists(select 1 from public.project_members pm
+     where pm.project_id=p_project and pm.user_id=p_user)))))
+$;
 create or replace function public.library_can_read_id(p_id uuid)
 returns boolean language sql stable security definer set search_path='' as $$
  select exists(select 1 from public.workspace_library m where m.id=p_id and m.deleted_at is null
  and (public.library_can_read(m.owner_id,m.scope,m.project_id)
       or exists(select 1 from public.library_access a where a.material_id=m.id
                   and a.user_id=public.current_app_user_id()
-                  and a.permission='editor')))
+                  and a.permission='editor'
+                  and (m.scope<>'project' or public.library_user_project_access(m.project_id,a.user_id)))))
 $$;
 create or replace function public.library_can_edit_id(p_id uuid)
 returns boolean language sql stable security definer set search_path='' as $$
@@ -50,7 +61,8 @@ returns boolean language sql stable security definer set search_path='' as $$
  and (m.owner_id=public.current_app_user_id()
       or exists(select 1 from public.library_access a where a.material_id=m.id
                   and a.user_id=public.current_app_user_id()
-                  and a.permission='editor')))
+                  and a.permission='editor'
+                  and (m.scope<>'project' or public.library_user_project_access(m.project_id,a.user_id)))))
 $$;
 drop policy if exists library_read on public.workspace_library;
 create policy library_read on public.workspace_library for select to authenticated
@@ -71,7 +83,9 @@ create policy library_access_select on public.library_access for select to authe
 create policy library_access_insert on public.library_access for insert to authenticated
  with check(public.library_is_owner_id(material_id)
   and user_id<>public.current_app_user_id()
-  and exists(select 1 from public.app_users u where u.id=user_id and u.is_active));
+  and exists(select 1 from public.app_users u where u.id=user_id and u.is_active)
+  and exists(select 1 from public.workspace_library m where m.id=material_id
+      and (m.scope<>'project' or public.library_user_project_access(m.project_id,user_id))));
 create policy library_access_delete on public.library_access for delete to authenticated
  using(public.library_is_owner_id(material_id));
 
