@@ -5,7 +5,7 @@
   window.__MOBILE_COMPLETED_TASKS_TOGGLE_V1__ = true;
 
   var mq = window.matchMedia
-    ? window.matchMedia('(max-width:980px)')
+    ? window.matchMedia('(max-width:1366px)')
     : { matches: false, addEventListener: function(){} };
   var observer = null;
   var retryTimer = 0;
