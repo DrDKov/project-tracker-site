@@ -23,7 +23,7 @@ assert.match(script,/new FormData\(form\)/);
 assert.match(script,/state\.draft=\{\.\.\.state\.draft,kind:e\.target\.value/,'type change must preserve drafts');
 assert.match(script,/if\(scope==='project'&&!project_id\)/,'project materials require project');
 assert.match(script,/createSignedUrl\(row\.storage_path,300\)/);
-assert.match(script,/row\.owner_id===profile\(\)\?\.id/,'owner-only edit/delete controls');
+assert.match(script,/item\.owner_id===profile\(\)\?\.id/,'owner-only edit/delete controls');
 assert.match(script,/window\.open\(url,'_blank','noopener,noreferrer'\)/);
 assert.match(script,/window\.addEventListener\('pt-workspace-context-changed',tick\)/);
 console.log('Materials 3.0 syntax, legacy migration, scoped access, loading and editor checks passed');
