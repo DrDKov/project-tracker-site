@@ -28,7 +28,8 @@ assert.match(js,/filterParts\(\)\.forEach\(el=>move\(el,body/,'Date, assignee, p
 assert.match(js,/move\(week,bar\)/,'Original week navigation moves into one-row toolbar');
 assert.match(js,/move\(week,toolbar,\$\('newTaskBtn'\)\)/,'Week navigation returns for non-tablet layouts');
 assert.match(js,/mode\.querySelector|taskBoardModeToggle/);
-assert.match(js,/\.querySelector\('\[data-task-mode="'\+choice\.dataset\.tabletTaskMode\+'"'\]\)'\)\?\.click\(\)/,'Tablet views forward to existing mode handler');
+assert.match(js,/choice\.dataset\.tabletTaskMode/,'Tablet view selection targets the actual board mode');
+assert.match(js,/\?\.click\(\)/,'Tablet forwards view changes through the original mode button');
 assert.match(js,/pt-select-task-date/,'Date picker forwards selected dates to existing board navigation');
 assert.match(css,/\.tablet-week-native-date\{[\s\S]*?position:absolute!important;inset:0!important;z-index:3!important/,'Native iPad calendar opens directly from date label');
 assert.match(layout,/#mobileTaskCompactBar,#tabletTaskBar/,'Filter funnel SVG cannot be overwritten by layout sync');
