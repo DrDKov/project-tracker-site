@@ -50,7 +50,9 @@
     var seen = {};
     return (Array.isArray(items) ? items : []).filter(function(item){
       if(!item || !item.task_id) return false;
-      var key = item.type === 'mention' ? (item.id || 'mention:'+item.task_id) : 'assignment-task:'+item.task_id;
+      var key = ['mention','reply','thread'].includes(item.type) ? (item.id || item.type+':'+item.task_id)
+      : item.type === 'recurrence' ? 'recurrence:'+item.recurrence_rule_id
+      : 'assignment-task:'+item.task_id;
       if(seen[key]) return false;
       seen[key] = true;
       return true;
@@ -142,6 +144,13 @@
     renderUi();
   }
 
+  function notificationTitle(item){
+    if(item.type==='mention')return 'Вас упомянули в комментарии';
+    if(item.type==='reply')return 'Ответили на ваш комментарий';
+    if(item.type==='thread')return 'Новое сообщение в вашем обсуждении';
+    if(item.type==='recurrence')return 'Вам назначена серия повторяющихся задач';
+    return 'Вам назначили задачу';
+  }
   function renderUi(){
     state.items = normalizeItems(state.items);
     applyReadBefore();
@@ -164,9 +173,9 @@
       if(!state.items.length){ list.innerHTML = '<div class="assignment-empty">Новых уведомлений пока нет</div>'; }
       else{
         list.innerHTML = state.items.map(function(item){
-          var type = item.type === 'mention' ? 'Упоминание' : 'Назначение';
-          var title = item.type === 'mention' ? 'Вас упомянули в комментарии' : 'Вам назначили задачу';
-          return '<button type="button" class="assignment-item '+(item.unread?'unread':'')+'" data-assignment-open="'+esc(item.task_id)+'"><div class="assignment-item-title"><span class="assignment-type">'+type+'</span>'+esc(title)+'</div><div>'+esc(item.title || 'Задача')+'</div><div class="assignment-item-meta">'+esc(item.project || 'Проект не указан')+' · '+esc(item.author ? 'от '+item.author+' · ' : '')+esc(dt(item.created_at))+'</div></button>';
+          var type = ['reply','thread','mention'].includes(item.type) ? 'Комментарий' : 'Назначение';
+          var title = notificationTitle(item);
+          return '<button type="button" class="assignment-item '+(item.unread?'unread':'')+'" data-assignment-open="'+esc(item.task_id)+'" data-assignment-key="'+esc(item.id)+'" data-comment-id="'+esc(item.comment_id||'')+'"><div class="assignment-item-title"><span class="assignment-type">'+type+'</span>'+esc(title)+'</div><div>'+esc(item.title || 'Задача')+'</div><div class="assignment-item-meta">'+esc(item.project || 'Проект не указан')+' · '+esc(item.author ? 'от '+item.author+' · ' : '')+esc(dt(item.created_at))+'</div></button>';
         }).join('');
       }
     }
@@ -187,11 +196,10 @@
     renderUi();
     saveRemoteReadState();
   }
-  function markTaskRead(taskId){
-    state.items.forEach(function(x){ if(x && x.task_id === taskId) x.unread = false; });
-    state.unread = state.items.filter(function(x){ return x && x.unread; }).length;
-    saveStore();
-    renderUi();
+  function markNotificationRead(notificationId){
+    state.items.forEach(function(x){if(x && x.id===notificationId)x.unread=false});
+    state.unread=state.items.filter(function(x){return x&&x.unread}).length;
+    saveStore();renderUi();
   }
 
   function projectName(projectId){
@@ -210,7 +218,7 @@
     if(!state.sb) return {id:taskId,title:'Задача',project_id:null};
     var sb=state.sb, profileId=state.profileId;
     try{
-      var r = await sb.from('tasks').select('id,project_id,title,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id').eq('id',taskId).maybeSingle();
+      var r = await sb.from('tasks').select('id,project_id,title,status,priority,start_date,due_date,created_at,updated_at,deleted_at,assignee_id,recurrence_rule_id').eq('id',taskId).maybeSingle();
       if(sb!==state.sb||profileId!==state.profileId)return null;
       if(!r.error && r.data){
         var arr = tasks();
@@ -222,19 +230,29 @@
   }
 
   function pushItem(type,task,extra){
-    extra = extra || {};
-    var key = type === 'mention' ? ('mention:'+(extra.comment_id || Date.now())+':'+task.id) : ('assignment:'+(extra.notification_id || task.id));
+    extra=extra||{};
+    var series=task.recurrence_rule_id||'';
+    if(type==='assignment'&&series)type='recurrence';
+    var key=['mention','reply','thread'].includes(type)
+      ? type+':'+(extra.notification_id||extra.comment_id||Date.now())+':'+task.id
+      : type==='recurrence'?'recurrence:'+series+':'+state.profileId
+      : 'assignment:'+(extra.notification_id||task.id);
     var existing=state.items.find(function(x){return x&&x.id===key});
-    var item = { id:key, type:type || 'assignment', task_id:task.id, title:task.title || 'Задача', project:projectName(task.project_id), author:extra.author || '', comment_id:extra.comment_id || '', created_at:extra.created_at || new Date().toISOString(), unread:true };
-    if(readTime(item.created_at) <= readTime(state.readBefore)) item.unread = false;
-    if(existing) item.unread=existing.unread;
-    state.items = state.items.filter(function(x){ return x && x.id !== item.id && !(item.type === 'assignment' && x.type !== 'mention' && x.task_id === item.task_id); });
-    state.items.unshift(item);
-    state.items = state.items.slice(0,MAX_ITEMS);
-    state.unread = state.items.filter(function(x){ return x && x.unread; }).length;
-    saveStore();
-    ensureUi();
-    if(!existing&&item.unread){pulseBell();showToast(item)}
+    if(existing)return;
+    var item={id:key,type:type,task_id:task.id,recurrence_rule_id:series,
+      title:task.title||'Задача',project:projectName(task.project_id),
+      author:extra.author||'',comment_id:extra.comment_id||'',
+      created_at:extra.created_at||new Date().toISOString(),unread:true};
+    if(readTime(item.created_at)<=readTime(state.readBefore))item.unread=false;
+    state.items=state.items.filter(function(x){
+      if(!x||x.id===key)return false;
+      if(type==='assignment'&&x.task_id===task.id&&x.type==='assignment')return false;
+      if(type==='recurrence'&&x.type==='assignment'&&x.task_id===task.id)return false;
+      return true;
+    });
+    state.items.unshift(item);state.items=normalizeItems(state.items);
+    state.unread=state.items.filter(function(x){return x&&x.unread}).length;
+    saveStore();ensureUi();if(item.unread){pulseBell();showToast(item)}
   }
   function pulseBell(){
     var bell = $('assignmentBell');
@@ -246,11 +264,13 @@
   function showToast(item){
     var box = $('assignmentToasts');
     if(!box) return;
-    var title = item.type === 'mention' ? 'Вас упомянули в комментарии' : 'Вам назначили задачу';
+    var title = notificationTitle(item);
     var toast = document.createElement('button');
     toast.type = 'button';
     toast.className = 'assignment-toast';
     toast.setAttribute('data-assignment-open',item.task_id);
+    toast.setAttribute('data-assignment-key',item.id);
+    toast.setAttribute('data-comment-id',item.comment_id||'');
     toast.innerHTML = '<b>'+esc(title)+'</b><div>'+esc(item.title)+'</div><small>'+esc(item.project)+(item.author ? ' · '+esc(item.author) : '')+'</small>';
     box.prepend(toast);
     setTimeout(function(){ toast.style.opacity = '0'; toast.style.transform = 'translateY(8px)'; },7000);
@@ -353,6 +373,17 @@
     pushItem('mention',task,{comment_id:row.id || '',author:userName(row.user_id),created_at:row.created_at});
   }
 
+  async function handleCommentAlert(row){
+    if(!row||row.recipient_id!==state.profileId||row.author_id===state.profileId)return;
+    var identity=state.profileId,sb=state.sb;
+    var task=await getTask(row.task_id);
+    if(identity!==state.profileId||sb!==state.sb||!task||task.deleted_at)return;
+    pushItem(row.kind==='reply'?'reply':'thread',task,{
+      notification_id:row.id,comment_id:row.comment_id,
+      author:userName(row.author_id),created_at:row.created_at
+    });
+  }
+
   function ensureMentionHint(){
     var ta = $('taskCommentText');
     if(!ta || ta.__mentionHintReady) return;
@@ -450,25 +481,20 @@
     button.click();
   }
 
-  function openTask(taskId){
-    if(!taskId) return;
-    markTaskRead(taskId);
+  function openTask(taskId,commentId,notificationId){
+    if(!taskId)return;
+    if(notificationId)markNotificationRead(notificationId);
     closePanel();
-    var nav = document.querySelector('.nav button[data-view="tasks"]');
-    if(nav) nav.click();
-    getTask(taskId).then(function(){
-      setTimeout(function(){
-        var card = document.querySelector('.task-card[data-task-id="'+cssId(taskId)+'"]');
-        if(card && card.scrollIntoView) card.scrollIntoView({block:'center',behavior:'smooth'});
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.style.display = 'none';
-        btn.setAttribute('data-action','open-task');
-        btn.setAttribute('data-id',taskId);
-        document.body.appendChild(btn);
-        btn.click();
-        setTimeout(function(){ if(btn.parentNode) btn.parentNode.removeChild(btn); },50);
-      },160);
+    var nav=document.querySelector('.nav button[data-view="tasks"]');
+    if(nav)nav.click();
+    getTask(taskId).then(function(task){
+      if(!task||task.deleted_at)return;
+      // The official task-opening event works even when the card is not
+      // rendered by the active filter or week. It also supports inspector tabs.
+      document.dispatchEvent(new CustomEvent('pt-open-task',{detail:{
+        id:taskId,projectId:task.project_id,
+        preset:commentId?{tab:'comments',focus_comment_id:commentId}:{}
+      }}));
     });
   }
 
@@ -486,6 +512,9 @@
     });
     ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'task_comments'},function(payload){
       handleCommentMention(payload.new || {});
+    });
+    ch.on('postgres_changes',{event:'INSERT',schema:'public',table:'task_comment_alerts'},function(payload){
+      handleCommentAlert(payload.new||{});
     });
     state.channel = ch;
     ch.subscribe(function(status){
@@ -541,7 +570,7 @@
     if(open){
       event.preventDefault();
       event.stopPropagation();
-      openTask(open.getAttribute('data-assignment-open'));
+      openTask(open.getAttribute('data-assignment-open'),open.getAttribute('data-comment-id'),open.getAttribute('data-assignment-key'));
       return;
     }
     if(event.target.closest('[data-assignment-clear]')){
