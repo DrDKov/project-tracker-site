@@ -34,7 +34,7 @@ assert.ok(m.toolbar().includes('data-library-format="check"'));
 assert.match(loader,/materials-rich-editor\.js\?v=20261013-materials-v32-v1/);
 assert.match(loader,/materials-v32\.js\?v=20261013-materials-v32-v1/);
 assert.doesNotMatch(loader,/\.\/materials-v3\.js\?/);
-assert.match(html,/app\.js\?v=20261013-mobile-task-toolbar-v2/);
+assert.match(html,/app\.js\?v=20261013-mobile-task-toolbar-v3/);
 assert.match(html,/app\.css\?v=20261013-materials-v32-v1/);
 for(const section of ['Версия','Корзина','Восстановить','Редакторы материала','Создать задачу по шаблону','Чек-лист'])assert.ok(ui.includes(section)||rich.includes(section),section);
 for(const name of ['library_save_revision','library_save_file_metadata','library_restore_revision','library_replace_file','library_set_trashed','library_create_workflow_task','library_access','library_versions'])assert.ok(ui.includes(name),name);
