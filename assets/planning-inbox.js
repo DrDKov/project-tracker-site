@@ -22,15 +22,17 @@
   ));
  };
  const projects=()=>{const c=context();return (c.projects||[]).filter(p=>canEditProject(p,c))};
- function selectors(item){
+ function selectors(item,writable){
   const opts=['<option value="">Без проекта</option>',...projects().map(p=>`<option value="${esc(p.id)}" ${p.id===item.project_id?'selected':''}>${esc(p.name)}</option>`)].join('');
   const users=eligibleUsers(item.project_id);
   const assigns=['<option value="">Без исполнителя</option>',...users.map(u=>`<option value="${esc(u.id)}" ${u.id===item.assignee_id?'selected':''}>${esc(u.display_name||u.email||'Участник')}</option>`)].join('');
-  return `<select class="planning-select" data-planning-field="project_id" data-id="${esc(item.id)}" aria-label="Проект задачи">${opts}</select><select class="planning-select" data-planning-field="assignee_id" data-id="${esc(item.id)}" aria-label="Исполнитель задачи" ${!item.project_id?'disabled':''}>${assigns}</select>`;
+  return `<select class="planning-select" data-planning-field="project_id" data-id="${esc(item.id)}" aria-label="Проект задачи" ${writable?'':'disabled'}>${opts}</select><select class="planning-select" data-planning-field="assignee_id" data-id="${esc(item.id)}" aria-label="Исполнитель задачи" ${!item.project_id||!writable?'disabled':''}>${assigns}</select>`;
  }
  function itemHtml(item,drawer){
-  const controls=drawer?`<div class="planning-row-date"><input type="date" data-planning-date="${esc(item.id)}" aria-label="Дата планирования" /><button type="button" data-planning-schedule="${esc(item.id)}" title="Назначить дату">В задачи <span aria-hidden="true">→</span></button></div>`:'';
-  return `<article class="planning-row" data-planning-id="${esc(item.id)}" draggable="true"><span class="planning-grip" title="Перетащите на проект или дату" aria-hidden="true">⠿</span><div class="planning-row-body"><input class="planning-title" data-planning-title="${esc(item.id)}" value="${esc(item.title)}" aria-label="Название неразобранной задачи" title="Нажмите Enter или выйдите из поля для сохранения"/><div class="planning-row-fields">${selectors(item)}</div>${controls}</div><button class="planning-delete" type="button" data-planning-delete="${esc(item.id)}" aria-label="Удалить задачу из планирования" title="Удалить">×</button></article>`;
+  const c=context();const writable=item.project_id?canEditProject((c.projects||[]).find(p=>p.id===item.project_id),c):item.created_by===c.profile?.id||['owner','admin'].includes(c.profile?.role);
+  const disabled=writable?'':'disabled';
+  const controls=drawer?`<div class="planning-row-date"><input type="date" data-planning-date="${esc(item.id)}" aria-label="Дата планирования" /><button type="button" data-planning-schedule="${esc(item.id)}" title="Назначить дату" ${disabled}>В задачи <span aria-hidden="true">→</span></button></div>`:'';
+  return `<article class="planning-row" data-planning-id="${esc(item.id)}" draggable="${writable?'true':'false'}"><span class="planning-grip" title="Перетащите на проект или дату" aria-hidden="true">⠿</span><div class="planning-row-body"><input class="planning-title" data-planning-title="${esc(item.id)}" value="${esc(item.title)}" aria-label="Название неразобранной задачи" title="Нажмите Enter или выйдите из поля для сохранения" ${disabled}/><div class="planning-row-fields">${selectors(item,writable)}</div>${controls}</div><button class="planning-delete" type="button" data-planning-delete="${esc(item.id)}" aria-label="Удалить задачу из планирования" title="Удалить" ${disabled}>×</button></article>`;
  }
  function render(){
   const main=$('focusList'),drawer=$('planningDrawerList');
