@@ -95,6 +95,8 @@ function add(type,taskId,title,uniq,createdAt,meta){
   var value=applyReadBefore(getState());
   var existing=value.items.find(function(x){return x&&x.id===uniq});
   if(existing)return;
+  if(type==='mention'&&value.items.some(function(x){return ['reply','thread'].includes(x.type)&&x.comment_id===meta.comment_id}))return;
+  if(['reply','thread'].includes(type))value.items=value.items.filter(function(x){return !(x.type==='mention'&&x.comment_id===meta.comment_id)});
   var item={id:uniq,type:type,task_id:taskId,title:title||'Задача',
     created_at:createdAt||new Date().toISOString(),unread:true,
     comment_id:meta.comment_id||'',recurrence_rule_id:meta.recurrence_rule_id||'',author:meta.author||''};
