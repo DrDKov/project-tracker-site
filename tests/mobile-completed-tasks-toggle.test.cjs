@@ -13,7 +13,7 @@ assert.match(
   /mobile-completed-tasks-toggle\.js\?v=20261013-mobile-task-controls-v1/,
   'the mobile completed-task control must be loaded with a fresh cache token',
 );
-assert.match(source, /filterBody\\.appendChild\\(doneToggle\\)/);
+assert.match(source, /filterBody\.appendChild\(doneToggle\)/);
 assert.match(source, /Показывать завершённые/);
 assert.doesNotMatch(source, /createElement\(['"]input['"]\)/, 'the existing checkbox and its state handler must be reused');
 assert.match(
