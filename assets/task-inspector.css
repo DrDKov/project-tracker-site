@@ -77,6 +77,47 @@ body #taskModal.task-inspector #taskCommentsBlock .task-comments-list > .task-co
   box-sizing:border-box!important;
 }
 body #taskModal.task-inspector #taskCommentsBlock .empty{padding:26px 18px;font-size:13px}
+/* Compact icon-only actions in task comment headers; keep accessible labels in markup. */
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:3px!important;
+  margin-left:auto!important;
+}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button{
+  display:inline-grid!important;
+  place-items:center!important;
+  flex:0 0 28px!important;
+  width:28px!important;
+  height:28px!important;
+  min-width:28px!important;
+  min-height:28px!important;
+  padding:0!important;
+  margin:0!important;
+  border:1px solid transparent!important;
+  border-radius:8px!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  cursor:pointer!important;
+  line-height:1!important;
+}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions svg{
+  display:block;
+  width:15px;
+  height:15px;
+  pointer-events:none;
+}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button[data-action="edit-task-comment"]{color:#246d70!important}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button[data-action="delete-task-comment"]{color:#a34b4b!important}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button:hover{
+  background:rgba(100,116,139,.10)!important;
+  border-color:rgba(100,116,139,.13)!important;
+}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button:focus-visible{
+  outline:2px solid var(--blue,#2563eb)!important;
+  outline-offset:2px!important;
+}
 body #taskModal.task-inspector .task-comment-body,body #taskModal.task-inspector .task-comment-subtask-label{overflow-wrap:anywhere}
 body dialog#taskModal.task-inspector>form#taskForm>.modal-actions{
   grid-column:1!important;grid-row:5!important;display:flex!important;align-items:center!important;
