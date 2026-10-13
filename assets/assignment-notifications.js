@@ -239,6 +239,7 @@
       : 'assignment:'+(extra.notification_id||task.id);
     var existing=state.items.find(function(x){return x&&x.id===key});
     if(existing)return;
+    if(type==='mention'&&state.items.some(function(x){return ['reply','thread'].includes(x.type)&&x.comment_id===extra.comment_id}))return;
     var item={id:key,type:type,task_id:task.id,recurrence_rule_id:series,
       title:task.title||'Задача',project:projectName(task.project_id),
       author:extra.author||'',comment_id:extra.comment_id||'',
@@ -246,6 +247,7 @@
     if(readTime(item.created_at)<=readTime(state.readBefore))item.unread=false;
     state.items=state.items.filter(function(x){
       if(!x||x.id===key)return false;
+      if(['reply','thread'].includes(type)&&x.type==='mention'&&x.comment_id===extra.comment_id)return false;
       if(type==='assignment'&&x.task_id===task.id&&x.type==='assignment')return false;
       if(type==='recurrence'&&x.type==='assignment'&&x.task_id===task.id)return false;
       return true;
