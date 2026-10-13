@@ -62,7 +62,7 @@ assert.match(css,/\.pt-task-load-toast\s*\{\s*position:fixed/);
 assert.match(css,/@keyframes pt-task-loading-ring/);
 assert.match(css,/prefers-reduced-motion:reduce/);
 assert.match(html,/task-load-toast\.js\?v=20261013-task-loading-toast-v1/);
-assert.match(html,/app\.css\?v=20261013-task-loading-toast-v1/);
+assert.match(html,/app\.css\?v=20261013-planning-inbox-v1/);
 assert.match(runtime,/ProjectTrackerTaskLoadToast/);
 assert.match(runtime,/indicator\?\.begin\(\)/);
 assert.match(runtime,/indicator\?\.retry\(\)/);

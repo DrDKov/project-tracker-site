@@ -323,3 +323,41 @@ body #chat #chatMessages.chat-messages > .chat-bubble.mine{
 @media(prefers-reduced-motion:reduce){
   .pt-task-load-toast,.pt-task-load-spinner{animation:none!important}
 }
+
+/* Planning Inbox: compact quick capture, accessible edits and drag targets */
+.planning-counter{display:inline-block;margin-left:5px;padding:2px 7px;border-radius:20px;background:rgba(0,103,108,.11);color:#00676c;font-size:12px;vertical-align:middle}
+.planning-quick{display:flex;align-items:stretch;gap:7px;margin:0 0 10px}
+.planning-quick textarea{flex:1;min-width:0;min-height:46px;max-height:130px;resize:vertical;padding:10px 12px;box-sizing:border-box;border:1px solid var(--line,#d5d5ce);border-radius:11px;background:rgba(255,255,255,.72);font:inherit;font-size:13px;color:inherit}
+.planning-quick button{align-self:center;flex:none;padding:10px}
+.planning-status{font-size:12px;color:#9a4e29;min-height:0}
+.planning-status:empty{display:none}
+.planning-inbox-list,.planning-drawer-list{display:grid;grid-auto-rows:max-content;align-content:start;gap:8px;min-width:0}
+.planning-empty{color:var(--muted,#64748b);font-size:13px;padding:13px 0}
+.planning-row{display:flex;align-items:flex-start;gap:7px;min-width:0;padding:10px 8px;border:1px solid rgba(106,118,115,.19);border-radius:12px;background:rgba(255,255,255,.68);box-shadow:0 2px 7px rgba(35,55,50,.035)}
+.planning-row[draggable]{cursor:grab}
+.planning-row[draggable]:active{cursor:grabbing}
+.planning-grip{flex:none;color:#79908b;font-size:18px;line-height:29px;user-select:none}
+.planning-row-body{display:grid;gap:7px;flex:1;min-width:0}
+.planning-title{box-sizing:border-box;width:100%;min-width:0;padding:4px 5px;border:1px solid transparent;border-radius:6px;background:transparent;color:inherit;font-size:13px;font-weight:650;line-height:1.4}
+.planning-title:hover,.planning-title:focus{background:#fff;border-color:rgba(0,103,108,.25);outline:0}
+.planning-row-fields{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.planning-select{box-sizing:border-box;flex:1 1 112px;width:100%;min-width:0;max-width:100%;border:1px solid rgba(106,118,115,.20);border-radius:8px;padding:5px;font:inherit;font-size:11.5px;color:#35504c;background:rgba(255,253,247,.85)}
+.planning-select:disabled{opacity:.55}
+.planning-delete{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:transparent;color:#aa5954;font-size:20px;cursor:pointer}
+.planning-delete:hover{background:rgba(160,65,65,.09)}
+.project-card[data-planning-project].planning-drop-active,.week-col.planning-drop-active,.timeline-time-grid.planning-drop-active{outline:3px dashed #00676c!important;outline-offset:2px;background-color:rgba(0,103,108,.09)!important}
+.planning-launch{white-space:nowrap;font-size:13px}
+.planning-drawer{position:fixed!important;top:64px;right:0;bottom:0;width:min(420px,100vw);max-width:100vw;z-index:1300;display:flex;flex-direction:column;box-sizing:border-box;border-left:1px solid rgba(90,112,103,.21);background:#f5efe4;color:#24373b;box-shadow:-11px 0 29px rgba(50,50,40,.13)}
+.planning-drawer[hidden]{display:none!important}
+.planning-drawer-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:18px 20px 13px;border-bottom:1px solid rgba(90,112,103,.16)}
+.planning-drawer-head > div{display:grid;gap:5px;min-width:0}
+.planning-drawer-head strong{font-size:18px}
+.planning-drawer-head span:not(.planning-counter){font-size:12px;line-height:1.5;color:#697a73}
+.planning-close{flex:none;display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(90,112,103,.16);border-radius:9px;background:rgba(255,255,255,.65);font-size:23px;color:inherit;cursor:pointer}
+.planning-drawer-list{padding:13px 15px 40px;overflow-y:auto;min-height:0;flex:1;overscroll-behavior:contain}
+.planning-drawer .planning-status{padding:0 15px}
+.planning-row-date{display:flex;gap:6px;align-items:center}
+.planning-row-date input{box-sizing:border-box;min-width:0;flex:1;height:32px;border:1px solid rgba(106,118,115,.2);border-radius:8px;background:#fff;padding:5px 7px;color:inherit}
+.planning-row-date button{min-height:32px;border:0;border-radius:8px;padding:5px 9px;background:#00676c;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+.planning-row-date button:hover{background:#005256}
+@media(max-width:720px){.planning-drawer{top:46px;width:min(100vw,420px)}.planning-quick{flex-wrap:wrap}.planning-quick button{width:100%}.planning-row-fields{flex-direction:column}.planning-select{flex:auto}}

@@ -48,7 +48,7 @@ const mineRule = scopedCss.match(/body #chat #chatMessages\.chat-messages > \.ch
 assert.match(mineRule,/align-self:flex-end!important/);
 const appHtml=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const pagesTransform=fs.readFileSync(path.join(root,'.github/scripts/apply_recurrence_scope.py'),'utf8');
-assert.match(appHtml,/app\.css\?v=20261013-task-loading-toast-v1/);
-assert.match(pagesTransform,/css_ver='20261013-task-loading-toast-v1'/);
+assert.match(appHtml,/app\.css\?v=20261013-planning-inbox-v1/);
+assert.match(pagesTransform,/css_ver='20261013-planning-inbox-v1'/);
 
 console.log('chat attachment picker checks passed');
