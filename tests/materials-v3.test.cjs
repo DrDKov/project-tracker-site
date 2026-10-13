@@ -5,7 +5,7 @@ const script=read('assets/materials-v3.js'),html=read('index.html'),loader=read(
 new vm.Script(script,{filename:'assets/materials-v3.js'});
 assert.match(loader,/materials-v32\.js\?v=20261013-materials-v32-v1/);
 assert.doesNotMatch(loader,/\.\/materials-v2\.js\?/,'legacy owner-only module must not load');
-assert.match(html,/app\.js\?v=20261013-mobile-task-toolbar-v2/);
+assert.match(html,/app\.js\?v=20261013-mobile-task-toolbar-v3/);
 assert.match(html,/app\.css\?v=20261013-materials-v32-v1/);
 assert.match(css,/\.library-layout\{display:grid/);
 assert.match(css,/@media\(max-width:720px\)/);
