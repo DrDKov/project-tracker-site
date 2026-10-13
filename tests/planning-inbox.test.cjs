@@ -13,7 +13,7 @@ assert.doesNotMatch(html,/Фокус недели/);
 assert.match(html,/id='planningQuickInput'/);
 assert.match(html,/id='openPlanningBtn'/);
 assert.match(html,/id='planningDrawer'/);
-assert.match(html,/planning-inbox\.js\?v=20261013-planning-inbox-v1/);
+assert.match(html,/planning-inbox\.js\?v=20261014-planning-autogrow-v2/);
 assert.match(runtime,/window\.ProjectTrackerPlanning\?\.init/);
 assert.match(runtime,/window\.ProjectTrackerPlanning\?\.render/);
 assert.ok(!runtime.includes("$('focusList')&&($('focusList').innerHTML=(S.tasks"), 'Old Focus Week rendering must be removed');
