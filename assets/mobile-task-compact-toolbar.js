@@ -31,7 +31,7 @@
       btn.setAttribute('aria-label','Отображение задач: '+(modes[current]?.name||'Неделя'));
     }
     const undated=$('mobileUndatedTasksBtn');
-    if(undated)undated.hidden=current!=='week';
+    if(undated){undated.hidden=current!=='week';undated.style.display=current==='week'?'':'none';}
     document.querySelectorAll('#mobileTaskView [data-mobile-task-mode]').forEach(x=>{
       const selected=x.dataset.mobileTaskMode===current;
       x.classList.toggle('selected',selected);
