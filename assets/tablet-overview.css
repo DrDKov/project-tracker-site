@@ -1,0 +1,219 @@
+/* Overview · tablet layout
+   Responsive polish for the overview dashboard, without changing the Kanban board. */
+@media (min-width:981px) and (max-width:1366px){
+  body #overview{
+    min-width:0!important;
+  }
+  body #overview>.cards-grid{
+    display:grid!important;
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:12px!important;
+    margin-bottom:16px!important;
+  }
+  body #overview>.cards-grid>.metric{
+    min-width:0!important;
+    padding:16px 17px!important;
+    border-radius:18px!important;
+  }
+  body #overview>.cards-grid>.metric span{
+    display:block!important;
+    font-size:11px!important;
+    line-height:1.35!important;
+    letter-spacing:.055em!important;
+  }
+  body #overview>.cards-grid>.metric b{
+    font-size:30px!important;
+    line-height:1.1!important;
+    margin-top:7px!important;
+  }
+  body #overview>.layout-2{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.24fr) minmax(0,1fr)!important;
+    align-items:start!important;
+    gap:16px!important;
+    min-width:0!important;
+  }
+  body #overview>.layout-2>.panel{
+    min-width:0!important;
+    width:100%!important;
+    margin:0!important;
+    padding:19px!important;
+    border-radius:20px!important;
+    align-self:start!important;
+  }
+  body #overview>.layout-2>.panel>.panel-head{
+    min-width:0!important;
+    margin:0 0 17px!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    flex-direction:column!important;
+    gap:7px!important;
+  }
+  body #overview>.layout-2>.panel>.panel-head>div{
+    min-width:0!important;max-width:100%!important;
+  }
+  body #overview>.layout-2>.panel .panel-head h3{
+    font-size:18px!important;
+    line-height:1.3!important;
+    font-weight:800!important;
+    letter-spacing:-.025em!important;
+    overflow-wrap:anywhere!important;
+  }
+  body #overview>.layout-2>.panel .panel-head p{
+    margin:5px 0 0!important;
+    max-width:100%!important;
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+  /* Left column: comfortable project cards, especially button groups. */
+  body #overview #overviewProjects{
+    min-width:0!important;width:100%!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:13px!important;
+  }
+  body #overview #overviewProjects>.project-card{
+    min-width:0!important;
+    padding:17px!important;
+    border-radius:17px!important;
+    overflow-wrap:anywhere!important;
+  }
+  body #overview #overviewProjects>.project-card>.project-title{
+    min-width:0!important;
+  }
+  body #overview #overviewProjects>.project-card>.project-title>div{
+    min-width:0!important;
+  }
+  body #overview #overviewProjects>.project-card>.project-title h4{
+    font-size:15px!important;line-height:1.35!important;
+  }
+  body #overview #overviewProjects>.project-card p{
+    line-height:1.48!important;
+  }
+  body #overview #overviewProjects>.project-card>.actions{
+    display:flex!important;flex-wrap:wrap!important;
+    align-items:center!important;justify-content:flex-start!important;
+    gap:7px!important;min-width:0!important;
+  }
+  body #overview #overviewProjects>.project-card>.actions>.btn{
+    min-height:36px!important;
+    max-width:100%!important;
+    padding:7px 10px!important;
+    font-size:12px!important;
+    line-height:1.2!important;
+    white-space:nowrap!important;
+  }
+  /* Right column: full-width, true multiline quick-capture field. */
+  body #overview .planning-quick{
+    box-sizing:border-box!important;
+    width:100%!important;
+    min-width:0!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    grid-template-rows:auto auto!important;
+    gap:10px 8px!important;
+    align-items:center!important;
+    margin:0 0 14px!important;
+  }
+  body #overview .planning-quick>#planningQuickInput{
+    grid-column:1/-1!important;grid-row:1!important;
+    display:block!important;box-sizing:border-box!important;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    min-height:108px!important;height:108px!important;max-height:260px!important;
+    margin:0!important;padding:14px 15px!important;
+    resize:vertical!important;
+    border-radius:14px!important;
+    font:inherit!important;font-size:14px!important;
+    font-weight:450!important;line-height:1.55!important;
+    text-align:left!important;
+    overflow-y:auto!important;
+    overflow-wrap:anywhere!important;
+    transition:border-color .16s ease,box-shadow .16s ease!important;
+  }
+  body #overview .planning-quick>#planningQuickInput::placeholder{
+    font-size:13px!important;
+    line-height:1.5!important;
+    white-space:normal!important;
+    opacity:1!important;
+  }
+  body #overview .planning-quick>#planningQuickInput:focus{
+    outline:none!important;
+    border-color:rgba(0,97,100,.55)!important;
+    box-shadow:0 0 0 3px rgba(0,97,100,.10),inset 2px 2px 5px rgba(116,97,70,.09)!important;
+  }
+  body #overview .planning-quick::after{
+    content:'Enter — добавить · Shift + Enter — новая строка';
+    display:block!important;
+    grid-column:1!important;grid-row:2!important;
+    align-self:center!important;
+    font-size:11px!important;
+    line-height:1.4!important;
+    color:var(--ref-muted,#64748b)!important;
+  }
+  body #overview .planning-quick>#planningQuickAdd{
+    grid-column:2!important;grid-row:2!important;
+    justify-self:end!important;align-self:center!important;
+    box-sizing:border-box!important;
+    width:auto!important;min-width:118px!important;max-width:100%!important;
+    min-height:42px!important;
+    margin:0!important;padding:10px 15px!important;
+    border-radius:12px!important;
+    font-size:13px!important;line-height:1.2!important;
+    white-space:nowrap!important;
+  }
+  body #overview #planningStatus{
+    min-width:0!important;
+    margin:0 0 9px!important;
+    line-height:1.45!important;
+    overflow-wrap:anywhere!important;
+  }
+  body #overview #focusList{
+    min-width:0!important;width:100%!important;
+    gap:9px!important;
+  }
+  body #overview #focusList .planning-empty{
+    display:flex!important;align-items:flex-start!important;
+    min-height:66px!important;
+    padding:17px!important;
+    margin:0!important;
+    border:1px dashed rgba(82,72,55,.21)!important;
+    border-radius:14px!important;
+    background:rgba(255,252,245,.33)!important;
+    color:var(--ref-muted,#64748b)!important;
+    font-size:13px!important;line-height:1.5!important;
+    box-sizing:border-box!important;
+  }
+  body #overview #focusList .planning-row{
+    width:100%!important;min-width:0!important;
+    box-sizing:border-box!important;
+    border-radius:13px!important;padding:12px!important;
+  }
+  body #overview #focusList .planning-row-body{
+    min-width:0!important;
+  }
+  body #overview #focusList .planning-row-fields{
+    min-width:0!important;gap:7px!important;
+  }
+  body #overview #focusList .planning-select{
+    min-width:0!important;
+    flex:1 1 130px!important;
+    width:auto!important;
+    height:36px!important;
+    font-size:12px!important;
+  }
+}
+@media (min-width:981px) and (max-width:1090px){
+  body #overview>.layout-2{
+    grid-template-columns:minmax(0,1.16fr) minmax(0,1fr)!important;
+    gap:13px!important;
+  }
+  body #overview>.layout-2>.panel{padding:16px!important}
+  body #overview .planning-quick::after{font-size:10.5px!important}
+  body #overview .planning-quick>#planningQuickAdd{
+    min-width:104px!important;padding:10px 12px!important;
+  }
+}
+@media (min-width:981px) and (max-width:1020px){
+  body #overview .planning-quick::after{
+    content:'Shift + Enter — новая строка';
+  }
+}
