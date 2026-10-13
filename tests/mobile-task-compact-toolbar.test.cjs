@@ -19,11 +19,20 @@ assert.match(deploy,/ver='20261013-mobile-task-toolbar-v3'/);
 assert.match(css,/@media\(max-width:980px\)/);
 assert.match(layout,/if\(summary && !summary\.closest\('#mobileTaskCompactBar'\)\)/,'Layout sync must not replace the funnel SVG with text');
 assert.match(css,/UNIFIED MOBILE TASK CONTROLS/);
-assert.match(html,/mobile-task-compact-toolbar\.css\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
-assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
+assert.match(html,/mobile-task-compact-toolbar\.css\?v=20261013-mobile-task-toolbar-v3-native-calendar-v1/);
+assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v1/);
 assert.match(app,/mobile-task-compact-toolbar\.js\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
-assert.match(deploy,/ver\+'-one-row-v1'/,'Deployment must preserve the one-row cache revision');
+assert.match(deploy,/ver\+'-native-calendar-v1'/,'Deployment must preserve the native calendar cache revision');
 assert.match(css,/SINGLE-ROW TASK COMMAND AND DAY NAVIGATION/);
+
+const layoutScript=read('assets/workspace-layout.js');
+assert.match(html,/id='compactNativeDate' class='mobile-native-date-input'/,'Use a direct date input over the day label');
+assert.match(html,/pager.querySelector\('#compactNativeDate'\)\.addEventListener\('change'/,'Choosing a native date navigates to that day');
+assert.match(html,/nativeDate\.disabled=!isWeek/,'Native calendar only activates for week mode');
+assert.match(css,/mobile-column-date-anchor>\.mobile-native-date-input\{[\s\S]*?position:absolute!important;inset:0!important;z-index:5!important/,'Native input overlays date button for direct iOS touch');
+assert.doesNotMatch(layoutScript,/compactDateDialog|dialog\.showModal\(\)/,'No intermediary date modal');
+assert.match(layoutScript,/input\.showPicker\(\)/,'Keyboard date activation opens browser-native picker');
+
 assert.match(css,/#mobileTaskCompactBar>#mobileColumnPager:not\(\[hidden\]\)\{[\s\S]*?grid-template-columns:30px minmax\(0,1fr\) 30px 65px!important/);
 assert.match(css,/@media\(max-width:350px\)\{[\s\S]*?grid-template-columns:28px minmax\(0,1fr\) 28px 34px!important/,'On narrow screens the Today action collapses to an icon');
 assert.match(css,/#mobileTaskCompactBar\.mobile-task-search-open>#mobileColumnPager\{[\s\S]*?display:none!important/,'Search must retain one row without crowding');
