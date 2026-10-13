@@ -153,3 +153,73 @@ body #taskModal.task-inspector :focus-visible{outline:2px solid var(--blue);outl
   #taskInspectorSaveHint{flex-basis:100%;min-width:0}
   body #taskModal.task-inspector #taskInspectorDiscard{margin:12px 16px 0}
 }
+
+
+/* Nested task discussions: one visual indent, quote links, and compact reply context. */
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-thread{
+  display:grid;grid-auto-rows:max-content;align-content:start;gap:6px;min-width:0;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-thread-replies{
+  display:grid;grid-auto-rows:max-content;align-content:start;gap:7px;
+  min-width:0;margin:0 0 0 12px;padding-left:11px;
+  border-left:2px solid rgba(13,102,109,.23);
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-thread-replies .task-comment{
+  min-width:0;height:auto!important;box-sizing:border-box;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-thread-toggle{
+  justify-self:start;display:inline-flex;align-items:center;gap:6px;
+  border:0;background:transparent;color:var(--blue,#2563eb);
+  font-size:12px;font-weight:700;padding:4px 7px;cursor:pointer;border-radius:7px;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-thread-toggle:hover{
+  background:rgba(37,99,235,.08);
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-quote{
+  display:grid;width:100%;max-width:100%;min-width:0;gap:2px;
+  text-align:left;border:0;border-left:3px solid rgba(13,102,109,.45);
+  border-radius:5px;background:rgba(13,102,109,.06);
+  padding:6px 8px;margin:2px 0 9px;cursor:pointer;color:inherit;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-quote b{
+  font-size:11px;color:#075d65;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-quote span{
+  font-size:12px;color:var(--muted,#64748b);
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-deleted{
+  font-size:12px;font-style:italic;color:var(--muted,#64748b);
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment.is-deleted{opacity:.78}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment.is-target{
+  outline:2px solid var(--blue,#2563eb);outline-offset:2px;
+}
+body #taskModal.task-inspector .task-comment-meta .task-comment-actions button[data-action="reply-task-comment"]{
+  color:#246d70!important;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context{
+  grid-column:1/-1!important;min-width:0;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  background:rgba(13,102,109,.07);border:1px solid rgba(13,102,109,.19);
+  border-left:3px solid #075d65;border-radius:10px;padding:7px 10px;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context[hidden]{display:none!important}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context > div{
+  display:grid;gap:2px;min-width:0;flex:1;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context b{
+  font-size:12px;color:#075d65;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context span{
+  display:block;font-size:12px;color:var(--muted,#64748b);
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context > button{
+  flex:none;width:28px;height:28px;border:0;border-radius:8px;
+  background:transparent;color:var(--muted,#64748b);
+  font-size:19px;cursor:pointer;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comment-reply-context > button:hover{
+  background:rgba(13,102,109,.10)
+}

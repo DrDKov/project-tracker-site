@@ -23,13 +23,13 @@
     let values=snapshot(),comment=$('taskCommentText')?.value||'',editor=document.querySelector('#taskForm .task-comment-edit-text');
     let edit=editor?{id:editor.dataset.id,body:editor.value}:active.edit||null;
     if(JSON.stringify(values)===active.baseline&&!comment&&!edit){remove(active.key);hint('');return true}
-    let draft={version:1,at:Date.now(),values,comment,subtaskId:active.subtaskId||null,edit,persistedTaskId:active.persistedTaskId||null};
+    let draft={version:1,at:Date.now(),values,comment,subtaskId:active.subtaskId||null,replyId:active.replyId||null,edit,persistedTaskId:active.persistedTaskId||null};
     try{let data=JSON.stringify(draft);if(data.length>100000)throw Error('large');localStorage.setItem(active.key,data);prune(active.who);hint('Черновик сохранён на этом устройстве');return true}catch{hint('Не удалось сохранить черновик на устройстве. Не закрывайте задачу.');return false}
   }
   function beforeOpen(){capture();active=null;banner(null)}
   function opened(){
     let who=identity();if(!who)return;let id=$('taskId')?.value||'',k=key(id,who),saved=read(k);
-    active={who,id,key:k,baseline:JSON.stringify(snapshot()),subtaskId:null,pending:saved};
+    active={who,id,key:k,baseline:JSON.stringify(snapshot()),subtaskId:null,replyId:null,pending:saved};
     banner(saved);hint('');
   }
   function changed(){if(!active||active.who!==identity())return;active.pending=null;banner(null);clearTimeout(timer);timer=setTimeout(capture,450)}
@@ -45,15 +45,15 @@
     document.querySelectorAll('#taskForm .task-repeat-weekday').forEach(f=>f.checked=(d.values.weekdays||[]).includes(f.value));
     document.querySelectorAll('#taskForm [name="taskRecurrenceScope"]').forEach(f=>f.checked=f.value===d.values.scope);
     if($('taskCommentText'))$('taskCommentText').value=d.comment||'';
-    active.subtaskId=d.subtaskId||null;active.edit=d.edit||null;active.pending=null;banner(null);
-    window.dispatchEvent(new CustomEvent('pt-draft-restored',{detail:{taskId:active.id,subtaskId:active.subtaskId,edit:d.edit||null}}));
+    active.subtaskId=d.subtaskId||null;active.replyId=d.replyId||null;active.edit=d.edit||null;active.pending=null;banner(null);
+    window.dispatchEvent(new CustomEvent('pt-draft-restored',{detail:{taskId:active.id,subtaskId:active.subtaskId,replyId:active.replyId,edit:d.edit||null}}));
     $('taskForm')?.dispatchEvent(new Event('input',{bubbles:true}));capture();
   }
   function discard(){if(active)remove(active.key);active=null;clearTimeout(timer);banner(null);hint('')}
   function saved(token){remove(token?.key);if(active?.key===token?.key){active=null;clearTimeout(timer);banner(null);hint('')}}
   function commentSaved(token,body){
-    let d=read(token?.key);if(d&&d.comment.trim()===body){d.comment='';d.subtaskId=null;try{localStorage.setItem(token.key,JSON.stringify(d))}catch{}}
-    if(active?.key===token?.key&&$('taskCommentText')?.value.trim()===body){$('taskCommentText').value='';active.subtaskId=null;capture()}
+    let d=read(token?.key);if(d&&d.comment.trim()===body){d.comment='';d.subtaskId=null;d.replyId=null;try{localStorage.setItem(token.key,JSON.stringify(d))}catch{}}
+    if(active?.key===token?.key&&$('taskCommentText')?.value.trim()===body){$('taskCommentText').value='';active.subtaskId=null;active.replyId=null;capture()}
   }
   function clearUser(userId){try{Object.keys(localStorage).filter(k=>k.startsWith(prefix)&&k.includes(':'+userId+':')).forEach(remove)}catch{}}
   function hideUndo(){clearTimeout(undoTimer);undo=null;let box=$('workspaceUndo');if(box)box.hidden=true}
@@ -97,7 +97,7 @@
   }
   function persisted(token,id){if(active?.key===token?.key){active.persistedTaskId=id;capture()}else{let d=read(token?.key);if(d){d.persistedTaskId=id;try{localStorage.setItem(token.key,JSON.stringify(d))}catch{}}}}
   function editSaved(id){if(active?.edit?.id===id)active.edit=null;let d=read(active?.key);if(d?.edit?.id===id){d.edit=null;try{localStorage.setItem(active.key,JSON.stringify(d))}catch{}}}
-  window.ProjectTrackerDrafts={beforeOpen,opened,capture,discard,saved,commentSaved,persisted,beginAction,editSaved,token:()=>active?{key:active.key,who:active.who,id:active.id}:null,setCommentContext:id=>{if(active)active.subtaskId=id||null},offerUndo};
+  window.ProjectTrackerDrafts={beforeOpen,opened,capture,discard,saved,commentSaved,persisted,beginAction,editSaved,token:()=>active?{key:active.key,who:active.who,id:active.id}:null,setCommentContext:id=>{if(active)active.subtaskId=id||null},setReplyContext:id=>{if(active)active.replyId=id||null},offerUndo};
   window.addEventListener('pagehide',capture);window.addEventListener('beforeunload',capture);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)capture()});
   window.addEventListener('pt-session-ended',e=>{if(e.detail.clearDrafts&&e.detail.userId)clearUser(e.detail.userId);active=null;clearTimeout(timer);banner(null);hint('');undoSequence++;hideUndo();$('taskModal')?.close();$('taskForm')?.reset();if($('taskCommentText'))$('taskCommentText').value='';if($('taskId'))$('taskId').value='';$('taskCommentsList')?.replaceChildren()});

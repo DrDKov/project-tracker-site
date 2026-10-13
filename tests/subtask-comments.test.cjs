@@ -5,10 +5,13 @@ const vm = require('node:vm');
 
 const root = path.join(__dirname, '..');
 const runtime = fs.readFileSync(path.join(root, 'assets', 'app-runtime.js'), 'utf8');
+const threadUi = fs.readFileSync(path.join(root, 'assets', 'task-comment-threads.js'), 'utf8');
 const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '20260928_task_comment_subtasks.sql'), 'utf8');
 const names = ['subBlock', 'taskCommentList', 'taskCommentCount', 'commentAuthor', 'canDeleteComment', 'canEditComment', 'commentSubtask', 'renderTaskCommentsModal', 'addTaskComment', 'saveTaskCommentEdit'];
 const indexHelpers = runtime.slice(runtime.indexOf('let RENDER_DATA_INDEXES='),runtime.indexOf('function byId('));
 const source = indexHelpers+'\n'+names.map(name => {
+  if(name === 'renderTaskCommentsModal') return runtime.slice(runtime.indexOf('function renderTaskCommentsModal(){'),runtime.indexOf('function goToNewTaskComment(',runtime.indexOf('function renderTaskCommentsModal(){')));
+  if(name === 'addTaskComment') return runtime.slice(runtime.indexOf('async function addTaskComment(){'),runtime.indexOf('async function saveTaskCommentEdit(',runtime.indexOf('async function addTaskComment(){')));
   const line = runtime.split(/\r?\n/).find(row => row.startsWith(`function ${name}(`) || row.startsWith(`async function ${name}(`));
   assert.ok(line, `${name} must be present`);
   return line;
@@ -77,6 +80,9 @@ const context = vm.createContext({
   subtaskToggleLabel: () => 'Не выполнено',
   pcolor: () => '#075d65',
   renderCommentSubtaskContext: () => {renderedContext = S.commentSubtaskId;},
+  renderReplyComposerContext: () => {},
+  goToNewTaskComment: () => {},
+  window: {},
   loadTaskComments: () => Promise.resolve(true),
   workspaceHistoryState: () => ({loaded:true}),
   historyNotice: () => '',
@@ -88,6 +94,7 @@ const context = vm.createContext({
     else S.taskComments[index] = row;
   },
 });
+vm.runInContext(threadUi, context);
 vm.runInContext(source, context);
 
 (async () => {
@@ -129,6 +136,31 @@ vm.runInContext(source, context);
   await vm.runInContext('addTaskComment()', context);
   assert.equal(inserted.subtask_id, subtaskId, 'retry must preserve its intended link');
   assert.equal(S.commentSubtaskId, null, 'successful retry clears @ selection');
+  assert.equal(input.value, '');
+
+  // A reply attaches to the selected message, inherits its root/subtask, and resets.
+  S.commentReplyToId = 'comment-1';
+  input.value = 'Ответ на первоначальный комментарий';
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.reply_to_comment_id, 'comment-1');
+  assert.equal(inserted.thread_root_id, 'comment-1');
+  assert.equal(inserted.subtask_id, subtaskId);
+  assert.equal(S.commentReplyToId, null, 'reply context clears on success');
+  assert.equal(input.value, '');
+  const firstReplyId = S.taskComments.at(-1).id;
+
+  // Reply-to-reply stays in one root thread and points to the exact quoted reply.
+  S.commentReplyToId = firstReplyId;
+  input.value = 'Ответ на ответ';
+  failNextInsert = true;
+  await assert.rejects(vm.runInContext('addTaskComment()', context), /Temporary storage failure/);
+  assert.equal(S.commentReplyToId, firstReplyId, 'failed reply preserves exact message target');
+  assert.equal(input.value, 'Ответ на ответ', 'failed reply keeps draft');
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.reply_to_comment_id, firstReplyId);
+  assert.equal(inserted.thread_root_id, 'comment-1');
+  assert.equal(inserted.subtask_id, subtaskId);
+  assert.equal(S.commentReplyToId, null);
   assert.equal(input.value, '');
 
   S.taskComments[0].body = 'Старый текст';
