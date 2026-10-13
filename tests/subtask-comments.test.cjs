@@ -138,6 +138,31 @@ vm.runInContext(source, context);
   assert.equal(S.commentSubtaskId, null, 'successful retry clears @ selection');
   assert.equal(input.value, '');
 
+  // A reply attaches to the selected message, inherits its root/subtask, and resets.
+  S.commentReplyToId = 'comment-1';
+  input.value = 'Ответ на первоначальный комментарий';
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.reply_to_comment_id, 'comment-1');
+  assert.equal(inserted.thread_root_id, 'comment-1');
+  assert.equal(inserted.subtask_id, subtaskId);
+  assert.equal(S.commentReplyToId, null, 'reply context clears on success');
+  assert.equal(input.value, '');
+  const firstReplyId = S.taskComments.at(-1).id;
+
+  // Reply-to-reply stays in one root thread and points to the exact quoted reply.
+  S.commentReplyToId = firstReplyId;
+  input.value = 'Ответ на ответ';
+  failNextInsert = true;
+  await assert.rejects(vm.runInContext('addTaskComment()', context), /Temporary storage failure/);
+  assert.equal(S.commentReplyToId, firstReplyId, 'failed reply preserves exact message target');
+  assert.equal(input.value, 'Ответ на ответ', 'failed reply keeps draft');
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.reply_to_comment_id, firstReplyId);
+  assert.equal(inserted.thread_root_id, 'comment-1');
+  assert.equal(inserted.subtask_id, subtaskId);
+  assert.equal(S.commentReplyToId, null);
+  assert.equal(input.value, '');
+
   S.taskComments[0].body = 'Старый текст';
   await vm.runInContext('saveTaskCommentEdit("comment-1")', context);
   assert.equal(updated.body, 'Исправленный текст');
