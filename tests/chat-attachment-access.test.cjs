@@ -40,7 +40,7 @@ assert.doesNotMatch(chat.render('📎 archived.xlsx: '+expiredLegacy,P),/expired
 const index=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const loader=fs.readFileSync(path.join(__dirname,'../assets/app.js'),'utf8');
 assert.match(index,/chat-attachment-access\.js\?v=20261011-chat-legacy-fix-v2/);
-assert.match(index,/app\.js\?v=20261013-mobile-task-toolbar-v2/);
+assert.match(index,/app\.js\?v=20261013-mobile-task-toolbar-v3/);
 assert.match(loader,/app-runtime\.js\?v=20261013-mobile-task-toolbar-v2/);
 
 console.log('Secure chat attachment tests passed');
