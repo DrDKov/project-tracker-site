@@ -19,6 +19,26 @@ assert.match(deploy,/ver='20261013-mobile-task-toolbar-v3'/);
 assert.match(css,/@media\(max-width:980px\)/);
 assert.match(layout,/if\(summary && !summary\.closest\('#mobileTaskCompactBar'\)\)/,'Layout sync must not replace the funnel SVG with text');
 assert.match(css,/UNIFIED MOBILE TASK CONTROLS/);
+assert.match(html,/mobile-task-compact-toolbar\\.css\\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
+assert.match(html,/assets\\/app\\.js\\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
+assert.match(app,/mobile-task-compact-toolbar\\.js\\?v=20261013-mobile-task-toolbar-v3-one-row-v1/);
+assert.match(deploy,/ver\+'-one-row-v1'/,'Deployment must preserve the one-row cache revision');
+assert.match(css,/SINGLE-ROW TASK COMMAND AND DAY NAVIGATION/);
+assert.match(css,/#mobileTaskCompactBar>#mobileColumnPager:not\\(\\[hidden\\]\\)\\{[\\s\\S]*?grid-template-columns:30px minmax\\(0,1fr\\) 30px 65px!important/);
+assert.match(css,/@media\\(max-width:350px\\)\\{[\\s\\S]*?grid-template-columns:28px minmax\\(0,1fr\\) 28px 34px!important/,'On narrow screens the Today action collapses to an icon');
+assert.match(css,/#mobileTaskCompactBar\\.mobile-task-search-open>#mobileColumnPager\\{[\\s\\S]*?display:none!important/,'Search must retain one row without crowding');
+assert.match(source,/function placePager\\(bar,toolbar,mode\\)/);
+assert.match(source,/if\\(pager.parentElement!==bar\\)bar.appendChild\\(pager\\)/,'Actual day pager is moved into the control row');
+assert.match(source,/if\\(week\\)week.insertAdjacentElement\\('afterend',pager\\)/,'Desktop restores the existing pager');
+for(const viewport of [320,360,375,390,402]){
+  const narrow=viewport<=374, tiny=viewport<=350;
+  const icons=narrow?34:38, gap=narrow?4:6;
+  const navButtons=narrow?28:30, today=tiny?34:narrow?64:65;
+  const navGaps=narrow?3:4;
+  const dateWidth=viewport-28-(3*icons+3*gap)-(2*navButtons+today+3*navGaps);
+  assert.ok(dateWidth>=70,'Date must fit on a '+viewport+'px screen, got '+dateWidth+'px');
+}
+
 assert.match(css,/#mobileTaskCompactBar>#mobileTaskSearchBtn,\s*body #tasks #mobileTaskCompactBar>#mobileTaskFilters,\s*body #tasks #mobileTaskCompactBar>#mobileTaskView\{[\s\S]*?flex:0 0 44px!important/,'Search, filter and view controls share equal dimensions');
 assert.match(css,/#mobileTaskViewBtn \.mobile-task-view-label,\s*body #tasks #mobileTaskCompactBar #mobileTaskViewBtn \.mobile-task-chevron\{[\s\S]*?display:none!important/,'View control is compact and icon-only');
 
