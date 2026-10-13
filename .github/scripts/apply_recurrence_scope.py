@@ -3,6 +3,7 @@ import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
 ver='20261013-subtask-comment-once-v1'
+css_ver='20261013-chat-bubble-height-v1'
 scope_js="""
 /* Recurrence scope editing v3 start */
 function ensureTaskRecurrenceScopeUi(){if($('taskRecurrenceScopeBox'))return;let a=$('taskRepeatExistingNote')||$('taskRepeatEnabled')?.closest('.task-recurrence-box')||$('taskDue')?.closest('label');if(!a)return;let b=document.createElement('div');b.id='taskRecurrenceScopeBox';b.className='full task-recurrence-scope hidden';b.innerHTML='<b>Применить изменения</b><label><input type="radio" name="taskRecurrenceScope" value="one" checked> Только эту задачу</label><label><input type="radio" name="taskRecurrenceScope" value="all"> Все задачи этой серии</label><label><input type="radio" name="taskRecurrenceScope" value="future"> Эту и будущие задачи серии</label><small id="taskRecurrenceScopeHint">Даты экземпляров серии не переносятся; меняются общие поля и время.</small>';a.parentNode.insertBefore(b,a.nextSibling)}
@@ -69,7 +70,7 @@ cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence 
 c.write_text(cs.rstrip()+'\n'+css,encoding='utf-8')
 html=i.read_text(encoding='utf-8')
 html=re.sub(r"assets/app\.js\?v=[^'\"]+",'assets/app.js?v='+ver,html)
-html=re.sub(r"assets/app\.css\?v=[^'\"]+",'assets/app.css?v='+ver,html)
+html=re.sub(r"assets/app\.css\?v=[^'\"]+",'assets/app.css?v='+css_ver,html)
 i.write_text(html,encoding='utf-8')
 if l.exists():
     txt=l.read_text(encoding='utf-8')
