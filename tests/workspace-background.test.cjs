@@ -54,7 +54,8 @@ function pollingHarness() {
   core.view='settings';cc.publishWorkspaceContext();assert.equal(contextEvents,3,'view entry reaches lazy modules');
   core.user=null;core.profile=null;cc.publishWorkspaceContext();assert.equal(contextEvents,4,'logout reaches optional module cleanup');
   const h=pollingHarness();await flush();
-  assert.equal(h.client.calls.length,4,'one reconciliation has four independent reads');
+  assert.equal(h.client.calls.length,5,'one reconciliation has five independent reads, including thread alerts');
+  assert.ok(h.client.calls.some(c=>c.table==='task_comment_alerts'),'Thread notifications are reconciled offline');
   assert.equal([...h.timers.values()].at(-1).delay,15000,'healthy realtime retains a slower backup poll');
   assert.equal(h.renders(),0,'unchanged polling does not rebuild the notification panel');
   const commentRead=h.client.calls.find(c=>c.table==='task_comments');
