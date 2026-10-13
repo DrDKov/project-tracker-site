@@ -50,6 +50,7 @@
     var toolbar = document.querySelector('#tasks>.toolbar');
     var modeToggle = document.getElementById('taskBoardModeToggle');
     var doneToggle = document.getElementById('taskShowDoneWrap');
+    var filterBody = document.querySelector('#mobileTaskFilters .mobile-filter-body');
 
     if(!toolbar || !modeToggle || !doneToggle){
       clearTimeout(retryTimer);
@@ -66,8 +67,10 @@
       setText(label, document.body.classList.contains('compact-workspace') ? 'Завершённые' : 'Показывать завершённые');
       setAttribute(doneToggle, 'title', 'Показывать завершённые задачи');
       setAttribute(checkbox, 'aria-label', 'Показывать завершённые задачи');
-      if(doneToggle.parentElement !== toolbar || modeToggle.nextElementSibling !== doneToggle){
-        modeToggle.insertAdjacentElement('afterend', doneToggle);
+      // Completed tasks belong to the funnel drawer on mobile, never a toolbar row.
+      // Keep the original checkbox and state handler (no duplicate controls).
+      if(filterBody && doneToggle.parentElement !== filterBody){
+        filterBody.appendChild(doneToggle);
       }
     }else{
       doneToggle.classList.remove('mobile-completed-visible');
