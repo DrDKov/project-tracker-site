@@ -23,7 +23,7 @@ const payload=[
 const state={profileId:'user-1',items:[],unread:0,readBefore:'1970-01-01T00:00:00.000Z'};
 let announcements=[];
 const context=vm.createContext({
- state,Date,readTime:v=>Date.parse(v)||0,projectName:()=> 'Проект',
+ MAX_ITEMS:40,state,Date,readTime:v=>Date.parse(v)||0,projectName:()=> 'Проект',
  saveStore:()=>{},ensureUi:()=>{},pulseBell:()=>{},
  showToast:item=>announcements.push(item),
 });
