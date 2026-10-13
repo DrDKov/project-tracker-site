@@ -233,12 +233,13 @@ async function save(e){
     if(result.error)throw result.error;
    }
   }else if(m.kind==='file'){
-   if(!owner(m))throw Error('Изменение метаданных файла доступно владельцу');
-   if(m.scope!==old.scope||m.project_id!==old.project_id){
+   result=await client.rpc('library_save_file_metadata',{p_id:m.id,p_expected_version:m.version_number,
+    p_title:m.title.trim(),p_collection:m.collection_name||''});
+   if(result.error)throw result.error;
+   if(owner(m)&&(m.scope!==old.scope||m.project_id!==old.project_id)){
     const upd=await client.from('workspace_library').update({scope:m.scope,project_id:m.scope==='project'?m.project_id:null}).eq('id',m.id);
-    if(upd.error)throw upd.error;
+    if(upd.error)throw Error('Файл сохранён, но доступ не изменился: '+upd.error.message);
    }
-   result={data:old};
   }else{
    result=await client.rpc('library_save_revision',{p_id:m.id,p_expected_version:m.version_number,p_title:m.title.trim(),
      p_body:m.body||'',p_collection:m.collection_name||''});
