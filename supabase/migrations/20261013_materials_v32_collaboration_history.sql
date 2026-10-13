@@ -85,9 +85,9 @@ create policy library_versions_read on public.library_versions for select to aut
 -- Existing file versions in the original private bucket follow live material permissions.
 create policy library_legacy_file_read on storage.objects for select to authenticated
  using(bucket_id='workspace-materials' and exists(
-   select 1 from public.workspace_library m
-   where m.storage_bucket='workspace-materials' and m.storage_path=name
-     and public.library_can_read_id(m.id)
+   select 1 from public.library_versions v
+   where v.storage_bucket='workspace-materials' and v.storage_path=name
+     and public.library_can_read_id(v.material_id)
  ));
 
 -- Protect revision history against an ordinary UPDATE that bypasses the version RPC.
