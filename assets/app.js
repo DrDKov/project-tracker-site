@@ -1,7 +1,7 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20261013-subtask-comment-once-v1')
+  import('./app-runtime.js?v=20261013-comment-action-icons-v1')
     .then(function(){
       var modules = [
         './workspace-layout.js?v=20261002-compact-v2',
