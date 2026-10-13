@@ -55,6 +55,7 @@
     if(!toolbar)return;
     const enabled=typeof force==='boolean'?force:!toolbar.classList.contains('mobile-task-search-open');
     toolbar.classList.toggle('mobile-task-search-open',enabled);
+    $('mobileTaskCompactBar')?.classList.toggle('mobile-task-search-open',enabled);
     const button=$('mobileTaskSearchBtn'),search=$('taskSearch');
     if(button){
       button.innerHTML=enabled?closeIcon:searchIcon;
@@ -89,6 +90,14 @@
     }
     if(installed){updateMode();updateFilterState();syncSearchState();return}
     installed=true;
+    // Isolate the three visible controls from the legacy task toolbar grid.
+    // Moving, rather than cloning, the existing filter details and search
+    // input preserves the original listeners, values and ARIA relationships.
+    const bar=document.createElement('div');
+    bar.id='mobileTaskCompactBar';
+    bar.setAttribute('role','group');
+    bar.setAttribute('aria-label','Поиск, фильтры и отображение задач');
+    toolbar.insertBefore(bar,toolbar.firstChild);
     const searchBtn=document.createElement('button');
     searchBtn.id='mobileTaskSearchBtn';searchBtn.type='button';
     searchBtn.className='mobile-task-control';
@@ -96,7 +105,7 @@
     searchBtn.setAttribute('aria-label','Поиск по задачам');
     searchBtn.setAttribute('aria-expanded','false');
     searchBtn.innerHTML=searchIcon;
-    toolbar.insertBefore(searchBtn,toolbar.firstChild);
+    bar.appendChild(searchBtn);
     const view=createControl('mobileTaskView',
       '<button id="mobileTaskViewBtn" class="mobile-task-control" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mobileTaskViewMenu">'+
       viewIcon+'<span class="mobile-task-view-label">Неделя</span><span class="mobile-task-chevron" aria-hidden="true">⌄</span></button>'+
@@ -104,7 +113,8 @@
       '<button type="button" data-mobile-task-mode="week" role="checkbox">Неделя</button>'+
       '<button type="button" data-mobile-task-mode="assignee" role="checkbox">Исполнители</button>'+
       '<button type="button" data-mobile-task-mode="status" role="checkbox">Статусы</button></div>');
-    toolbar.insertBefore(view,mode);
+    bar.appendChild(filter);
+    bar.appendChild(view);
     const filterSummary=filter.querySelector('summary');
     if(filterSummary){
       filterSummary.innerHTML=funnel+'<span class="mobile-filter-indicator" aria-hidden="true"></span>';
@@ -113,7 +123,25 @@
     }
     const filterBody=filter.querySelector('.mobile-filter-body');
     // Preserve the original completed-toggle checkbox and its established handler.
-    if(filterBody&&done.parentElement!==filterBody)filterBody.appendChild(done);
+    if(mq.matches&&filterBody&&done.parentElement!==filterBody)filterBody.appendChild(done);
+    function syncPlacement(){
+      const search=$('taskSearch');
+      if(mq.matches){
+        if(search&&search.parentElement!==bar)bar.insertBefore(search,searchBtn);
+        if(filter.parentElement!==bar)bar.appendChild(filter);
+        if(view.parentElement!==bar)bar.appendChild(view);
+        if(filterBody&&done.parentElement!==filterBody)filterBody.appendChild(done);
+      }else{
+        if(search?.parentElement===bar)bar.insertAdjacentElement('afterend',search);
+        if(done.parentElement===filterBody)toolbar.insertBefore(done,mode);
+      }
+      const open=bar.classList.contains('mobile-task-search-open')&&mq.matches;
+      if(search){
+        search.setAttribute('aria-hidden',String(mq.matches&&!open));
+        search.tabIndex=mq.matches&&!open?-1:0;
+      }
+    }
+    syncPlacement();
     searchBtn.addEventListener('click',()=>toggleSearch());
     $('mobileTaskViewBtn').addEventListener('click',()=>{
       if(!mq.matches)return;
@@ -150,7 +178,7 @@
       observer.observe(mode,{subtree:true,attributes:true,attributeFilter:['class']});
     }
     mq.addEventListener?.('change',()=>{
-      closeMode();toggleSearch(false);updateFilterState();
+      closeMode();toggleSearch(false);syncPlacement();updateFilterState();
     });
     updateMode();updateFilterState();syncSearchState();
     // The keyboard can focus the desktop search without it being visible on mobile.

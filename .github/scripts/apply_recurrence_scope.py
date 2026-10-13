@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20261013-mobile-task-controls-v1'
+ver='20261013-mobile-task-toolbar-v2'
 css_ver='20261013-materials-v32-v1'
 scope_js="""
 /* Recurrence scope editing v3 start */
