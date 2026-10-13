@@ -13,7 +13,7 @@ const mobile=load('assets/mobile-task-compact-toolbar.js');
 const done=load('assets/mobile-completed-tasks-toggle.js');
 new vm.Script(js,{filename:'tablet-task-toolbar.js'});
 assert.match(html,/assets\/tablet-task-toolbar\.css\?v=20261014-ipad-toolbar-v1/);
-assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v2-ipad-v1/);
+assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v2-ipad-v1-timeline-v1/);
 assert.match(loader,/tablet-task-toolbar\.js\?v=20261014-ipad-toolbar-v1/);
 assert.match(loader,/workspace-layout\.js\?v=20261014-ipad-layout-v1/);
 assert.match(css,/@media \(min-width:981px\) and \(max-width:1366px\)/);
