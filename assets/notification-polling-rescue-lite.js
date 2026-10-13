@@ -101,7 +101,11 @@ function add(type,taskId,title,uniq,createdAt,meta){
     created_at:createdAt||new Date().toISOString(),unread:true,
     comment_id:meta.comment_id||'',recurrence_rule_id:meta.recurrence_rule_id||'',author:meta.author||''};
   if(time(item.created_at)<=time(value.read_before))item.unread=false;
-  if(type==='assignment')value.items=value.items.filter(function(x){return x&&!(x.type==='assignment'&&x.task_id===taskId)});
+  if(type==='assignment'){
+    var previous=value.items.find(function(x){return x&&x.type==='assignment'&&x.task_id===taskId});
+    if(previous&&time(previous.created_at)>=time(item.created_at))return;
+    value.items=value.items.filter(function(x){return x&&!(x.type==='assignment'&&x.task_id===taskId)});
+  }
   value.items.unshift(item);
   setState(value);
 }
