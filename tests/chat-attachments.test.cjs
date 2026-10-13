@@ -13,7 +13,7 @@ assert.match(html, /id='chatFiles' type='file' multiple/);
 const generator=fs.readFileSync(path.join(root,'.github','scripts','apply_recurrence_scope.py'),'utf8');
 const expectedVersion=generator.match(/ver='([^']+)'/)?.[1];
 assert.ok(expectedVersion,'Deployment cache version must be specified');
-assert.equal(html.match(/assets\/app\.js\?v=([^'"]+)/)?.[1],expectedVersion+'-native-calendar-v1');
+assert.equal(html.match(/assets\/app\.js\?v=([^'"]+)/)?.[1],expectedVersion+'-native-calendar-v2');
 assert.equal(loader.match(/app-runtime\.js\?v=([^'"]+)/)?.[1],expectedVersion);
 assert.match(runtime, /document\.createElement\('span'\)/);
 assert.match(runtime, /control\.className='chat-file-control'/);
