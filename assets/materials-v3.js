@@ -28,7 +28,15 @@ return '<div class="library-preview-head"><div><span class="library-kicker">'+es
 function render(){const root=$('materialsRoot');if(!root)return;root.innerHTML='<div class="library-shell"><div class="library-toolbar"><div><h2>Материалы</h2><span>Личная, проектная и общая библиотека</span></div><div class="library-toolbar-actions"><button type="button" class="btn secondary" data-library-reload title="Обновить">↻</button><button type="button" class="btn primary" data-library-new>+ Создать</button></div></div><div id="libraryStatus" class="library-status" role="status"></div><div class="library-search-wrap"><input class="input" id="librarySearch" type="search" placeholder="Найти документ, файл, шаблон…" value="'+esc(state.query)+'" aria-label="Поиск по материалам"></div><div class="library-layout"><nav class="library-side" aria-label="Разделы библиотеки">'+drawNav()+'</nav><section class="library-list" aria-label="Список материалов"><div class="library-list-head"><b>'+(state.view==='all'?'Все материалы':({personal:'Личные',team:'Общие',project:'Проекты',favorites:'Избранное',recent:'Недавние'})[state.view])+'</b><span>'+activeList().length+'</span></div><div class="library-list-scroll" id="libraryItems">'+listHtml()+'</div></section><section class="library-preview" aria-label="Просмотр материала">'+(state.editor?editorHtml(state.draft):previewHtml(state.rows.find(x=>x.id===state.active)))+'</section></div></div>';
 if(state.error)notify(state.error,true);else if(state.loading)notify('Загрузка материалов…');
 const search=$('librarySearch');if(search)search.addEventListener('input',()=>{state.query=search.value;const item=$('libraryItems');if(item)item.innerHTML=listHtml();});
-const form=$('libraryEditor');if(form){form.querySelector('[name="scope"]').addEventListener('change',e=>{form.querySelector('[data-library-project-wrap]').hidden=e.target.value!=='project'});form.addEventListener('submit',save)}
+const form=$('libraryEditor');if(form){
+form.querySelector('[name="scope"]').addEventListener('change',e=>{form.querySelector('[data-library-project-wrap]').hidden=e.target.value!=='project'});
+form.querySelector('[name="kind"]').addEventListener('change',e=>{
+ const snapshot=new FormData(form);
+ state.draft={...state.draft,kind:e.target.value,title:String(snapshot.get('title')||''),body:String(snapshot.get('body')||''),scope:String(snapshot.get('scope')||'personal'),project_id:String(snapshot.get('project_id')||'')||null,collection_name:String(snapshot.get('collection_name')||'')};
+ render();
+});
+form.addEventListener('submit',save)
+}
 }
 async function load(){if(!state.sb||!state.profile||state.loading)return;const generation=state.generation;state.loading=true;render();
 try{const [a,b]=await Promise.all([state.sb.from('workspace_library').select('*').is('deleted_at',null).order('updated_at',{ascending:false}),state.sb.from('projects').select('id,name').is('deleted_at',null).order('name',{ascending:true})]);if(generation!==state.generation)return;if(a.error)throw a.error;state.rows=a.data||[];state.projects=b.error?[]:b.data||[];state.error='';state.loadedAt=Date.now();if(state.active&&!state.rows.some(x=>x.id===state.active))state.active=null}
