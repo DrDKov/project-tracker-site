@@ -1,7 +1,7 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20261013-mobile-task-toolbar-v3')
+  import('./app-runtime.js?v=20261013-mobile-task-toolbar-v3-timeline-v1')
     .then(function(){
       var modules = [
         './workspace-layout.js?v=20261014-ipad-layout-v1',
@@ -16,6 +16,7 @@
         './mobile-completed-tasks-toggle.js?v=20261014-ipad-completed-v1',
         './mobile-task-compact-toolbar.js?v=20261013-mobile-task-toolbar-v3-native-calendar-v2',
         './tablet-task-toolbar.js?v=20261014-ipad-toolbar-v1',
+        './timeline-compact-toolbar.js?v=20261014-timeline-controls-v1',
         './subtask-reorder.js?v=20260728-task-comment-composer-v1',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
 
