@@ -7,6 +7,31 @@
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
  const errorText=e=>e?.message||String(e);
  const status=msg=>{for(const id of ['planningStatus','planningDrawerStatus']){const el=$(id);if(el)el.textContent=msg||''}};
+ const tabletQuickMedia=typeof window.matchMedia==='function'?window.matchMedia('(min-width:981px) and (max-width:1366px)'):null;
+ let quickPlaceholder=null,quickRows=null;
+ function resizeQuickCapture(){
+  const area=$('planningQuickInput');
+  if(!area||!area.style)return;
+  if(!tabletQuickMedia?.matches){
+   if(quickPlaceholder!==null){
+    area.placeholder=quickPlaceholder;
+    area.rows=quickRows;
+    area.style.removeProperty('--planning-quick-height');
+    quickPlaceholder=null;quickRows=null;
+   }
+   return;
+  }
+  if(quickPlaceholder===null){
+   quickPlaceholder=area.placeholder;
+   quickRows=area.rows;
+   area.placeholder='Новая задача…';
+   area.rows=1;
+  }
+  // Measure from one line every time so shrinking is as reliable as growth.
+  area.style.setProperty('--planning-quick-height','44px');
+  const measured=Math.max(44,Math.min(220,Math.ceil(area.scrollHeight+2)||44));
+  area.style.setProperty('--planning-quick-height',measured+'px');
+ }
  const canEditProject=(p,c=context())=>{
   if(!p||p.deleted_at||!c.profile)return false;
   if(['admin','owner'].includes(c.profile.role)||p.owner_id===c.profile.id)return true;
@@ -84,10 +109,10 @@
    for(let i=0;i<items.length;i++){
     const title=items[i].slice(0,500);
     const r=await context().sb.from('planning_inbox').insert({title,created_by:context().profile.id}).select('*').single();
-    if(r.error){area.value=items.slice(i).join('\n');throw r.error}
-    rows.push(r.data);area.value=items.slice(i+1).join('\n');render();
+    if(r.error){area.value=items.slice(i).join('\n');resizeQuickCapture();throw r.error}
+    rows.push(r.data);area.value=items.slice(i+1).join('\n');resizeQuickCapture();render();
    }
-   area.value='';status('');
+   area.value='';resizeQuickCapture();status('');
   }finally{busy=false;area.focus()}
  }
  async function schedule(id,date){
@@ -112,6 +137,13 @@
   const id=dragId||e.dataTransfer?.getData('application/x-pt-planning');
   return id?item(id):null;
  }
+ document.addEventListener('input',event=>{
+  if(event.target?.id==='planningQuickInput')resizeQuickCapture();
+ });
+ if(tabletQuickMedia?.addEventListener)tabletQuickMedia.addEventListener('change',resizeQuickCapture);
+ window.addEventListener('resize',resizeQuickCapture);
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',resizeQuickCapture,{once:true});
+ else resizeQuickCapture();
  document.addEventListener('click',e=>{
   if(e.target.closest('#planningQuickAdd')){e.preventDefault();create().catch(report);return}
   if(e.target.closest('#openPlanningBtn')){e.preventDefault();open();return}
