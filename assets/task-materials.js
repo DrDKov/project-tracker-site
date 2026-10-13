@@ -20,10 +20,23 @@ function ensureUI(){
   grid.appendChild(section);
  }
  const composer=form.querySelector('#taskCommentsBlock .task-comment-form');
- if(composer&&!composer.querySelector('[data-task-material-choose="comment"]')){
-  const button=document.createElement('button');button.type='button';button.className='task-material-comment-button';button.dataset.taskMaterialChoose='comment';
-  button.setAttribute('aria-label','Вставить материал в комментарий');button.title='Материалы и шаблоны';button.textContent='▤';
-  composer.insertBefore(button,composer.querySelector('#taskCommentText')||composer.firstChild);
+ const textarea=composer?.querySelector('#taskCommentText');
+ if(composer&&textarea){
+  // The composer has exactly two grid columns: text input and send button.
+  // Put the materials action INSIDE the input column to prevent an implicit
+  // third grid item from moving the textarea/send button to another row.
+  let inputWrap=textarea.closest('.task-comment-input-wrap');
+  if(!inputWrap){
+   inputWrap=document.createElement('div');
+   inputWrap.className='task-comment-input-wrap';
+   textarea.before(inputWrap);
+   inputWrap.appendChild(textarea);
+  }
+  if(!inputWrap.querySelector('[data-task-material-choose="comment"]')){
+   const button=document.createElement('button');button.type='button';button.className='task-material-comment-button';button.dataset.taskMaterialChoose='comment';
+   button.setAttribute('aria-label','Вставить материал в комментарий');button.title='Материалы и шаблоны';button.textContent='▤';
+   inputWrap.appendChild(button);
+  }
  }
  if(!$('taskMaterialPicker')){
   const picker=document.createElement('div');picker.id='taskMaterialPicker';picker.className='task-material-picker';picker.hidden=true;
