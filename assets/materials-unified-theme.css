@@ -1,0 +1,230 @@
+/* Materials 3.x — match the visual language of the active Workspace theme. */
+#materials .library-shell{
+  --lib-raised:#fff;--lib-soft:#f8fafc;--lib-inset:#f2f5f7;
+  --lib-border:#dce3e9;--lib-ink:#0f172a;--lib-muted:#64748b;
+  --lib-accent:#00676c;--lib-active:#dcebe7;
+  --lib-shadow:0 6px 18px rgba(15,23,42,.07);
+  --lib-inset-shadow:inset 0 2px 6px rgba(15,23,42,.05);
+  --lib-button-shadow:0 2px 5px rgba(15,23,42,.07);
+  display:grid!important;gap:14px!important;
+  min-width:0!important;width:100%!important;
+  color:var(--lib-ink)!important;
+}
+body.reference-theme #materials .library-shell{
+  --lib-raised:linear-gradient(145deg,#f7f0e3,#eae0cf);
+  --lib-soft:linear-gradient(145deg,#f8f1e5,#eee4d5);
+  --lib-inset:#eee5d7;--lib-border:rgba(82,72,55,.16);
+  --lib-ink:#182321;--lib-muted:#716d64;
+  --lib-accent:#07595c;--lib-active:#dce9e0;
+  --lib-shadow:6px 7px 16px rgba(116,97,70,.18),-6px -6px 13px rgba(255,252,243,.75);
+  --lib-inset-shadow:inset 3px 3px 8px rgba(116,97,70,.12),inset -3px -3px 7px rgba(255,252,243,.65);
+  --lib-button-shadow:3px 4px 8px rgba(116,97,70,.16),-3px -3px 7px rgba(255,252,243,.72);
+}
+body.sketch-theme #materials .library-shell{
+  --lib-raised:#f8f5ec;--lib-soft:#f4f0e6;--lib-inset:#eeeae0;
+  --lib-border:#777067;--lib-ink:#24231f;--lib-muted:#67635b;
+  --lib-accent:#24231f;--lib-active:#e4dfd4;
+  --lib-shadow:4px 4px 0 rgba(36,35,31,.19);
+  --lib-inset-shadow:inset 2px 2px 0 rgba(36,35,31,.10);
+  --lib-button-shadow:2px 2px 0 rgba(36,35,31,.20);
+}
+body #materials .library-toolbar{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  flex-wrap:wrap!important;gap:10px!important;
+  min-width:0!important;padding:1px 0 3px!important;
+}
+body #materials .library-toolbar>div:first-child{min-width:0!important}
+body #materials .library-toolbar h2{
+  color:var(--lib-ink)!important;font-size:24px!important;
+  font-weight:800!important;letter-spacing:-.03em!important;line-height:1.2!important;
+}
+body #materials .library-toolbar span{color:var(--lib-muted)!important;line-height:1.4!important}
+body #materials .library-toolbar-actions{
+  display:flex!important;align-items:center!important;gap:8px!important;
+}
+body #materials .library-toolbar-actions .btn{
+  min-height:43px!important;border-radius:12px!important;
+}
+body #materials .library-search-wrap{
+  width:100%!important;min-width:0!important;margin:0!important;
+}
+body #materials .library-search-wrap .input,
+body #materials .library-form input,
+body #materials .library-form select,
+body #materials .library-form textarea,
+body #materials .library-access-add select{
+  box-sizing:border-box!important;min-width:0!important;width:100%!important;
+  border:1px solid var(--lib-border)!important;
+  border-radius:12px!important;
+  color:var(--lib-ink)!important;background:var(--lib-inset)!important;
+  box-shadow:var(--lib-inset-shadow)!important;
+  font-size:14px!important;
+}
+body #materials .library-search-wrap .input{
+  width:100%!important;min-height:45px!important;padding:0 14px!important;
+}
+body #materials .library-form input,
+body #materials .library-form select{min-height:41px!important;padding:8px 11px!important}
+body #materials .library-form textarea{padding:12px!important;line-height:1.6!important}
+body #materials .library-search-wrap .input:focus-visible,
+body #materials .library-form input:focus-visible,
+body #materials .library-form select:focus-visible,
+body #materials .library-form textarea:focus-visible{
+  outline:2px solid var(--lib-accent)!important;outline-offset:2px!important;
+}
+body #materials .library-layout{
+  gap:13px!important;align-items:start!important;min-width:0!important;
+}
+body #materials .library-side,
+body #materials .library-list,
+body #materials .library-preview{
+  box-sizing:border-box!important;min-width:0!important;
+  border:1px solid var(--lib-border)!important;
+  border-radius:18px!important;background:var(--lib-raised)!important;
+  color:var(--lib-ink)!important;box-shadow:var(--lib-shadow)!important;
+}
+body #materials .library-side{padding:10px!important;gap:4px!important}
+body #materials .library-nav-item{
+  display:flex!important;align-items:center!important;min-height:41px!important;
+  padding:10px 12px!important;text-align:left!important;
+  border:1px solid transparent!important;border-radius:11px!important;
+  color:var(--lib-ink)!important;background:transparent!important;
+  font-size:13px!important;line-height:1.3!important;
+  box-shadow:none!important;white-space:normal!important;
+}
+body #materials .library-nav-item:hover:not(.active){
+  color:var(--lib-accent)!important;
+  background:var(--lib-soft)!important;
+  border-color:var(--lib-border)!important;
+}
+body #materials .library-nav-item.active{
+  color:var(--lib-accent)!important;background:var(--lib-active)!important;
+  border-color:var(--lib-border)!important;
+  font-weight:800!important;box-shadow:var(--lib-inset-shadow)!important;
+}
+body #materials .library-list{overflow:hidden!important}
+body #materials .library-list-head{
+  display:flex!important;justify-content:space-between!important;
+  align-items:center!important;gap:10px!important;
+  padding:16px!important;min-height:53px!important;
+  border-bottom:1px solid var(--lib-border)!important;
+  color:var(--lib-ink)!important;
+}
+body #materials .library-list-head b{font-size:15px!important;font-weight:800!important}
+body #materials .library-list-head span{color:var(--lib-muted)!important}
+body #materials .library-row{
+  padding:13px 12px!important;min-width:0!important;
+  border:0!important;border-bottom:1px solid var(--lib-border)!important;
+  background:transparent!important;color:var(--lib-ink)!important;
+  box-shadow:none!important;
+}
+body #materials .library-row:last-child{border-bottom:0!important}
+body #materials .library-row:hover{background:var(--lib-soft)!important}
+body #materials .library-row.active{
+  background:var(--lib-active)!important;
+  box-shadow:inset 3px 0 0 var(--lib-accent)!important;
+}
+body #materials .library-row-icon{
+  background:var(--lib-inset)!important;color:var(--lib-accent)!important;
+  border:1px solid var(--lib-border)!important;border-radius:10px!important;
+}
+body #materials .library-row-copy b{color:var(--lib-ink)!important}
+body #materials .library-row-copy small,
+body #materials .library-row-date{color:var(--lib-muted)!important}
+body #materials .library-preview{
+  padding:18px!important;min-height:390px!important;
+  overflow-wrap:anywhere!important;
+}
+body #materials .library-preview-head{gap:10px!important;min-width:0!important}
+body #materials .library-preview-head h3{
+  color:var(--lib-ink)!important;font-size:18px!important;
+  line-height:1.35!important;
+}
+body #materials .library-kicker,
+body #materials .library-status{color:var(--lib-accent)!important}
+body #materials .library-subtitle,
+body #materials .library-empty,
+body #materials .library-intro p,
+body #materials .library-subpanel-intro{color:var(--lib-muted)!important}
+body #materials .library-preview-actions{
+  gap:8px!important;margin:15px 0!important;padding-bottom:14px!important;
+  border-bottom:1px solid var(--lib-border)!important;
+}
+body #materials .library-icon-btn,
+body #materials .library-access-row button,
+body #materials .library-version-row button,
+body #materials .library-rich-toolbar button{
+  border:1px solid var(--lib-border)!important;border-radius:10px!important;
+  color:var(--lib-ink)!important;background:var(--lib-soft)!important;
+  box-shadow:var(--lib-button-shadow)!important;
+}
+body #materials .library-icon-btn{
+  width:36px!important;height:36px!important;
+  display:grid!important;place-items:center!important;
+}
+body #materials .library-subpanel,
+body #materials .library-editor-preview,
+body #materials .library-version-preview,
+body #materials .library-version-hint,
+body #materials .library-trash-note{
+  border:1px solid var(--lib-border)!important;
+  border-radius:13px!important;
+  color:var(--lib-ink)!important;background:var(--lib-inset)!important;
+  box-shadow:var(--lib-inset-shadow)!important;
+}
+body #materials .library-subpanel{
+  gap:12px!important;padding:15px!important;
+}
+body #materials .library-access-row,
+body #materials .library-version-row{
+  border:1px solid var(--lib-border)!important;border-radius:11px!important;
+  background:var(--lib-soft)!important;color:var(--lib-ink)!important;
+}
+body #materials .library-rich-display{color:var(--lib-ink)!important}
+body #materials .library-rich-display a{color:var(--lib-accent)!important}
+body #materials .library-rich-display pre,
+body #materials .library-rich-display code,
+body #materials .library-rich-display th{
+  border-color:var(--lib-border)!important;
+  background:var(--lib-inset)!important;
+}
+body #materials .library-rich-display pre code{background:transparent!important}
+body #materials .library-rich-display td,
+body #materials .library-rich-display th{
+  border-color:var(--lib-border)!important;
+}
+body #materials .library-editor-modes{border-color:var(--lib-border)!important}
+body #materials .library-editor-modes button{
+  border:1px solid transparent!important;
+  color:var(--lib-muted)!important;background:transparent!important;
+}
+body #materials .library-editor-modes button.active{
+  border-color:var(--lib-border)!important;
+  color:var(--lib-accent)!important;background:var(--lib-active)!important;
+  font-weight:800!important;
+}
+body #materials .library-rich-toolbar button:hover,
+body #materials .library-access-row button:hover,
+body #materials .library-version-row button:hover{
+  background:var(--lib-active)!important;color:var(--lib-accent)!important;
+}
+body #materials .library-version-preview iframe,
+body #materials .library-file-preview iframe{
+  border-color:var(--lib-border)!important;border-radius:10px!important;
+}
+@media(max-width:1120px){
+  body #materials .library-layout{
+    grid-template-columns:145px minmax(0,1fr)!important;
+  }
+  body #materials .library-preview{grid-column:2!important}
+}
+@media(max-width:720px){
+  body #materials .library-layout{grid-template-columns:minmax(0,1fr)!important}
+  body #materials .library-preview{grid-column:1!important;min-height:260px!important}
+  body #materials .library-side{
+    display:flex!important;overflow-x:auto!important;
+    white-space:nowrap!important;gap:6px!important;
+  }
+  body #materials .library-nav-item{flex:none!important;white-space:nowrap!important}
+  body #materials .library-toolbar h2{font-size:21px!important}
+}
