@@ -1,0 +1,18 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+const start=html.indexOf("<style id='mobile-task-toolbar-v2'>");
+const end=html.indexOf('</style>',start);
+assert.ok(start>=0&&end>start,'The mobile Tasks toolbar stylesheet exists');
+const css=html.slice(start,end);
+const mobileStart=css.indexOf('@media(max-width:980px){');
+assert.ok(mobileStart>=0,'The mobile breakpoint matches the existing Tasks layout');
+const hidden='body #tasks #openPlanningBtn{display:none!important}';
+assert.ok(css.indexOf(hidden)>mobileStart,'Plan must be hidden inside the mobile-only media query');
+assert.equal(css.split(hidden).length-1,1,'Hide rule must appear exactly once');
+assert.match(html, /id='openPlanningBtn'/,'Desktop planning action is retained');
+assert.match(html, /id='planningDrawer'/,'Planning drawer continues to exist for desktop users');
+assert.match(html, /id='newTaskBtn'/,'Task creation remains unchanged');
+assert.ok(css.indexOf(hidden)<css.lastIndexOf('}'),'Mobile-only hide rule remains within the media block');
+console.log('Tasks mobile planning action hidden; desktop controls remain intact');
