@@ -20,7 +20,8 @@
     toolbar.classList.toggle('tl-filters-open',filtersOpen);
     const searchButton=$('tlCompactSearch');
     if(searchButton){
-      searchButton.innerHTML=searchOpen?close:search;
+      const iconState=searchOpen?'close':'search';
+      if(searchButton.dataset.iconState!==iconState){searchButton.innerHTML=searchOpen?close:search;searchButton.dataset.iconState=iconState;}
       searchButton.setAttribute('aria-label',searchOpen?'Закрыть поиск по таймлайну':'Поиск по таймлайну');
       searchButton.setAttribute('aria-expanded',String(searchOpen));
       searchButton.classList.toggle('has-search',!!$('tlQ')?.value?.trim());
