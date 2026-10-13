@@ -364,8 +364,11 @@
   body #tasks #mobileTaskCompactBar #compactTodayBtn .mobile-today-text{
     display:block!important;white-space:nowrap!important;
   }
-  body.compact-workspace:not([data-compact-task-mode='week']) #tasks #mobileTaskCompactBar #mobileColumnPager{
+  body:not([data-compact-task-mode='week']) #tasks #mobileTaskCompactBar #mobileColumnPager{
     grid-template-columns:30px minmax(0,1fr) 30px!important;
+  }
+  body:not([data-compact-task-mode='week']) #tasks #mobileTaskCompactBar #mobileColumnPager #compactTodayBtn{
+    display:none!important;
   }
   body #tasks #mobileTaskCompactBar #mobileColumnPager #compactTodayBtn:focus-visible,
   body #tasks #mobileTaskCompactBar #mobileColumnPager #mobileColumnPrev:focus-visible,
@@ -404,7 +407,7 @@
   body #tasks #mobileTaskCompactBar #mobileColumnPager button{
     height:38px!important;min-height:38px!important;border-radius:11px!important;
   }
-  body.compact-workspace:not([data-compact-task-mode='week']) #tasks #mobileTaskCompactBar #mobileColumnPager{
+  body:not([data-compact-task-mode='week']) #tasks #mobileTaskCompactBar #mobileColumnPager{
     grid-template-columns:28px minmax(0,1fr) 28px!important;
   }
   body #tasks #mobileTaskCompactBar #mobileColumnPager .mobile-column-label strong{
