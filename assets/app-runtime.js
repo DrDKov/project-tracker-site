@@ -364,8 +364,39 @@ function goToNewTaskComment(id){
  if(typeof requestAnimationFrame!=='function')return;
  requestAnimationFrame(()=>{const node=document.querySelector('#taskCommentsList [data-comment-id="'+id+'"]');if(node){node.scrollIntoView({block:'nearest',behavior:'smooth'});node.classList.add('is-target');setTimeout(()=>node.classList.remove('is-target'),1700)}});
 }
-async function addTaskComment(){let taskId=$('taskId')?.value,ta=$('taskCommentText');if(!taskId||!ta||S.commentSending)return;let body=ta.value.trim();if(!body)return;let subtask=S.commentSubtaskId?(S.subtasks||[]).find(s=>s.id===S.commentSubtaskId&&s.task_id===taskId&&!s.deleted_at):null;if(S.commentSubtaskId&&!subtask)throw Error('Подзадача больше не доступна');let row={task_id:taskId,user_id:S.profile?.id||S.user?.id||null,body,subtask_id:subtask?.id||null},send=document.querySelector('#taskCommentsBlock [data-action="add-task-comment"]'),drafts=typeof window!=='undefined'?window.ProjectTrackerDrafts:null,token=drafts?.token();drafts?.capture();S.commentSending=true;if(send)send.disabled=true;try{let r=await S.sb.from('task_comments').insert(row).select('*').single();if(r.error)throw r.error;if((S.profile?.id||S.user?.id)!==row.user_id)return;let saved=r.data||{...row,id:'local-'+Date.now(),created_at:new Date().toISOString()};rtUpsert('task_comments',saved);drafts?.commentSaved(token,body);if($('taskId')?.value===taskId){if(ta.value.trim()===body)ta.value='';/* The @subtask context applies only to this one successfully sent comment. */if(S.commentSubtaskId===row.subtask_id)S.commentSubtaskId=null;}renderTaskCommentsModal();scheduleRender('task-comment-add')}finally{S.commentSending=false;if(send)send.disabled=false}}
-
+async function addTaskComment(){
+ let taskId=$('taskId')?.value,ta=$('taskCommentText');
+ if(!taskId||!ta||S.commentSending)return;
+ let body=ta.value.trim();if(!body)return;
+ const parentId=S.commentReplyToId||null;
+ const parent=parentId?(S.taskComments||[]).find(c=>c.id===parentId&&c.task_id===taskId&&!c.deleted_at):null;
+ if(parentId&&!parent)throw Error('Сообщение, на которое вы отвечаете, больше не доступно');
+ const rootId=parent?(parent.thread_root_id||parent.id):null;
+ const root=parent?(S.taskComments||[]).find(c=>c.id===rootId&&c.task_id===taskId):null;
+ if(parent&&!root)throw Error('Не удалось найти исходное сообщение ветки');
+ const subtaskId=parent?root.subtask_id||null:S.commentSubtaskId||null;
+ const subtask=subtaskId?(S.subtasks||[]).find(s=>s.id===subtaskId&&s.task_id===taskId&&!s.deleted_at):null;
+ if(subtaskId&&!subtask)throw Error('Подзадача больше не доступна');
+ const row={task_id:taskId,user_id:S.profile?.id||S.user?.id||null,body,subtask_id:subtask?.id||null,reply_to_comment_id:parentId,thread_root_id:rootId};
+ const send=document.querySelector('#taskCommentsBlock [data-action="add-task-comment"]');
+ const drafts=typeof window!=='undefined'?window.ProjectTrackerDrafts:null,token=drafts?.token();
+ drafts?.capture();S.commentSending=true;if(send)send.disabled=true;
+ try{
+  const r=await S.sb.from('task_comments').insert(row).select('*').single();
+  if(r.error)throw r.error;
+  if((S.profile?.id||S.user?.id)!==row.user_id)return;
+  const saved=r.data||{...row,id:'local-'+Date.now(),created_at:new Date().toISOString()};
+  rtUpsert('task_comments',saved);
+  if(rootId)(S.commentCollapsedThreads||(S.commentCollapsedThreads=new Set())).delete(rootId);
+  drafts?.commentSaved(token,body);
+  if($('taskId')?.value===taskId){
+   if(ta.value.trim()===body)ta.value='';
+   if(S.commentSubtaskId===row.subtask_id)S.commentSubtaskId=null;
+   if((S.commentReplyToId||null)===parentId)S.commentReplyToId=null;
+  }
+  renderTaskCommentsModal();scheduleRender('task-comment-add');goToNewTaskComment(saved.id);
+ }finally{S.commentSending=false;if(send)send.disabled=false}
+}
 
 async function saveTaskCommentEdit(id){let c=(S.taskComments||[]).find(x=>x.id===id),taskId=$('taskId')?.value,editor=document.querySelector('.task-comment-edit-text[data-id="'+id+'"]');if(!c||c.task_id!==taskId||!canEditComment(c)||!editor||S.commentEditSaving)return;let body=editor.value.trim();if(!body)throw Error('Комментарий не может быть пустым');let drafts=typeof window!=='undefined'?window.ProjectTrackerDrafts:null;if(body===c.body){S.commentEditingId=null;S.commentEditingDraft=null;drafts?.editSaved(id);renderTaskCommentsModal();return}S.commentEditSaving=true;let button=document.querySelector('[data-action="save-task-comment-edit"][data-id="'+id+'"]');if(button)button.disabled=true;try{let r=await S.sb.from('task_comments').update({body,updated_at:new Date().toISOString()}).eq('id',id).eq('task_id',taskId).eq('user_id',S.profile.id).is('deleted_at',null).select('*').maybeSingle();if(r.error)throw r.error;if(!r.data)throw Error('Комментарий не найден или нет прав на редактирование');if(S.profile?.id!==c.user_id)return;rtUpsert('task_comments',r.data);S.commentEditingId=null;S.commentEditingDraft=null;drafts?.editSaved(id);renderTaskCommentsModal();scheduleRender('task-comment-edit')}finally{S.commentEditSaving=false;if(button?.isConnected)button.disabled=false}}
 async function deleteTaskComment(id){let c=(S.taskComments||[]).find(x=>x.id===id);if(!c)return;if(!canDeleteComment(c)){alert('Нет прав на удаление комментария');return}let r=await S.sb.rpc('soft_delete_task_comment',{p_comment_id:id});if(r.error)throw r.error;rtRemove('task_comments',c);renderTaskCommentsModal();scheduleRender('task-comment-delete')}
