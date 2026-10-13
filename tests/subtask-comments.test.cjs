@@ -107,6 +107,10 @@ vm.runInContext(source, context);
   vm.runInContext('renderTaskCommentsModal()', context);
   assert.match(box.innerHTML, /@&lt;Подзадача&gt;/);
   assert.match(box.innerHTML, /data-action="edit-task-comment"/);
+  assert.match(box.innerHTML, /data-action="edit-task-comment"[^>]*aria-label="Редактировать комментарий"[^>]*title="Редактировать комментарий"><svg/);
+  assert.match(box.innerHTML, /data-action="delete-task-comment"[^>]*aria-label="Удалить комментарий"[^>]*title="Удалить комментарий"><svg/);
+  assert.match(box.innerHTML, /<svg[^>]*aria-hidden="true"[^>]*focusable="false"/);
+  assert.doesNotMatch(box.innerHTML, />Редактировать<\/button>|>Удалить<\/button>/, 'header actions must be compact icons, not words');
   assert.equal(count.textContent, '1');
 
   input.value = 'Отдельное сообщение без ссылки';
