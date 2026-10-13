@@ -466,6 +466,18 @@ function renderPager(){
  const current=list[index],tasks=current.querySelectorAll('.task-card').length;
  pager.querySelector('#mobileColumnTitle').textContent=columnTitle(current);
  pager.querySelector('#mobileColumnMeta').textContent=(m==='week'&&document.body.classList.contains('compact-workspace')?'':(index+1)+' из '+list.length+' · ')+tasks+' '+taskWord(tasks);
+ const nativeDate=pager.querySelector('#compactNativeDate'),dateButton=pager.querySelector('#compactDateOpen');
+ if(nativeDate){
+   const isWeek=m==='week';
+   nativeDate.disabled=!isWeek;
+   nativeDate.tabIndex=isWeek?0:-1;
+   if(dateButton)dateButton.tabIndex=isWeek?-1:0;
+   if(isWeek&&document.activeElement!==nativeDate){
+     const date=current.dataset.date;
+     const now=new Date();
+     nativeDate.value=/^\d{4}-\d{2}-\d{2}$/.test(date||'')?date:(now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'));
+   }
+ }
  const prev=pager.querySelector('#mobileColumnPrev'),next=pager.querySelector('#mobileColumnNext');
  const dayNavigation=m==='week'&&document.body.classList.contains('compact-workspace');
  prev.disabled=!dayNavigation&&index===0;next.disabled=!dayNavigation&&index===list.length-1;
@@ -499,11 +511,12 @@ function setup(){
  installed=true;
  if(!document.getElementById('mobileColumnPager')){
    const pager=document.createElement('div');pager.id='mobileColumnPager';pager.setAttribute('aria-label','Переключение колонки');
-   pager.innerHTML="<button id='mobileColumnPrev' type='button' aria-label='Предыдущая колонка'>‹</button><button type='button' id='compactDateOpen' class='mobile-column-label' aria-label='Выбрать дату' aria-live='polite'><strong id='mobileColumnTitle'>Колонка</strong><small id='mobileColumnMeta'></small></button><button id='mobileColumnNext' type='button' aria-label='Следующая колонка'>›</button><button type='button' id='compactTodayBtn'>Сегодня</button>";
+   pager.innerHTML="<button id='mobileColumnPrev' type='button' aria-label='Предыдущая колонка'>‹</button><span class='mobile-column-date-anchor'><button type='button' id='compactDateOpen' class='mobile-column-label' aria-label='Выбрать дату' aria-live='polite'><strong id='mobileColumnTitle'>Колонка</strong><small id='mobileColumnMeta'></small></button><input type='date' id='compactNativeDate' class='mobile-native-date-input' aria-label='Выбрать дату в календаре'></span><button id='mobileColumnNext' type='button' aria-label='Следующая колонка'>›</button><button type='button' id='compactTodayBtn'>Сегодня</button>";
    weekNav.insertAdjacentElement('afterend',pager);
    pager.querySelector('#mobileColumnPrev').addEventListener('click',()=>stepColumn(-1));
    pager.querySelector('#mobileColumnNext').addEventListener('click',()=>stepColumn(1));
    pager.querySelector('#compactTodayBtn').addEventListener('click',()=>weekNav.querySelector("[data-week-nav='today']")?.click());
+   pager.querySelector('#compactNativeDate').addEventListener('change',event=>{if(event.target.value)chooseDate(event.target.value)});
  }
  if(!observer){observer=new MutationObserver(schedule);observer.observe(board,{childList:true,subtree:true})}
  modeToggle.addEventListener('click',e=>{
