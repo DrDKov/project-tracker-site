@@ -69,10 +69,10 @@ cs=c.read_text(encoding='utf-8') if c.exists() else ''
 cs=re.sub(r'/\* Recurrence scope editing v[123] start \*/[\s\S]*?/\* Recurrence scope editing v[123] end \*/\n?','',cs)
 c.write_text(cs.rstrip()+'\n'+css,encoding='utf-8')
 html=i.read_text(encoding='utf-8')
-html=re.sub(r"assets/app\.js\?v=[^'\"]+",'assets/app.js?v='+ver+'-native-calendar-v2-ipad-v1',html)
+html=re.sub(r"assets/app\.js\?v=[^'\"]+",'assets/app.js?v='+ver+'-native-calendar-v2-ipad-v1-timeline-v1',html)
 html=re.sub(r"assets/app\.css\?v=[^'\"]+",'assets/app.css?v='+css_ver,html)
 i.write_text(html,encoding='utf-8')
 if l.exists():
     txt=l.read_text(encoding='utf-8')
-    txt=re.sub(r"app-runtime\.js\?v=[^'\"]+",'app-runtime.js?v='+ver,txt)
+    txt=re.sub(r"app-runtime\.js\?v=[^'\"]+",'app-runtime.js?v='+ver+'-timeline-v1',txt)
     l.write_text(txt,encoding='utf-8')
