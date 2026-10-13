@@ -80,6 +80,32 @@
     node.innerHTML=html;
     return node;
   }
+  // Reuse the real day pager so its date selection and task counts remain in sync.
+  // It lives inside the same row on mobile and returns next to week navigation on desktop.
+  function placePager(bar,toolbar,mode){
+    const pager=$('mobileColumnPager');
+    if(!pager||!bar)return;
+    if(mq.matches){
+      if(pager.parentElement!==bar)bar.appendChild(pager);
+      const today=$('compactTodayBtn');
+      if(today&&!today.querySelector('.mobile-today-text')){
+        const label=today.textContent.trim()||'Сегодня';
+        today.textContent='';
+        const text=document.createElement('span');
+        text.className='mobile-today-text';text.textContent=label;
+        const glyph=document.createElement('span');
+        glyph.className='mobile-today-glyph';glyph.setAttribute('aria-hidden','true');
+        glyph.innerHTML=icon('<path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="m9.5 16 2 2 4-4"/>');
+        today.append(text,glyph);
+        today.setAttribute('aria-label','Сегодня');
+        today.setAttribute('title','Перейти к сегодняшнему дню');
+      }
+    }else if(pager.parentElement===bar){
+      const week=$('taskWeekNav');
+      if(week)week.insertAdjacentElement('afterend',pager);
+      else toolbar.appendChild(pager);
+    }
+  }
   function install(){
     const toolbar=document.querySelector('#tasks>.toolbar');
     const filter=$('mobileTaskFilters'),mode=$('taskBoardModeToggle');
@@ -88,7 +114,7 @@
       if(attempts++<100)setTimeout(install,100);
       return;
     }
-    if(installed){updateMode();updateFilterState();syncSearchState();return}
+    if(installed){placePager($('mobileTaskCompactBar'),toolbar,mode);updateMode();updateFilterState();syncSearchState();return}
     installed=true;
     // Isolate the three visible controls from the legacy task toolbar grid.
     // Moving, rather than cloning, the existing filter details and search
@@ -96,7 +122,7 @@
     const bar=document.createElement('div');
     bar.id='mobileTaskCompactBar';
     bar.setAttribute('role','group');
-    bar.setAttribute('aria-label','Поиск, фильтры и отображение задач');
+    bar.setAttribute('aria-label','Поиск, фильтры, представления и навигация по дням');
     toolbar.insertBefore(bar,toolbar.firstChild);
     const searchBtn=document.createElement('button');
     searchBtn.id='mobileTaskSearchBtn';searchBtn.type='button';
@@ -131,9 +157,11 @@
         if(filter.parentElement!==bar)bar.appendChild(filter);
         if(view.parentElement!==bar)bar.appendChild(view);
         if(filterBody&&done.parentElement!==filterBody)filterBody.appendChild(done);
+        placePager(bar,toolbar,mode);
       }else{
         if(search?.parentElement===bar)bar.insertAdjacentElement('afterend',search);
         if(done.parentElement===filterBody)toolbar.insertBefore(done,mode);
+        placePager(bar,toolbar,mode);
       }
       const open=bar.classList.contains('mobile-task-search-open')&&mq.matches;
       if(search){
