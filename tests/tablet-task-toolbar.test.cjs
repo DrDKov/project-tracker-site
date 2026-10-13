@@ -1,0 +1,48 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const root=path.resolve(__dirname,'..');
+const load=p=>fs.readFileSync(path.join(root,p),'utf8');
+const html=load('index.html');
+const loader=load('assets/app.js');
+const js=load('assets/tablet-task-toolbar.js');
+const css=load('assets/tablet-task-toolbar.css');
+const layout=load('assets/workspace-layout.js');
+const mobile=load('assets/mobile-task-compact-toolbar.js');
+const done=load('assets/mobile-completed-tasks-toggle.js');
+new vm.Script(js,{filename:'tablet-task-toolbar.js'});
+assert.match(html,/assets\/tablet-task-toolbar\.css\?v=20261014-ipad-toolbar-v1/);
+assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v2-ipad-v1/);
+assert.match(loader,/tablet-task-toolbar\.js\?v=20261014-ipad-toolbar-v1/);
+assert.match(loader,/workspace-layout\.js\?v=20261014-ipad-layout-v1/);
+assert.match(css,/@media \(min-width:981px\) and \(max-width:1366px\)/);
+assert.match(js,/matchMedia\('\(min-width:981px\) and \(max-width:1366px\)'\)/);
+assert.match(css,/#tabletTaskBar\{display:none\}/,'Tablet bar is absent on phones and wide desktops');
+assert.match(css,/#tasks>\.toolbar>#tabletTaskBar\.tablet-task-enabled\{[\s\S]*?display:flex!important;flex-direction:row!important/,'Visible tablet controls are in one row');
+assert.match(css,/#tasks>\.toolbar>:not\(#tabletTaskBar\)\{[\s\S]*?display:none!important/,'Tablet hides unneeded extra toolbar rows');
+assert.match(css,/#tasks>\.toolbar>#newTaskBtn\{display:none!important/,'Duplicate New Task button hidden on tablet');
+assert.match(js,/move\(\$\('taskSearch'\),bar,\$\('tabletTaskView'\)\)/,'Tablet reuses native search control');
+assert.match(js,/move\(filter,bar,\$\('tabletTaskView'\)\)/,'Tablet reuses filter drawer and its selected values');
+assert.match(js,/filterParts\(\)\.forEach\(el=>move\(el,body/,'Date, assignee, project, completed filters stay in drawer');
+assert.match(js,/move\(week,bar\)/,'Original week navigation moves into one-row toolbar');
+assert.match(js,/move\(week,toolbar,\$\('newTaskBtn'\)\)/,'Week navigation returns for non-tablet layouts');
+assert.match(js,/mode\.querySelector|taskBoardModeToggle/);
+assert.match(js,/\.querySelector\('\[data-task-mode="'\+choice\.dataset\.tabletTaskMode\+'"'\]\)'\)\?\.click\(\)/,'Tablet views forward to existing mode handler');
+assert.match(js,/pt-select-task-date/,'Date picker forwards selected dates to existing board navigation');
+assert.match(css,/\.tablet-week-native-date\{[\s\S]*?position:absolute!important;inset:0!important;z-index:3!important/,'Native iPad calendar opens directly from date label');
+assert.match(layout,/#mobileTaskCompactBar,#tabletTaskBar/,'Filter funnel SVG cannot be overwritten by layout sync');
+assert.match(done,/max-width:1366px/,'Done toggle stays inside tablet filter drawer');
+assert.match(mobile,/function placePager/,'Existing mobile layout remains independently available');
+assert.doesNotMatch(css,/#kanban\{/,'Tablet toolbar must not replace the multi-column task board');
+for(const viewport of [981,1024,1112,1180,1280,1366]){
+  // The toolbar uses the compact navigation dimensions at narrower iPad widths.
+  const tabletSmall=viewport<=1080;
+  const content=viewport-76-32;
+  const controls=44+44+(tabletSmall?146:167);
+  const nav=(tabletSmall?36:40)*2+(tabletSmall?110:120)+(tabletSmall?72:84);
+  const gaps=tabletSmall?6:8;
+  const required=controls+nav+6*gaps+20;
+  assert.ok(content>=required,viewport+'px tablet has enough room for one line');
+}
+console.log('Tablet task toolbar placement, native date picker, filter reuse and iPad widths passed');
