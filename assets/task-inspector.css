@@ -58,7 +58,24 @@ body dialog#taskModal.task-inspector>form#taskForm>#taskCommentsBlock.task-comme
   background:transparent!important;box-shadow:none!important;
 }
 body #taskModal.task-inspector #taskCommentsBlock .task-comments-head{padding:0 0 10px!important;background:transparent!important}
-body #taskModal.task-inspector #taskCommentsBlock .task-comments-list{min-height:0!important;max-height:none!important;overflow:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable}
+/* This scroll region fills the inspector, but its message rows must NOT share the free height. */
+body #taskModal.task-inspector #taskCommentsBlock .task-comments-list{
+  display:grid!important;
+  grid-auto-rows:max-content!important;
+  align-content:start!important;
+  min-height:0!important;
+  max-height:none!important;
+  overflow:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+body #taskModal.task-inspector #taskCommentsBlock .task-comments-list > .task-comment{
+  align-self:start!important;
+  height:auto!important;
+  min-height:0!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
 body #taskModal.task-inspector #taskCommentsBlock .empty{padding:26px 18px;font-size:13px}
 body #taskModal.task-inspector .task-comment-body,body #taskModal.task-inspector .task-comment-subtask-label{overflow-wrap:anywhere}
 body dialog#taskModal.task-inspector>form#taskForm>.modal-actions{
