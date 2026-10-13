@@ -1,7 +1,7 @@
 (function(){
   if(window.__PT_LOADER_IMPORT__) return;
   window.__PT_LOADER_IMPORT__ = true;
-  import('./app-runtime.js?v=20261013-materials-v32-v1')
+  import('./app-runtime.js?v=20261013-mobile-task-controls-v1')
     .then(function(){
       var modules = [
         './workspace-layout.js?v=20261002-compact-v2',
@@ -13,7 +13,8 @@
         // Notifications are loaded once by index.html, including their fallback polling.
         './task-comments.js?v=20260717-comments-v3',
         './native-pickers.js?v=20260814-native-pickers-v1',
-        './mobile-completed-tasks-toggle.js?v=20261002-compact-v2',
+        './mobile-completed-tasks-toggle.js?v=20261013-mobile-task-controls-v1',
+        './mobile-task-compact-toolbar.js?v=20261013-mobile-task-controls-v1',
         './subtask-reorder.js?v=20260728-task-comment-composer-v1',
         './mention-dropdown-v6.js?v=20260715-unread-v1',
 
