@@ -17,7 +17,7 @@ assert.match(deployTransform, /ver='20261013-subtask-comment-once-v1'/);
 assert.match(runtime, /class="wk-sublist" data-task-id=/);
 assert.match(runtime, /class="wk-subdrag-handle"/);
 assert.match(runtime, /Math\.max\(0,\.\.\.subs\(task_id\)\.map/);
-assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20261013-subtask-comment-once-v1/);
+assert.match(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), /app\.css\?v=20261013-chat-bubble-height-v1/);
 assert.match(css, /touch-action:none/);
 assert.match(css, /appearance:none!important/);
 assert.match(css, /position:absolute!important;left:0!important;top:0!important;bottom:0!important;width:15px!important/);
