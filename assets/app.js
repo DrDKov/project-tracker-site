@@ -4,7 +4,7 @@
   import('./app-runtime.js?v=20261013-mobile-task-toolbar-v3')
     .then(function(){
       var modules = [
-        './workspace-layout.js?v=20261013-direct-date-picker-v1',
+        './workspace-layout.js?v=20261014-ipad-layout-v1',
         './workspace-announcements.js?v=20261010-background-v1',
         './theme-settings.js?v=20260824-event-scope-v1',
         './materials-rich-editor.js?v=20261013-materials-v32-v1',
