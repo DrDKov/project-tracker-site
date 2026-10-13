@@ -90,9 +90,14 @@ async function openMaterialById(id){
  if(state.rows.some(m=>m.id===id)){state.active=id;render()}
  else{state.active=null;render();notify('Материал недоступен или удалён.',true)}
 }
+let handledMaterialHash='';
 function handleMaterialHash(){
  const found=String(window.location?.hash||'').match(LIBRARY_HASH);
- if(found&&state.identity)openMaterialById(found[1]).catch(err=>notify(err.message||String(err),true));
+ if(!found||!state.identity)return;
+ const key=state.identity+':'+found[1];
+ if(handledMaterialHash===key)return;
+ handledMaterialHash=key;
+ openMaterialById(found[1]).catch(err=>notify(err.message||String(err),true));
 }
 window.ProjectTrackerMaterials={openMaterialById};
 window.addEventListener('hashchange',handleMaterialHash);
