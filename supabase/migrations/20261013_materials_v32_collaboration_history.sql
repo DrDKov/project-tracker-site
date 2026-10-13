@@ -37,7 +37,7 @@ returns boolean language sql stable security definer set search_path='' as $$
   and m.owner_id=public.current_app_user_id())
 $$;
 create or replace function public.library_user_project_access(p_project uuid,p_user uuid)
-returns boolean language sql stable security definer set search_path='' as $
+returns boolean language sql stable security definer set search_path='' as $libaccess$
  select exists(select 1 from public.app_users u
   where u.id=p_user and u.is_active and
   (u.role in ('owner','admin') or exists(
@@ -45,7 +45,7 @@ returns boolean language sql stable security definer set search_path='' as $
     where p.id=p_project and p.deleted_at is null and
     (p.owner_id=p_user or exists(select 1 from public.project_members pm
      where pm.project_id=p_project and pm.user_id=p_user)))))
-$;
+$libaccess$;
 create or replace function public.library_can_read_id(p_id uuid)
 returns boolean language sql stable security definer set search_path='' as $$
  select exists(select 1 from public.workspace_library m where m.id=p_id and m.deleted_at is null
@@ -191,7 +191,7 @@ end $$;
 
 create or replace function public.library_save_file_metadata(
  p_id uuid,p_expected_version integer,p_title text,p_collection text
-) returns public.workspace_library language plpgsql security definer set search_path='' as $
+) returns public.workspace_library language plpgsql security definer set search_path='' as $libmeta$
 declare v public.workspace_library%rowtype;
 begin
  select * into v from public.workspace_library where id=p_id for update;
@@ -209,7 +209,7 @@ begin
  where id=p_id returning * into v;
  perform set_config('app.library_revision_write','',true);
  return v;
-end $;
+end $libmeta$;
 
 create or replace function public.library_replace_file(
  p_id uuid,p_expected_version integer,p_path text,p_name text,p_mime text,p_size bigint
