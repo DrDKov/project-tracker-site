@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 root=Path('.')
 r=root/'assets/app-runtime.js'; c=root/'assets/app.css'; i=root/'index.html'; l=root/'assets/app.js'
-ver='20261013-subtask-comment-once-v1'
+ver='20261013-comment-action-icons-v1'
 css_ver='20261013-chat-bubble-height-v1'
 scope_js="""
 /* Recurrence scope editing v3 start */
