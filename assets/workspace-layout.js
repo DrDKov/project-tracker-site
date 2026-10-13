@@ -52,7 +52,7 @@
     const summary = document.querySelector('#mobileTaskFilters > summary');
     // On mobile, the compact toolbar owns this summary's SVG and state.
     // Replacing textContent here removes the funnel icon and leaves a blank button.
-    if(summary && !summary.closest('#mobileTaskCompactBar')){
+    if(summary && !summary.closest('#mobileTaskCompactBar,#tabletTaskBar')){
       let count = 0;
       ['taskProjectFilter','taskAssigneeFilter'].forEach(id => {
         const values = Array.from($(id)?.selectedOptions || []);
