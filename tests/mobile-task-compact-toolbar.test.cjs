@@ -22,7 +22,7 @@ assert.match(css,/UNIFIED MOBILE TASK CONTROLS/);
 assert.match(html,/mobile-task-compact-toolbar\.css\?v=20261013-mobile-task-toolbar-v3-native-calendar-v1/);
 assert.match(html,/assets\/app\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v2/);
 assert.match(app,/mobile-task-compact-toolbar\.js\?v=20261013-mobile-task-toolbar-v3-native-calendar-v2/);
-assert.match(deploy,/ver\+'-native-calendar-v2-ipad-v1'/,'Deployment must preserve the native calendar cache revision');
+assert.match(deploy,/ver\+'-native-calendar-v2-ipad-v1-timeline-v1'/,'Deployment must preserve the native calendar cache revision');
 assert.match(css,/SINGLE-ROW TASK COMMAND AND DAY NAVIGATION/);
 
 const layoutScript=read('assets/workspace-layout.js');
