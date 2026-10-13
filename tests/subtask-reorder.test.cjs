@@ -13,7 +13,7 @@ const migration = fs.readFileSync(path.join(root, 'supabase', 'migrations', '202
 
 assert.match(loader, /subtask-reorder\.js\?v=20260728-task-comment-composer-v1/);
 assert.match(loader, /app-runtime\.js\?v=20261013-mobile-task-toolbar-v2/);
-assert.match(deployTransform, /ver='20261013-mobile-task-toolbar-v2'/);
+assert.match(deployTransform, /ver='20261013-mobile-task-toolbar-v3'/);
 assert.match(runtime, /class="wk-sublist" data-task-id=/);
 assert.match(runtime, /class="wk-subdrag-handle"/);
 assert.match(runtime, /Math\.max\(0,\.\.\.subs\(task_id\)\.map/);
