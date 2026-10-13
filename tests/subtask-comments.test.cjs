@@ -27,7 +27,7 @@ const editor = { value: 'Исправленный текст' };
 const save = { disabled: false, isConnected: true };
 const box = { innerHTML: '', querySelector: () => null };
 const count = { textContent: '' };
-let inserted, updated, filters = [];
+let inserted, updated, filters = [], insertSeq = 0, failNextInsert = false, renderedContext = 'initial';
 const S = {
   profile: { id: authorId, display_name: 'Автор', role: 'member' },
   users: [{ id: authorId, display_name: 'Автор' }],
@@ -42,7 +42,10 @@ const client = {
     return {
       insert(row) {
         inserted = row;
-        return { select: () => ({ single: async () => ({ data: { ...row, id: 'comment-1', created_at: '2026-09-28T12:00:00Z' }, error: null }) }) };
+        return { select: () => ({ single: async () => {
+          if(failNextInsert){ failNextInsert = false; return {data:null,error:new Error('Temporary storage failure')}; }
+          return { data: { ...row, id: 'comment-'+(++insertSeq), created_at: '2026-09-28T12:00:00Z' }, error: null };
+        } }) };
       },
       update(row) {
         updated = row;
@@ -73,7 +76,7 @@ const context = vm.createContext({
   subtaskState: () => 'not_done',
   subtaskToggleLabel: () => 'Не выполнено',
   pcolor: () => '#075d65',
-  renderCommentSubtaskContext: () => {},
+  renderCommentSubtaskContext: () => {renderedContext = S.commentSubtaskId;},
   loadTaskComments: () => Promise.resolve(true),
   workspaceHistoryState: () => ({loaded:true}),
   historyNotice: () => '',
@@ -98,11 +101,31 @@ vm.runInContext(source, context);
   assert.equal(inserted.body, 'Готово к проверке');
   assert.equal(input.value, '');
   assert.equal(send.disabled, false);
+  assert.equal(S.commentSubtaskId, null, 'successful send must clear @ subtask selection');
+  assert.equal(renderedContext, null, 'context UI must rerender without the old @ chip');
 
   vm.runInContext('renderTaskCommentsModal()', context);
   assert.match(box.innerHTML, /@&lt;Подзадача&gt;/);
   assert.match(box.innerHTML, /data-action="edit-task-comment"/);
   assert.equal(count.textContent, '1');
+
+  input.value = 'Отдельное сообщение без ссылки';
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.subtask_id, null, 'next comment must not inherit prior @ subtask');
+  assert.equal(S.taskComments.length, 2);
+  assert.equal(input.value, '');
+
+  S.commentSubtaskId = subtaskId;
+  input.value = 'Сообщение не было отправлено';
+  failNextInsert = true;
+  await assert.rejects(vm.runInContext('addTaskComment()', context), /Temporary storage failure/);
+  assert.equal(S.commentSubtaskId, subtaskId, 'failed send must keep the @ reference for retry');
+  assert.equal(input.value, 'Сообщение не было отправлено', 'failed send must keep the draft');
+  assert.equal(send.disabled, false);
+  await vm.runInContext('addTaskComment()', context);
+  assert.equal(inserted.subtask_id, subtaskId, 'retry must preserve its intended link');
+  assert.equal(S.commentSubtaskId, null, 'successful retry clears @ selection');
+  assert.equal(input.value, '');
 
   S.taskComments[0].body = 'Старый текст';
   await vm.runInContext('saveTaskCommentEdit("comment-1")', context);
