@@ -149,3 +149,124 @@
   }
   body #tasks>.toolbar>#mobileColumnPager[hidden]{display:none!important}
 }
+
+
+/* UNIFIED MOBILE TASK CONTROLS — one visual component in all app themes.
+   Keep the legacy widgets mounted for their event handlers, but do not
+   inherit their distinct button styles on the mobile toolbar. */
+@media (max-width:980px){
+  body #tasks #mobileTaskCompactBar{
+    --mt-control-background:linear-gradient(145deg,#f7f0e3,#e9dfce);
+    --mt-control-border:rgba(82,72,55,.17);
+    --mt-control-ink:#07595c;
+    --mt-control-shadow:3px 4px 9px rgba(116,97,70,.16),-3px -3px 8px rgba(255,252,243,.72);
+    --mt-control-radius:14px;
+    --mt-control-active:#dce8e0;
+    --mt-control-popover:#f4edde;
+    gap:8px!important;
+    justify-content:flex-start!important;
+  }
+  body.sketch-theme #tasks #mobileTaskCompactBar{
+    --mt-control-background:#f8f5ec;
+    --mt-control-border:#777067;
+    --mt-control-ink:#24231f;
+    --mt-control-shadow:3px 3px 0 rgba(36,35,31,.18);
+    --mt-control-radius:8px;
+    --mt-control-active:#e4dfd4;
+    --mt-control-popover:#f8f5ec;
+  }
+  body:not(.reference-theme):not(.sketch-theme) #tasks #mobileTaskCompactBar{
+    --mt-control-background:#fff;
+    --mt-control-border:#d8dfe8;
+    --mt-control-ink:#0f172a;
+    --mt-control-shadow:0 1px 3px rgba(15,23,42,.08);
+    --mt-control-radius:13px;
+    --mt-control-active:#e5f2f1;
+    --mt-control-popover:#fff;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn,
+  body #tasks #mobileTaskCompactBar>#mobileTaskFilters,
+  body #tasks #mobileTaskCompactBar>#mobileTaskView{
+    flex:0 0 44px!important;
+    width:44px!important;min-width:44px!important;max-width:44px!important;
+    height:44px!important;min-height:44px!important;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn,
+  body #tasks #mobileTaskCompactBar>#mobileTaskFilters>summary,
+  body #tasks #mobileTaskCompactBar #mobileTaskViewBtn{
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    box-sizing:border-box!important;
+    width:44px!important;min-width:44px!important;max-width:44px!important;
+    height:44px!important;min-height:44px!important;
+    padding:0!important;margin:0!important;gap:0!important;
+    border:1px solid var(--mt-control-border)!important;
+    border-radius:var(--mt-control-radius)!important;
+    background:var(--mt-control-background)!important;
+    color:var(--mt-control-ink)!important;
+    box-shadow:var(--mt-control-shadow)!important;
+    font-size:0!important;line-height:1!important;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn svg,
+  body #tasks #mobileTaskCompactBar>#mobileTaskFilters>summary svg,
+  body #tasks #mobileTaskCompactBar #mobileTaskViewBtn svg{
+    display:block!important;
+    flex:none!important;width:21px!important;height:21px!important;
+    stroke:currentColor!important;stroke-width:2!important;
+    visibility:visible!important;opacity:1!important;
+  }
+  body #tasks #mobileTaskCompactBar #mobileTaskViewBtn .mobile-task-view-label,
+  body #tasks #mobileTaskCompactBar #mobileTaskViewBtn .mobile-task-chevron{
+    display:none!important;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskFilters[open]>summary,
+  body #tasks #mobileTaskCompactBar>#mobileTaskView.open #mobileTaskViewBtn,
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn[aria-expanded='true']{
+    background:var(--mt-control-active)!important;
+    border-color:var(--mt-control-ink)!important;
+    color:var(--mt-control-ink)!important;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn.has-search:not([aria-expanded='true']){
+    color:var(--mt-control-ink)!important;
+    border-color:var(--mt-control-ink)!important;
+  }
+  body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn:focus-visible,
+  body #tasks #mobileTaskCompactBar>#mobileTaskFilters>summary:focus-visible,
+  body #tasks #mobileTaskCompactBar #mobileTaskViewBtn:focus-visible{
+    outline:2px solid var(--mt-control-ink)!important;outline-offset:3px!important;
+  }
+  body #tasks #mobileTaskCompactBar .mobile-task-view-menu{
+    width:186px!important;max-width:calc(100vw - 28px)!important;
+    border-color:var(--mt-control-border)!important;
+    border-radius:var(--mt-control-radius)!important;
+    background:var(--mt-control-popover)!important;
+    box-shadow:0 12px 28px rgba(82,72,55,.20)!important;
+  }
+  body #tasks #mobileTaskCompactBar .mobile-task-view-menu button{
+    font-size:14px!important;font-weight:650!important;
+    color:var(--mt-control-ink)!important;
+  }
+  body #tasks #mobileTaskCompactBar .mobile-task-view-menu button.selected{
+    background:var(--mt-control-active)!important;
+    color:var(--mt-control-ink)!important;
+  }
+  body #tasks #mobileTaskCompactBar.mobile-task-search-open>#taskSearch{
+    flex:1 1 0%!important;width:0!important;min-width:0!important;max-width:none!important;
+    height:44px!important;min-height:44px!important;
+    padding:0 13px!important;margin:0!important;
+    border:1px solid var(--mt-control-border)!important;
+    border-radius:var(--mt-control-radius)!important;
+    background:var(--mt-control-popover)!important;background-image:none!important;
+    color:var(--mt-control-ink)!important;
+    box-shadow:var(--mt-control-shadow)!important;
+    font-size:16px!important;
+  }
+  @media(hover:hover){
+    body #tasks #mobileTaskCompactBar>#mobileTaskSearchBtn:hover,
+    body #tasks #mobileTaskCompactBar>#mobileTaskFilters>summary:hover,
+    body #tasks #mobileTaskCompactBar #mobileTaskViewBtn:hover{
+      filter:brightness(.985);
+    }
+  }
+}
