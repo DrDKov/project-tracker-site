@@ -6,7 +6,7 @@ const $=id=>document.getElementById(id);
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const kindNames={document:'Документ',template:'Шаблон',file:'Файл',link:'Ссылка'};
-const state={taskId:null,projectId:null,links:[],materials:[],picker:null,mode:'task',loading:false,working:false,request:0,profileId:null};
+const state={taskId:null,projectId:null,links:[],materials:[],picker:null,mode:'task',loading:false,working:false,linkRequest:0,pickerRequest:0,profileId:null};
 const sb=()=>window.sb||null,profile=()=>window.currentProfile||null;
 const canUseForTask=m=>m.scope==='team'||m.scope==='project'&&m.project_id===state.projectId;
 const marker=id=>'https://drdkov.github.io/project-tracker-site/#materials/'+id;
@@ -36,21 +36,21 @@ function ensureUI(){
 }
 async function onTaskOpen(taskId,projectId){
  ensureUI();
- state.taskId=taskId||null;state.projectId=projectId||null;state.links=[];
+ state.taskId=taskId||null;state.projectId=projectId||null;state.links=[];++state.linkRequest;++state.pickerRequest;
  state.profileId=profile()?.id||null;
  closePicker();renderAttached();
  if(taskId)await refreshLinks();
 }
 async function refreshLinks(){
- const id=state.taskId,client=sb(),token=++state.request,identity=profile()?.id;
+ const id=state.taskId,client=sb(),token=++state.linkRequest,identity=profile()?.id;
  if(!id||!client)return;
  const r=await client.from('task_material_links').select('id,material_id,created_at').eq('task_id',id).order('created_at',{ascending:true});
- if(token!==state.request||id!==state.taskId||identity!==profile()?.id)return;
+ if(token!==state.linkRequest||id!==state.taskId||identity!==profile()?.id)return;
  if(r.error){status('Не удалось загрузить материалы: '+r.error.message,true);return}
  const links=r.data||[];
  if(!links.length){state.links=[];renderAttached();return}
  const m=await client.from('workspace_library').select('id,title,kind,scope,project_id,body,storage_bucket,storage_path,original_name,mime_type').in('id',links.map(x=>x.material_id)).is('deleted_at',null);
- if(token!==state.request||id!==state.taskId||identity!==profile()?.id)return;
+ if(token!==state.linkRequest||id!==state.taskId||identity!==profile()?.id)return;
  if(m.error){status('Ошибка чтения материалов: '+m.error.message,true);return}
  const visible=new Map((m.data||[]).map(x=>[x.id,x]));
  state.links=links.filter(x=>visible.has(x.material_id)).map(x=>({...x,material:visible.get(x.material_id)}));
@@ -74,10 +74,10 @@ async function openPicker(mode='task',focusId=null){
  const panel=$('taskMaterialPickerPreview');panel.hidden=true;panel.replaceChildren();
  popup.dataset.mode=mode;
  $('taskMaterialPickerResults').innerHTML='<p class="task-material-empty">Загрузка…</p>';
- const client=sb(),token=++state.request,identity=profile()?.id;
+ const client=sb(),token=++state.pickerRequest,identity=profile()?.id;
  if(!client||!identity){status('Для доступа к материалам необходимо войти.',true);return}
  const r=await client.from('workspace_library').select('id,title,kind,scope,project_id,body,storage_bucket,storage_path,original_name,mime_type').is('deleted_at',null).order('title',{ascending:true});
- if(token!==state.request||identity!==profile()?.id||popup.hidden)return;
+ if(token!==state.pickerRequest||identity!==profile()?.id||popup.hidden)return;
  if(r.error){status('Материалы не загрузились: '+r.error.message,true);$('taskMaterialPickerResults').innerHTML='';return}
  state.materials=r.data||[];
  status('');
@@ -97,7 +97,7 @@ function renderPickerResults(){
   return '<article class="task-material-option"><div><b>'+esc(m.title)+'</b><small>'+esc(kindNames[m.kind])+' · '+tag+'</small></div><div class="task-material-option-actions"><button type="button" data-task-material-preview="'+esc(m.id)+'">Просмотр</button>'+actions+'</div></article>';
  }).join(''):'<p class="task-material-empty">Подходящих материалов нет. Для прикрепления используйте общие материалы или материалы проекта этой задачи.</p>';
 }
-function closePicker(){const el=$('taskMaterialPicker');if(el)el.hidden=true}
+function closePicker(){++state.pickerRequest;const el=$('taskMaterialPicker');if(el)el.hidden=true}
 async function attach(id){
  if(state.working||!state.taskId)return;
  const m=state.materials.find(x=>x.id===id);
