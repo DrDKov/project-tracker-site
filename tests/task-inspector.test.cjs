@@ -6,6 +6,7 @@ const root = path.resolve(__dirname,'..');
 const source = fs.readFileSync(path.join(root,'assets/task-inspector.js'),'utf8');
 const css = fs.readFileSync(path.join(root,'assets/task-inspector.css'),'utf8');
 const runtime = fs.readFileSync(path.join(root,'assets/app-runtime.js'),'utf8');
+const threadUi = fs.readFileSync(path.join(root,'assets/task-comment-threads.js'),'utf8');
 const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
 
 assert.match(html,/assets\/task-inspector\.css\?v=20261013-threaded-comments-v1/);
@@ -36,8 +37,8 @@ assert.match(iconButtonCss,/width:28px!important/);
 assert.match(iconButtonCss,/height:28px!important/);
 assert.match(iconButtonCss,/padding:0!important/);
 assert.match(css,/\.task-comment-actions button:focus-visible/);
-assert.match(runtime,/data-action="edit-task-comment"[^>]*aria-label="Редактировать комментарий"[^>]*title="Редактировать комментарий"><svg/);
-assert.match(runtime,/data-action="delete-task-comment"[^>]*aria-label="Удалить комментарий"[^>]*title="Удалить комментарий"><svg/);
+assert.match(threadUi,/data-action="edit-task-comment"[^>]*aria-label="Редактировать комментарий"[^>]*title="Редактировать комментарий"><svg/);
+assert.match(threadUi,/data-action="delete-task-comment"[^>]*aria-label="Удалить комментарий"[^>]*title="Удалить комментарий"><svg/);
 assert.match(css,/task-inspector-open:not\(\.task-inspector-expanded\) \.main\{margin-right:var\(--task-inspector-width\)\}/);
 assert.match(css,/\.form-grid\[hidden\]/);
 assert.match(runtime,/decision===false\)return false/);
