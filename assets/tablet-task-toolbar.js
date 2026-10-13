@@ -3,7 +3,7 @@
   'use strict';
   if(window.__PT_TABLET_TASK_TOOLBAR_V1__)return;
   window.__PT_TABLET_TASK_TOOLBAR_V1__=true;
-  const tablet=window.matchMedia('(min-width:981px) and (max-width:1280px)');
+  const tablet=window.matchMedia('(min-width:981px) and (max-width:1366px)');
   const phone=window.matchMedia('(max-width:980px)');
   const $=id=>document.getElementById(id);
   const icon=paths=>'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
