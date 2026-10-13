@@ -9,10 +9,12 @@ const loader = fs.readFileSync(path.join(root, 'assets/app.js'), 'utf8');
 function durationInputAttributes(markup) {
   const input = markup.match(/<input\b[^>]*\bid=["']taskDurationMinutes["'][^>]*>/)?.[0];
   assert.ok(input, 'Task duration must be present in both initial HTML and runtime fallback');
+  const attributes = Object.fromEntries(
+    [...input.matchAll(/([a-z-]+)=["']([^"']+)["']/g)].map(([,key,value]) => [key,value])
+  );
   const get = name => {
-    const match = input.match(new RegExp('\\b' + name + '=["\\']([^"\\']+)["\\']'));
-    assert.ok(match, name + ' must be explicitly declared');
-    return match[1];
+    assert.ok(attributes[name], name + ' must be explicitly declared');
+    return attributes[name];
   };
   return { type:get('type'), min:Number(get('min')), step:Number(get('step')) };
 }
