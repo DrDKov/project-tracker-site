@@ -16,7 +16,7 @@ new vm.Script(script,{filename:'task-materials.js'});
 new vm.Script(threads,{filename:'task-comment-threads.js'});
 new vm.Script(lib,{filename:'materials-v3.js'});
 assert.match(loader,/task-materials\.js\?v=20261013-comment-composer-fix-v1/);
-assert.match(loader,/materials-v3\.js\?v=20261013-task-material-links-v1/);
+assert.match(loader,/materials-v32\.js\?v=20261013-materials-v32-v1/);
 assert.match(html,/task-comment-threads\.js\?v=20261013-task-material-links-v1/);
 assert.match(html,/task-inspector\.css\?v=20261013-comment-composer-fix-v1/);
 assert.match(runtime,/ProjectTrackerTaskMaterials\?\.onTaskOpen\(id,/);
