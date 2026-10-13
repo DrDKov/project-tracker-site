@@ -8,7 +8,7 @@ const css = fs.readFileSync(path.join(root,'assets/task-inspector.css'),'utf8');
 const runtime = fs.readFileSync(path.join(root,'assets/app-runtime.js'),'utf8');
 const html = fs.readFileSync(path.join(root,'index.html'),'utf8');
 
-assert.match(html,/assets\/task-inspector\.css\?v=20261002-inspector-v1/);
+assert.match(html,/assets\/task-inspector\.css\?v=20261013-comment-size-v2/);
 assert.match(html,/assets\/task-inspector\.js\?v=20261011-reliability-v1/);
 assert.ok(html.indexOf("src='assets/task-inspector.js") < html.indexOf("src='assets/app.js"),'inspector installs before the task runtime');
 assert.match(source,/mq\.matches \? dialog\.show\(\) : dialog\.showModal\(\)/,'desktop is modeless, mobile is an accessible full-screen dialog');
@@ -18,6 +18,18 @@ assert.match(source,/form\.addEventListener\('invalid',\(\) => chooseTab\('detai
 assert.match(source,/form\.addEventListener\('submit',protectCommentDraft,true\)/);
 assert.match(css,/grid-template-columns:minmax\(0,1fr\)!important/);
 assert.match(css,/backdrop-filter:none!important/);
+// The scrollable inspector area may be tall, but individual comment grid rows
+// must be intrinsic-height rather than stretching into 1/N of free space.
+const listCss=css.match(/body #taskModal\.task-inspector #taskCommentsBlock \.task-comments-list\s*\{([^}]+)\}/)?.[1]||'';
+assert.match(listCss,/display:grid!important/);
+assert.match(listCss,/grid-auto-rows:max-content!important/);
+assert.match(listCss,/align-content:start!important/);
+assert.match(listCss,/overflow:auto!important/);
+const commentCss=css.match(/body #taskModal\.task-inspector #taskCommentsBlock \.task-comments-list > \.task-comment\s*\{([^}]+)\}/)?.[1]||'';
+assert.match(commentCss,/align-self:start!important/);
+assert.match(commentCss,/height:auto!important/);
+assert.match(commentCss,/min-height:0!important/);
+assert.match(commentCss,/width:100%!important/);
 assert.match(css,/task-inspector-open:not\(\.task-inspector-expanded\) \.main\{margin-right:var\(--task-inspector-width\)\}/);
 assert.match(css,/\.form-grid\[hidden\]/);
 assert.match(runtime,/decision===false\)return false/);
